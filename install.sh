@@ -101,9 +101,15 @@ collect_user_info() {
         fi
     done
     
-    # Générer les mots de passe DB
+    echo ""
+    print_step "Configuration de la base de données"
+    
+    # Mot de passe root MySQL
+    read -sp "$(echo -e ${CYAN}Mot de passe ROOT MySQL:${NC} )" MYSQL_ROOT_PASSWORD
+    echo ""
+    
+    # Générer le mot de passe DB
     DB_PASSWORD=$(generate_password)
-    DB_ROOT_PASSWORD=$(generate_password)
     
     echo ""
     print_success "Configuration collectée avec succès"
@@ -228,9 +234,9 @@ install_mysql() {
     # Créer la base de données et l'utilisateur
     print_info "Configuration de la base de données..."
     
-    # Essayer avec sudo mysql (Debian/MariaDB par défaut)
-    if sudo mysql -u root -e "SELECT 1" > /dev/null 2>&1; then
-        sudo mysql -u root <<-EOSQL 2>/dev/null || {
+    # Essayer avec le mot de passe root fourni
+    if mysql -u root -p"${MYSQL_ROOT_PASSWORD}" -e "SELECT 1" > /dev/null 2>&1; then
+        mysql -u root -p"${MYSQL_ROOT_PASSWORD}" <<-EOSQL 2>/dev/null || {
             print_warning "Impossible de configurer MySQL, continuons..."
             return 0
         }
@@ -240,9 +246,8 @@ install_mysql() {
             FLUSH PRIVILEGES;
 EOSQL
     else
-        print_warning "MySQL ne répond pas, on continue sans configuration DB..."
-        print_warning "Vous devrez configurer MySQL manuellement"
-        return 0
+        print_error "MySQL - mot de passe root incorrect"
+        exit 1
     fi
     
     print_success "Base de données configurée"

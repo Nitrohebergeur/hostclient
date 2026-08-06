@@ -32,13 +32,17 @@ if [ -z "$APP_URL" ]; then
 fi
 
 echo ""
+read -sp "Mot de passe ROOT MySQL: " MYSQL_ROOT_PASSWORD
+echo ""
+
+echo ""
 echo "=== Configuration MySQL ==="
 echo "Vérification connexion MySQL..."
-if sudo mysql -u root -e "SELECT 1" 2>&1; then
+if mysql -u root -p"${MYSQL_ROOT_PASSWORD}" -e "SELECT 1" 2>&1; then
     echo "✓ MySQL répond"
     
     echo "Création base de données..."
-    sudo mysql -u root <<EOF
+    mysql -u root -p"${MYSQL_ROOT_PASSWORD}" <<EOF
 CREATE DATABASE IF NOT EXISTS ${DB_NAME} CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 CREATE USER IF NOT EXISTS '${DB_USER}'@'localhost' IDENTIFIED BY '${DB_PASSWORD}';
 GRANT ALL PRIVILEGES ON ${DB_NAME}.* TO '${DB_USER}'@'localhost';
@@ -47,8 +51,7 @@ SELECT 'Base de données créée' AS Status;
 EOF
     echo "✓ Base de données configurée"
 else
-    echo "✗ ERREUR: MySQL ne répond pas"
-    echo "Essayez: sudo systemctl start mysql"
+    echo "✗ ERREUR: MySQL - mot de passe root incorrect"
     exit 1
 fi
 
