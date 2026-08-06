@@ -51,7 +51,7 @@ check_requirements() {
     
     # Check PHP
     if ! command_exists php; then
-        missing_requirements+=("PHP 8.1+")
+        missing_requirements+=("PHP 8.2+")
     else
         PHP_VERSION=$(php -r "echo PHP_VERSION;")
         print_success "PHP $PHP_VERSION installed"
