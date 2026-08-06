@@ -251,18 +251,11 @@ print_success "Migrations terminées"
 
 # Créer l'admin
 print_info "Création du compte administrateur..."
-php artisan tinker --no-interaction <<EOFTINKER
-\$user = App\Models\User::firstOrCreate(
-    ['email' => '${ADMIN_EMAIL}'],
-    [
-        'name'               => '${ADMIN_NAME}',
-        'password'           => bcrypt('${ADMIN_PASSWORD}'),
-        'email_verified_at'  => now(),
-    ]
-);
-echo "Admin : " . \$user->email . "\n";
-exit;
-EOFTINKER
+ADMIN_FIRST=$(echo "$ADMIN_NAME" | awk '{print $1}')
+ADMIN_LAST=$(echo "$ADMIN_NAME" | awk '{print $2}')
+ADMIN_LAST=${ADMIN_LAST:-$ADMIN_FIRST}
+ADMIN_HASH=$(php -r "echo password_hash('${ADMIN_PASSWORD}', PASSWORD_BCRYPT);")
+mysql -u root "$DB_NAME" -e "INSERT INTO users (first_name, last_name, email, password, email_verified_at, email_verified, is_active, created_at, updated_at) VALUES ('${ADMIN_FIRST}', '${ADMIN_LAST}', '${ADMIN_EMAIL}', '${ADMIN_HASH}', NOW(), 1, 1, NOW(), NOW()) ON DUPLICATE KEY UPDATE password='${ADMIN_HASH}', is_active=1, email_verified=1;" 2>/dev/null
 print_success "Admin créé : ${ADMIN_EMAIL}"
 
 # Storage link
@@ -277,6 +270,7 @@ chmod -R 755 public
 # NPM + build
 print_info "Installation des dépendances JavaScript..."
 npm install
+npm install @tailwindcss/vite --save-dev
 print_info "Compilation des assets..."
 npm run build
 print_success "Assets compilés"
