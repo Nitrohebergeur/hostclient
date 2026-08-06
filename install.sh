@@ -124,10 +124,17 @@ install_dependencies() {
     
     # Installer les outils de base
     print_info "Installation des outils de base..."
-    apt-get install -y software-properties-common curl wget git unzip ca-certificates apt-transport-https lsb-release gnupg2 || {
-        print_error "Échec de l'installation des outils de base"
-        exit 1
-    }
+    if [ "$OS" = "debian" ]; then
+        apt-get install -y curl wget git unzip ca-certificates apt-transport-https lsb-release gnupg2 || {
+            print_error "Échec de l'installation des outils de base"
+            exit 1
+        }
+    else
+        apt-get install -y software-properties-common curl wget git unzip ca-certificates apt-transport-https lsb-release gnupg2 || {
+            print_error "Échec de l'installation des outils de base"
+            exit 1
+        }
+    fi
     print_success "Outils de base installés"
     
     # Ajouter le repo PHP pour Debian

@@ -26,7 +26,7 @@ apt-get update
 
 # 2. Outils de base
 echo "=== Installation outils de base ==="
-apt-get install -y software-properties-common curl wget git unzip ca-certificates apt-transport-https lsb-release gnupg2
+apt-get install -y curl wget git unzip ca-certificates apt-transport-https lsb-release gnupg2
 
 # 3. Repository PHP
 echo "=== Ajout du repository PHP ==="
