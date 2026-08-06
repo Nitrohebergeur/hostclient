@@ -32,7 +32,7 @@ Cette commande va :
 ### Système
 
 - **Serveur Web** : Apache 2.4+ ou Nginx 1.18+
-- **PHP** : 8.4 ou supérieur
+- **PHP** : 8.2 ou supérieur
 - **Base de données** : MySQL 8.0+ ou MariaDB 10.3+
 - **Node.js** : 18.x ou supérieur
 - **Composer** : 2.x

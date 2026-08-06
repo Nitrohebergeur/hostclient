@@ -1,10 +1,10 @@
 # HostClient - Panel Client Moderne pour Hébergeurs Web
 
-[![Laravel](https://img.shields.io/badge/Laravel-12.x-FF2D20?logo=laravel)](https://laravel.com)
-[![PHP](https://img.shields.io/badge/PHP-8.4+-777BB4?logo=php)](https://php.net)
+[![Laravel](https://img.shields.io/badge/Laravel-11.x-FF2D20?logo=laravel)](https://laravel.com)
+[![PHP](https://img.shields.io/badge/PHP-8.2+-777BB4?logo=php)](https://php.net)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-**HostClient** est une solution complète et moderne de gestion client pour les hébergeurs web. Conçu avec Laravel 12, il offre une interface intuitive pour la gestion des services, la facturation automatisée, le support client et bien plus encore.
+**HostClient** est une solution complète et moderne de gestion client pour les hébergeurs web. Conçu avec Laravel 11, il offre une interface intuitive pour la gestion des services, la facturation automatisée, le support client et bien plus encore.
 
 ## ✨ Fonctionnalités Principales
 
@@ -58,7 +58,7 @@
 
 ## 📋 Prérequis
 
-- PHP >= 8.4
+- PHP >= 8.2
 - Composer
 - Node.js >= 18.x & NPM
 - MySQL >= 8.0 ou MariaDB >= 10.3
