@@ -1,4 +1,4 @@
-@extends('layouts.client')
+@extends('layouts.client-simple')
 
 @section('title', 'Dashboard')
 
