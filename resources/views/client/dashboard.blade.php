@@ -91,7 +91,7 @@
                 <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Mes Services</h2>
             </div>
             <div class="p-6 space-y-4">
-                @forelse($recent_services ?? [] as $service)
+                @forelse($recentServices ?? [] as $service)
                     <div class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
                         <div class="flex items-center space-x-3">
                             <div class="w-10 h-10 bg-blue-100 dark:bg-blue-900/20 rounded-full flex items-center justify-center">
@@ -125,7 +125,7 @@
                 <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Mes Factures</h2>
             </div>
             <div class="p-6 space-y-4">
-                @forelse($recent_invoices ?? [] as $invoice)
+                @forelse($recentInvoices ?? [] as $invoice)
                     <div class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
                         <div class="flex items-center space-x-3">
                             <div class="w-10 h-10 bg-purple-100 dark:bg-purple-900/20 rounded-full flex items-center justify-center">
