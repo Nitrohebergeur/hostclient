@@ -74,15 +74,27 @@
 
 ## 🚀 Installation
 
-### Installation Rapide (Recommandé)
+### ⚡ Installation Automatique (Recommandé)
 
-Installation automatique en une seule commande :
+Installation complète en **une seule commande** (installe PHP, MySQL, Nginx, tout configuré automatiquement) :
 
 ```bash
 bash <(curl -sSL https://raw.githubusercontent.com/Nitrohebergeur/hostclient/main/install.sh)
 ```
 
-### Installation Manuelle
+**Ce que fait le script :**
+- ✅ Installe toutes les dépendances (PHP 8.2, MySQL, Nginx, Node.js)
+- ✅ Configure automatiquement MySQL et la base de données
+- ✅ Clone et installe HostClient
+- ✅ Crée votre compte administrateur
+- ✅ Configure Nginx et PHP-FPM
+- ✅ Active les tâches cron
+
+**Prérequis :** Ubuntu 20.04+ / Debian 11+ avec accès root
+
+📖 [Guide d'installation détaillé](QUICK_INSTALL.md)
+
+### 📦 Installation Manuelle
 
 #### 1. Cloner le projet
 

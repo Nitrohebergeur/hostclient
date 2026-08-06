@@ -1,244 +1,441 @@
 #!/bin/bash
 
-# HostClient Installation Script
+# HostClient Complete Auto-Installation Script
 # Usage: bash <(curl -sSL https://raw.githubusercontent.com/Nitrohebergeur/hostclient/main/install.sh)
 
 set -e
 
-# Colors for output
+# Colors
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
-NC='\033[0m' # No Color
+CYAN='\033[0;36m'
+MAGENTA='\033[0;35m'
+NC='\033[0m'
+
+# Variables globales
+DB_NAME="hostclient"
+DB_USER="hostclient_user"
+DB_PASSWORD=""
+DB_ROOT_PASSWORD=""
+ADMIN_EMAIL=""
+ADMIN_PASSWORD=""
+ADMIN_NAME=""
+COMPANY_NAME=""
+APP_URL="http://localhost"
 
 # Functions
-print_success() {
-    echo -e "${GREEN}✓ $1${NC}"
-}
-
-print_error() {
-    echo -e "${RED}✗ $1${NC}"
-}
-
-print_info() {
-    echo -e "${BLUE}ℹ $1${NC}"
-}
-
-print_warning() {
-    echo -e "${YELLOW}⚠ $1${NC}"
-}
+print_success() { echo -e "${GREEN}✓ $1${NC}"; }
+print_error() { echo -e "${RED}✗ $1${NC}"; }
+print_info() { echo -e "${BLUE}ℹ $1${NC}"; }
+print_warning() { echo -e "${YELLOW}⚠ $1${NC}"; }
+print_step() { echo -e "${CYAN}▶ $1${NC}"; }
 
 print_header() {
-    echo -e "${BLUE}"
-    echo "╔════════════════════════════════════════╗"
-    echo "║      HostClient Installer v1.0         ║"
-    echo "║   https://github.com/Nitrohebergeur    ║"
-    echo "╚════════════════════════════════════════╝"
+    clear
+    echo -e "${MAGENTA}"
+    echo "╔════════════════════════════════════════════════════════╗"
+    echo "║       HostClient Auto-Installer v2.0                   ║"
+    echo "║       Installation Automatique Complète                ║"
+    echo "║       https://github.com/Nitrohebergeur                ║"
+    echo "╚════════════════════════════════════════════════════════╝"
     echo -e "${NC}"
 }
 
-# Check if command exists
 command_exists() {
     command -v "$1" >/dev/null 2>&1
 }
 
-# Check system requirements
-check_requirements() {
-    print_info "Checking system requirements..."
-    
-    local missing_requirements=()
-    
-    # Check PHP
-    if ! command_exists php; then
-        missing_requirements+=("PHP 8.2+")
+generate_password() {
+    openssl rand -base64 32 | tr -d "=+/" | cut -c1-25
+}
+
+# Détecter l'OS
+detect_os() {
+    if [ -f /etc/os-release ]; then
+        . /etc/os-release
+        OS=$ID
+        OS_VERSION=$VERSION_ID
     else
-        PHP_VERSION=$(php -r "echo PHP_VERSION;")
-        print_success "PHP $PHP_VERSION installed"
-    fi
-    
-    # Check Composer
-    if ! command_exists composer; then
-        missing_requirements+=("Composer")
-    else
-        print_success "Composer installed"
-    fi
-    
-    # Check Git
-    if ! command_exists git; then
-        missing_requirements+=("Git")
-    else
-        print_success "Git installed"
-    fi
-    
-    # Check Node.js
-    if ! command_exists node; then
-        print_warning "Node.js not found (optional for asset compilation)"
-    else
-        NODE_VERSION=$(node -v)
-        print_success "Node.js $NODE_VERSION installed"
-    fi
-    
-    if [ ${#missing_requirements[@]} -gt 0 ]; then
-        print_error "Missing requirements:"
-        for req in "${missing_requirements[@]}"; do
-            echo "  - $req"
-        done
-        echo ""
-        print_info "Please install the missing requirements and try again."
+        print_error "Système d'exploitation non supporté"
         exit 1
     fi
+    print_info "Système: $OS $OS_VERSION"
 }
 
-# Clone repository
+# Collecter les informations utilisateur
+collect_user_info() {
+    print_step "Configuration initiale"
+    echo ""
+    
+    # Nom de l'entreprise
+    read -p "$(echo -e ${CYAN}Nom de votre entreprise:${NC} )" COMPANY_NAME
+    COMPANY_NAME=${COMPANY_NAME:-"Mon Entreprise"}
+    
+    # URL de l'application
+    read -p "$(echo -e ${CYAN}URL de l\'application \(ex: https://panel.example.com\):${NC} )" APP_URL
+    APP_URL=${APP_URL:-"http://localhost"}
+    
+    echo ""
+    print_step "Informations du compte administrateur"
+    
+    # Nom admin
+    read -p "$(echo -e ${CYAN}Nom complet de l\'administrateur:${NC} )" ADMIN_NAME
+    ADMIN_NAME=${ADMIN_NAME:-"Admin"}
+    
+    # Email admin
+    while [[ ! "$ADMIN_EMAIL" =~ ^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$ ]]; do
+        read -p "$(echo -e ${CYAN}Email administrateur:${NC} )" ADMIN_EMAIL
+        if [[ ! "$ADMIN_EMAIL" =~ ^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$ ]]; then
+            print_error "Email invalide, réessayez"
+        fi
+    done
+    
+    # Mot de passe admin
+    while [ -z "$ADMIN_PASSWORD" ] || [ ${#ADMIN_PASSWORD} -lt 8 ]; do
+        read -sp "$(echo -e ${CYAN}Mot de passe admin \(min 8 caractères\):${NC} )" ADMIN_PASSWORD
+        echo ""
+        if [ ${#ADMIN_PASSWORD} -lt 8 ]; then
+            print_error "Le mot de passe doit contenir au moins 8 caractères"
+        fi
+    done
+    
+    # Générer les mots de passe DB
+    DB_PASSWORD=$(generate_password)
+    DB_ROOT_PASSWORD=$(generate_password)
+    
+    echo ""
+    print_success "Configuration collectée avec succès"
+}
+
+# Installer les dépendances système
+install_dependencies() {
+    print_step "Installation des dépendances système..."
+    
+    export DEBIAN_FRONTEND=noninteractive
+    
+    # Update
+    apt-get update -qq
+    
+    # Installer les outils de base
+    apt-get install -y -qq software-properties-common curl wget git unzip > /dev/null 2>&1
+    print_success "Outils de base installés"
+    
+    # Ajouter les repos
+    add-apt-repository -y ppa:ondrej/php > /dev/null 2>&1
+    apt-get update -qq
+    
+    # Installer PHP 8.2
+    print_info "Installation de PHP 8.2..."
+    apt-get install -y -qq php8.2 php8.2-cli php8.2-fpm php8.2-mysql php8.2-xml php8.2-mbstring \
+        php8.2-curl php8.2-zip php8.2-gd php8.2-bcmath php8.2-intl php8.2-redis \
+        php8.2-soap php8.2-gmp > /dev/null 2>&1
+    print_success "PHP 8.2 installé"
+    
+    # Installer Composer
+    if ! command_exists composer; then
+        print_info "Installation de Composer..."
+        curl -sS https://getcomposer.org/installer | php > /dev/null 2>&1
+        mv composer.phar /usr/local/bin/composer
+        chmod +x /usr/local/bin/composer
+        print_success "Composer installé"
+    fi
+    
+    # Installer Node.js
+    if ! command_exists node; then
+        print_info "Installation de Node.js 20..."
+        curl -fsSL https://deb.nodesource.com/setup_20.x | bash - > /dev/null 2>&1
+        apt-get install -y -qq nodejs > /dev/null 2>&1
+        print_success "Node.js installé"
+    fi
+}
+
+# Installer et configurer MySQL
+install_mysql() {
+    print_step "Installation et configuration de MySQL..."
+    
+    # Préconfigurer MySQL
+    echo "mysql-server mysql-server/root_password password $DB_ROOT_PASSWORD" | debconf-set-selections
+    echo "mysql-server mysql-server/root_password_again password $DB_ROOT_PASSWORD" | debconf-set-selections
+    
+    # Installer MySQL
+    apt-get install -y -qq mysql-server > /dev/null 2>&1
+    print_success "MySQL installé"
+    
+    # Démarrer MySQL
+    systemctl start mysql
+    systemctl enable mysql > /dev/null 2>&1
+    
+    # Créer la base de données et l'utilisateur
+    print_info "Configuration de la base de données..."
+    mysql -u root -p"$DB_ROOT_PASSWORD" <<-EOSQL 2>/dev/null
+        CREATE DATABASE IF NOT EXISTS ${DB_NAME} CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+        CREATE USER IF NOT EXISTS '${DB_USER}'@'localhost' IDENTIFIED BY '${DB_PASSWORD}';
+        GRANT ALL PRIVILEGES ON ${DB_NAME}.* TO '${DB_USER}'@'localhost';
+        FLUSH PRIVILEGES;
+EOSQL
+    
+    print_success "Base de données configurée"
+}
+
+# Cloner le repository
 clone_repository() {
-    print_info "Cloning HostClient repository..."
+    print_step "Téléchargement de HostClient..."
     
     if [ -d "hostclient" ]; then
-        print_warning "Directory 'hostclient' already exists."
-        read -p "Do you want to remove it and continue? (y/N): " -n 1 -r
-        echo
-        if [[ $REPLY =~ ^[Yy]$ ]]; then
-            rm -rf hostclient
-        else
-            print_error "Installation cancelled."
-            exit 1
-        fi
+        print_warning "Le dossier hostclient existe déjà"
+        rm -rf hostclient
     fi
     
-    git clone https://github.com/Nitrohebergeur/hostclient.git
+    git clone -q https://github.com/Nitrohebergeur/hostclient.git
     cd hostclient
-    print_success "Repository cloned successfully"
+    print_success "Repository cloné"
 }
 
-# Install dependencies
-install_dependencies() {
-    print_info "Installing Composer dependencies..."
-    composer install --no-dev --optimize-autoloader
-    print_success "Composer dependencies installed"
+# Installer les dépendances de l'application
+install_app_dependencies() {
+    print_step "Installation des dépendances de l'application..."
     
+    # Composer
+    print_info "Installation des packages PHP..."
+    COMPOSER_ALLOW_SUPERUSER=1 composer install --no-dev --optimize-autoloader --no-interaction -q
+    print_success "Packages PHP installés"
+    
+    # NPM
     if command_exists npm; then
-        print_info "Installing NPM dependencies..."
-        npm install
-        print_success "NPM dependencies installed"
+        print_info "Installation des packages JavaScript..."
+        npm install --silent > /dev/null 2>&1
+        print_success "Packages JavaScript installés"
         
-        print_info "Building assets..."
-        npm run build
-        print_success "Assets built successfully"
+        print_info "Compilation des assets..."
+        npm run build > /dev/null 2>&1
+        print_success "Assets compilés"
     fi
 }
 
-# Setup environment
+# Configurer l'environnement
 setup_environment() {
-    print_info "Setting up environment configuration..."
+    print_step "Configuration de l'environnement..."
     
-    if [ ! -f ".env" ]; then
-        cp .env.example .env
-        print_success "Environment file created"
-    else
-        print_warning ".env file already exists, skipping..."
-    fi
+    # Copier .env
+    cp .env.example .env
     
-    print_info "Generating application key..."
-    php artisan key:generate
-    print_success "Application key generated"
+    # Générer la clé
+    php artisan key:generate --force > /dev/null 2>&1
+    
+    # Configuration du .env
+    sed -i "s|APP_NAME=.*|APP_NAME=\"$COMPANY_NAME\"|" .env
+    sed -i "s|APP_URL=.*|APP_URL=$APP_URL|" .env
+    sed -i "s|APP_ENV=.*|APP_ENV=production|" .env
+    sed -i "s|APP_DEBUG=.*|APP_DEBUG=false|" .env
+    
+    sed -i "s|DB_CONNECTION=.*|DB_CONNECTION=mysql|" .env
+    sed -i "s|DB_HOST=.*|DB_HOST=127.0.0.1|" .env
+    sed -i "s|DB_PORT=.*|DB_PORT=3306|" .env
+    sed -i "s|DB_DATABASE=.*|DB_DATABASE=$DB_NAME|" .env
+    sed -i "s|DB_USERNAME=.*|DB_USERNAME=$DB_USER|" .env
+    sed -i "s|DB_PASSWORD=.*|DB_PASSWORD=$DB_PASSWORD|" .env
+    
+    print_success "Environnement configuré"
 }
 
-# Database setup
+# Configurer la base de données
 setup_database() {
-    print_info "Database setup..."
-    echo ""
-    print_warning "Please configure your database settings in the .env file"
-    echo ""
-    read -p "Have you configured your database settings? (y/N): " -n 1 -r
-    echo
+    print_step "Configuration de la base de données..."
     
-    if [[ $REPLY =~ ^[Yy]$ ]]; then
-        print_info "Running database migrations..."
-        php artisan migrate --force
-        print_success "Database migrated successfully"
-        
-        read -p "Do you want to seed the database with sample data? (y/N): " -n 1 -r
-        echo
-        if [[ $REPLY =~ ^[Yy]$ ]]; then
-            php artisan db:seed
-            print_success "Database seeded successfully"
-        fi
-    else
-        print_warning "Skipping database setup. Run 'php artisan migrate' after configuration."
-    fi
+    # Migrations
+    print_info "Exécution des migrations..."
+    php artisan migrate --force > /dev/null 2>&1
+    print_success "Migrations exécutées"
+    
+    # Créer l'utilisateur admin
+    print_info "Création du compte administrateur..."
+    php artisan tinker <<EOF > /dev/null 2>&1
+\$user = new App\Models\User();
+\$user->name = '$ADMIN_NAME';
+\$user->email = '$ADMIN_EMAIL';
+\$user->password = bcrypt('$ADMIN_PASSWORD');
+\$user->email_verified_at = now();
+\$user->save();
+\$user->assignRole('admin');
+echo "Admin created\n";
+EOF
+    print_success "Compte administrateur créé"
 }
 
-# Set permissions
+# Configurer les permissions
 set_permissions() {
-    print_info "Setting directory permissions..."
+    print_step "Configuration des permissions..."
     
-    chmod -R 755 storage bootstrap/cache
+    # Créer le lien de stockage
+    php artisan storage:link > /dev/null 2>&1
     
-    if [ -d "storage" ]; then
-        chmod -R 775 storage
-    fi
+    # Permissions
+    chown -R www-data:www-data storage bootstrap/cache
+    chmod -R 775 storage bootstrap/cache
     
-    if [ -d "bootstrap/cache" ]; then
-        chmod -R 775 bootstrap/cache
-    fi
-    
-    print_success "Permissions set successfully"
+    print_success "Permissions configurées"
 }
 
-# Create symbolic link for storage
-create_storage_link() {
-    print_info "Creating storage symbolic link..."
-    php artisan storage:link
-    print_success "Storage link created"
+# Installer Nginx
+install_nginx() {
+    print_step "Installation de Nginx..."
+    
+    apt-get install -y -qq nginx > /dev/null 2>&1
+    print_success "Nginx installé"
+    
+    # Configuration Nginx
+    local DOMAIN=$(echo $APP_URL | sed 's/https\?:\/\///')
+    local NGINX_CONF="/etc/nginx/sites-available/hostclient"
+    
+    cat > $NGINX_CONF <<EOF
+server {
+    listen 80;
+    server_name $DOMAIN;
+    root $(pwd)/public;
+
+    add_header X-Frame-Options "SAMEORIGIN";
+    add_header X-Content-Type-Options "nosniff";
+
+    index index.php;
+
+    charset utf-8;
+
+    location / {
+        try_files \$uri \$uri/ /index.php?\$query_string;
+    }
+
+    location = /favicon.ico { access_log off; log_not_found off; }
+    location = /robots.txt  { access_log off; log_not_found off; }
+
+    error_page 404 /index.php;
+
+    location ~ \.php$ {
+        fastcgi_pass unix:/var/run/php/php8.2-fpm.sock;
+        fastcgi_param SCRIPT_FILENAME \$realpath_root\$fastcgi_script_name;
+        include fastcgi_params;
+    }
+
+    location ~ /\.(?!well-known).* {
+        deny all;
+    }
+}
+EOF
+    
+    ln -sf $NGINX_CONF /etc/nginx/sites-enabled/hostclient
+    rm -f /etc/nginx/sites-enabled/default
+    
+    nginx -t > /dev/null 2>&1
+    systemctl restart nginx
+    systemctl enable nginx > /dev/null 2>&1
+    
+    print_success "Nginx configuré"
 }
 
-# Final instructions
-show_final_instructions() {
+# Configurer le cron
+setup_cron() {
+    print_step "Configuration des tâches planifiées..."
+    
+    (crontab -l 2>/dev/null | grep -v "hostclient"; echo "* * * * * cd $(pwd) && php artisan schedule:run >> /dev/null 2>&1") | crontab -
+    
+    print_success "Tâches planifiées configurées"
+}
+
+# Sauvegarder les informations
+save_credentials() {
+    local CREDS_FILE="$(pwd)/CREDENTIALS.txt"
+    
+    cat > $CREDS_FILE <<EOF
+╔════════════════════════════════════════════════════════╗
+║           INFORMATIONS D'INSTALLATION                  ║
+╚════════════════════════════════════════════════════════╝
+
+📅 Date d'installation: $(date)
+
+🌐 APPLICATION
+   URL: $APP_URL
+   Entreprise: $COMPANY_NAME
+
+👤 COMPTE ADMINISTRATEUR
+   Email: $ADMIN_EMAIL
+   Mot de passe: $ADMIN_PASSWORD
+
+🗄️  BASE DE DONNÉES
+   Nom: $DB_NAME
+   Utilisateur: $DB_USER
+   Mot de passe: $DB_PASSWORD
+   
+🔐 MYSQL ROOT
+   Mot de passe: $DB_ROOT_PASSWORD
+
+⚠️  IMPORTANT: Conservez ce fichier en lieu sûr et supprimez-le ensuite!
+   Pour supprimer: rm $(pwd)/CREDENTIALS.txt
+
+EOF
+    
+    chmod 600 $CREDS_FILE
+    print_success "Identifiants sauvegardés dans CREDENTIALS.txt"
+}
+
+# Afficher le résumé final
+show_final_summary() {
     echo ""
-    echo -e "${GREEN}╔════════════════════════════════════════╗${NC}"
-    echo -e "${GREEN}║     Installation completed! 🎉         ║${NC}"
-    echo -e "${GREEN}╚════════════════════════════════════════╝${NC}"
+    echo -e "${GREEN}╔════════════════════════════════════════════════════════╗${NC}"
+    echo -e "${GREEN}║          Installation terminée avec succès! 🎉         ║${NC}"
+    echo -e "${GREEN}╚════════════════════════════════════════════════════════╝${NC}"
     echo ""
-    print_info "Next steps:"
-    echo "  1. Configure your .env file with your settings"
-    echo "  2. Run: php artisan migrate (if not done)"
-    echo "  3. Start the development server:"
-    echo "     ${BLUE}php artisan serve${NC}"
+    echo -e "${CYAN}📋 Résumé:${NC}"
+    echo -e "   ${BLUE}•${NC} URL: ${YELLOW}$APP_URL${NC}"
+    echo -e "   ${BLUE}•${NC} Admin: ${YELLOW}$ADMIN_EMAIL${NC}"
+    echo -e "   ${BLUE}•${NC} Mot de passe: ${YELLOW}$ADMIN_PASSWORD${NC}"
     echo ""
-    echo "  Or configure your web server to point to the 'public' directory"
+    echo -e "${CYAN}📁 Emplacement:${NC} $(pwd)"
+    echo -e "${CYAN}📄 Identifiants:${NC} $(pwd)/CREDENTIALS.txt"
     echo ""
-    print_info "Documentation: https://github.com/Nitrohebergeur/hostclient"
+    echo -e "${YELLOW}⚠️  Prochaines étapes:${NC}"
+    echo -e "   ${BLUE}1.${NC} Configurez votre DNS pour pointer vers ce serveur"
+    echo -e "   ${BLUE}2.${NC} Installez un certificat SSL (recommandé avec certbot)"
+    echo -e "   ${BLUE}3.${NC} Accédez à ${YELLOW}$APP_URL${NC} et connectez-vous"
+    echo -e "   ${BLUE}4.${NC} Supprimez le fichier CREDENTIALS.txt après avoir noté les informations"
+    echo ""
+    echo -e "${GREEN}✨ Votre panel est prêt à l'emploi!${NC}"
     echo ""
 }
 
-# Main installation flow
+# Main installation
 main() {
     print_header
     
-    check_requirements
+    # Vérifier si root
+    if [[ $EUID -ne 0 ]]; then
+        print_error "Ce script doit être exécuté en tant que root"
+        echo "Utilisez: sudo bash install.sh"
+        exit 1
+    fi
+    
+    detect_os
     echo ""
     
-    clone_repository
+    collect_user_info
+    echo ""
+    
+    print_step "Début de l'installation automatique..."
     echo ""
     
     install_dependencies
-    echo ""
-    
+    install_mysql
+    clone_repository
+    install_app_dependencies
     setup_environment
-    echo ""
-    
     setup_database
-    echo ""
-    
     set_permissions
-    echo ""
+    install_nginx
+    setup_cron
+    save_credentials
     
-    create_storage_link
-    echo ""
-    
-    show_final_instructions
+    show_final_summary
 }
 
-# Run main installation
+# Exécuter l'installation
 main
