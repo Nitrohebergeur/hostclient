@@ -34,7 +34,7 @@ Toutes ces extensions doivent être activées.
 
 ```bash
 # Via Git
-git clone https://github.com/votre-repo/hostclient.git
+git clone https://github.com/Nitrohebergeur/hostclient/hostclient.git
 cd hostclient
 
 # Ou télécharger l'archive ZIP et extraire

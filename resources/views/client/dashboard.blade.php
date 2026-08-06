@@ -1,139 +1,155 @@
-@extends('layouts.app')
+@extends('layouts.client')
 
-@section('title', 'Dashboard Client')
+@section('title', 'Dashboard')
 
 @section('content')
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <!-- Stats Grid -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
-        <!-- Active Services -->
-        <div class="card animate-slide-up">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm text-gray-600 dark:text-gray-400">Services Actifs</p>
-                    <p class="text-3xl font-bold text-gray-900 dark:text-white">{{ $stats['active_services'] }}</p>
-                </div>
-                <div class="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
-                    <i data-lucide="server" class="w-6 h-6 text-blue-600 dark:text-blue-400"></i>
-                </div>
-            </div>
-        </div>
+    <!-- Welcome Section -->
+    <div class="bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg shadow-lg p-8 mb-8 text-white">
+        <h1 class="text-3xl font-bold mb-2">Bienvenue, {{ auth()->user()->first_name }} !</h1>
+        <p class="text-blue-100">Gérez vos services, factures et tickets de support depuis votre tableau de bord.</p>
+    </div>
 
-        <!-- Pending Orders -->
-        <div class="card animate-slide-up" style="animation-delay: 0.1s">
+    <!-- Quick Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <!-- Active Services -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-sm text-gray-600 dark:text-gray-400">Commandes</p>
-                    <p class="text-3xl font-bold text-gray-900 dark:text-white">{{ $stats['pending_orders'] }}</p>
+                    <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Services Actifs</p>
+                    <p class="text-3xl font-bold text-gray-900 dark:text-white mt-2">
+                        {{ $stats['active_services'] ?? 0 }}
+                    </p>
                 </div>
-                <div class="p-3 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
-                    <i data-lucide="shopping-cart" class="w-6 h-6 text-purple-600 dark:text-purple-400"></i>
+                <div class="w-12 h-12 bg-green-100 dark:bg-green-900/20 rounded-lg flex items-center justify-center">
+                    <i data-lucide="server" class="w-6 h-6 text-green-600 dark:text-green-400"></i>
                 </div>
             </div>
+            <a href="{{ route('client.services.index') }}" class="text-sm text-blue-600 dark:text-blue-400 hover:underline mt-3 block">
+                Voir mes services →
+            </a>
         </div>
 
         <!-- Unpaid Invoices -->
-        <div class="card animate-slide-up" style="animation-delay: 0.2s">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-sm text-gray-600 dark:text-gray-400">Factures Impayées</p>
-                    <p class="text-3xl font-bold text-gray-900 dark:text-white">{{ $stats['unpaid_invoices'] }}</p>
+                    <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Factures Impayées</p>
+                    <p class="text-3xl font-bold text-gray-900 dark:text-white mt-2">
+                        {{ $stats['unpaid_invoices'] ?? 0 }}
+                    </p>
                 </div>
-                <div class="p-3 bg-red-100 dark:bg-red-900/30 rounded-lg">
+                <div class="w-12 h-12 bg-red-100 dark:bg-red-900/20 rounded-lg flex items-center justify-center">
                     <i data-lucide="file-text" class="w-6 h-6 text-red-600 dark:text-red-400"></i>
                 </div>
             </div>
+            <a href="{{ route('client.invoices.index') }}" class="text-sm text-blue-600 dark:text-blue-400 hover:underline mt-3 block">
+                Voir mes factures →
+            </a>
         </div>
 
         <!-- Open Tickets -->
-        <div class="card animate-slide-up" style="animation-delay: 0.3s">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-sm text-gray-600 dark:text-gray-400">Tickets Ouverts</p>
-                    <p class="text-3xl font-bold text-gray-900 dark:text-white">{{ $stats['open_tickets'] }}</p>
+                    <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Tickets Ouverts</p>
+                    <p class="text-3xl font-bold text-gray-900 dark:text-white mt-2">
+                        {{ $stats['open_tickets'] ?? 0 }}
+                    </p>
                 </div>
-                <div class="p-3 bg-green-100 dark:bg-green-900/30 rounded-lg">
-                    <i data-lucide="message-circle" class="w-6 h-6 text-green-600 dark:text-green-400"></i>
+                <div class="w-12 h-12 bg-orange-100 dark:bg-orange-900/20 rounded-lg flex items-center justify-center">
+                    <i data-lucide="message-circle" class="w-6 h-6 text-orange-600 dark:text-orange-400"></i>
                 </div>
             </div>
+            <a href="{{ route('client.tickets.index') }}" class="text-sm text-blue-600 dark:text-blue-400 hover:underline mt-3 block">
+                Voir mes tickets →
+            </a>
         </div>
 
-        <!-- Balance -->
-        <div class="card animate-slide-up" style="animation-delay: 0.4s">
+        <!-- Account Balance -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-sm text-gray-600 dark:text-gray-400">Solde</p>
-                    <p class="text-3xl font-bold text-gray-900 dark:text-white">{{ number_format($stats['balance'], 2) }}€</p>
+                    <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Solde du Compte</p>
+                    <p class="text-3xl font-bold text-gray-900 dark:text-white mt-2">
+                        {{ number_format(auth()->user()->balance, 2) }} €
+                    </p>
                 </div>
-                <div class="p-3 bg-yellow-100 dark:bg-yellow-900/30 rounded-lg">
-                    <i data-lucide="wallet" class="w-6 h-6 text-yellow-600 dark:text-yellow-400"></i>
+                <div class="w-12 h-12 bg-blue-100 dark:bg-blue-900/20 rounded-lg flex items-center justify-center">
+                    <i data-lucide="wallet" class="w-6 h-6 text-blue-600 dark:text-blue-400"></i>
                 </div>
             </div>
+            <button class="text-sm text-blue-600 dark:text-blue-400 hover:underline mt-3 block">
+                Recharger →
+            </button>
         </div>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <!-- Recent Services -->
-        <div class="lg:col-span-2">
-            <div class="card">
-                <div class="flex items-center justify-between mb-6">
-                    <h2 class="text-xl font-semibold text-gray-900 dark:text-white">Services Récents</h2>
-                    <a href="{{ route('client.services.index') }}" class="text-primary-600 hover:text-primary-700 text-sm font-medium">
-                        Voir tous →
-                    </a>
-                </div>
-
-                <div class="space-y-4">
-                    @forelse($recentServices as $service)
-                        <div class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition">
-                            <div class="flex items-center space-x-4">
-                                <div class="p-2 bg-white dark:bg-gray-800 rounded-lg">
-                                    <i data-lucide="server" class="w-5 h-5 text-gray-600 dark:text-gray-400"></i>
-                                </div>
-                                <div>
-                                    <p class="font-medium text-gray-900 dark:text-white">{{ $service->name }}</p>
-                                    <p class="text-sm text-gray-500 dark:text-gray-400">{{ $service->product->name }}</p>
-                                </div>
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow">
+            <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+                <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Mes Services</h2>
+            </div>
+            <div class="p-6 space-y-4">
+                @forelse($recent_services ?? [] as $service)
+                    <div class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-10 h-10 bg-blue-100 dark:bg-blue-900/20 rounded-full flex items-center justify-center">
+                                <i data-lucide="server" class="w-5 h-5 text-blue-600 dark:text-blue-400"></i>
                             </div>
-                            <div class="text-right">
-                                <span class="badge badge-{{ $service->status === 'active' ? 'success' : 'warning' }}">
-                                    {{ ucfirst($service->status) }}
-                                </span>
-                                <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                                    {{ $service->price }}€/{{ $service->billing_cycle }}
-                                </p>
+                            <div>
+                                <p class="text-sm font-medium text-gray-900 dark:text-white">{{ $service->name }}</p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400">{{ $service->product->name }}</p>
                             </div>
                         </div>
-                    @empty
-                        <p class="text-center text-gray-500 dark:text-gray-400 py-8">Aucun service</p>
-                    @endforelse
-                </div>
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $service->status === 'active' ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300' : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300' }}">
+                            {{ ucfirst($service->status) }}
+                        </span>
+                    </div>
+                @empty
+                    <div class="text-center py-12">
+                        <i data-lucide="server" class="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-4"></i>
+                        <p class="text-gray-500 dark:text-gray-400 mb-4">Vous n'avez pas encore de service</p>
+                        <a href="{{ route('store.index') }}" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                            <i data-lucide="shopping-cart" class="w-4 h-4 mr-2"></i>
+                            Commander un service
+                        </a>
+                    </div>
+                @endforelse
             </div>
         </div>
 
-        <!-- Activity Feed -->
-        <div>
-            <div class="card">
-                <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-6">Activité Récente</h2>
-
-                <div class="space-y-4">
-                    @foreach($activities as $activity)
-                        <div class="flex space-x-3">
-                            <div class="flex-shrink-0">
-                                <div class="p-2 bg-primary-100 dark:bg-primary-900/30 rounded-full">
-                                    <i data-lucide="{{ $activity['icon'] }}" class="w-4 h-4 text-primary-600 dark:text-primary-400"></i>
-                                </div>
+        <!-- Recent Invoices -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow">
+            <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+                <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Mes Factures</h2>
+            </div>
+            <div class="p-6 space-y-4">
+                @forelse($recent_invoices ?? [] as $invoice)
+                    <div class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-10 h-10 bg-purple-100 dark:bg-purple-900/20 rounded-full flex items-center justify-center">
+                                <i data-lucide="file-text" class="w-5 h-5 text-purple-600 dark:text-purple-400"></i>
                             </div>
-                            <div class="flex-1 min-w-0">
-                                <p class="text-sm font-medium text-gray-900 dark:text-white">{{ $activity['title'] }}</p>
-                                <p class="text-sm text-gray-500 dark:text-gray-400 truncate">{{ $activity['description'] }}</p>
-                                <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">{{ $activity['date']->diffForHumans() }}</p>
+                            <div>
+                                <p class="text-sm font-medium text-gray-900 dark:text-white">{{ $invoice->invoice_number }}</p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400">Échéance: {{ $invoice->due_date->format('d/m/Y') }}</p>
                             </div>
                         </div>
-                    @endforeach
-                </div>
+                        <div class="text-right">
+                            <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ number_format($invoice->total, 2) }} €</p>
+                            <span class="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full {{ $invoice->status === 'paid' ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300' : 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-300' }}">
+                                {{ $invoice->status === 'paid' ? 'Payée' : 'Impayée' }}
+                            </span>
+                        </div>
+                    </div>
+                @empty
+                    <div class="text-center py-12">
+                        <i data-lucide="file-text" class="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-4"></i>
+                        <p class="text-gray-500 dark:text-gray-400">Aucune facture pour le moment</p>
+                    </div>
+                @endforelse
             </div>
         </div>
     </div>
-</div>
 @endsection

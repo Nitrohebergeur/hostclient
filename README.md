@@ -77,7 +77,7 @@
 ### 1. Cloner le projet
 
 ```bash
-git clone https://github.com/votre-repo/hostclient.git
+git clone https://github.com/Nitrohebergeur/hostclient/hostclient.git
 cd hostclient
 ```
 
