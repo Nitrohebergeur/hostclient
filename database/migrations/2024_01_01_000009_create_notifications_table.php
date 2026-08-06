@@ -16,22 +16,10 @@ return new class extends Migration
             $table->timestamp('read_at')->nullable();
             $table->timestamps();
         });
-
-        Schema::create('notification_settings', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->string('channel'); // email, database, discord, slack, telegram
-            $table->string('event'); // invoice_created, service_created, ticket_reply, etc.
-            $table->boolean('is_enabled')->default(true);
-            $table->timestamps();
-
-            $table->unique(['user_id', 'channel', 'event']);
-        });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('notification_settings');
         Schema::dropIfExists('notifications');
     }
 };
