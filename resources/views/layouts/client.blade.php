@@ -12,6 +12,8 @@
     <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
     @stack('styles')
 </head>
 <body class="font-sans antialiased">
@@ -236,5 +238,8 @@
     </div>
 
     @stack('scripts')
+    <script>
+        lucide.createIcons();
+    </script>
 </body>
 </html>
