@@ -74,21 +74,31 @@
 
 ## 🚀 Installation
 
-### 1. Cloner le projet
+### Installation Rapide (Recommandé)
+
+Installation automatique en une seule commande :
 
 ```bash
-git clone https://github.com/Nitrohebergeur/hostclient/hostclient.git
+bash <(curl -sSL https://raw.githubusercontent.com/Nitrohebergeur/hostclient/main/install.sh)
+```
+
+### Installation Manuelle
+
+#### 1. Cloner le projet
+
+```bash
+git clone https://github.com/Nitrohebergeur/hostclient.git
 cd hostclient
 ```
 
-### 2. Installer les dépendances
+#### 2. Installer les dépendances
 
 ```bash
 composer install
 npm install
 ```
 
-### 3. Configuration
+#### 3. Configuration
 
 ```bash
 # Copier le fichier d'environnement
@@ -106,7 +116,7 @@ php artisan key:generate
 # DB_PASSWORD=
 ```
 
-### 4. Installation guidée
+#### 4. Installation guidée
 
 ```bash
 php artisan hostclient:install
@@ -119,7 +129,7 @@ Cette commande va :
 - Créer votre compte administrateur
 - Configurer les paramètres de base
 
-### 5. Compiler les assets
+#### 5. Compiler les assets
 
 ```bash
 # Développement
@@ -129,7 +139,7 @@ npm run dev
 npm run build
 ```
 
-### 6. Lancer l'application
+#### 6. Lancer l'application
 
 ```bash
 php artisan serve

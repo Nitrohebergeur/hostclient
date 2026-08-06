@@ -2,13 +2,30 @@
 
 Ce guide vous accompagne pas à pas dans l'installation et la configuration de HostClient.
 
+## 🚀 Installation Rapide (Recommandé)
+
+Pour une installation automatique en une seule commande :
+
+```bash
+bash <(curl -sSL https://raw.githubusercontent.com/Nitrohebergeur/hostclient/main/install.sh)
+```
+
+Cette commande va :
+- ✅ Vérifier les prérequis système
+- ✅ Cloner le repository
+- ✅ Installer les dépendances (Composer & NPM)
+- ✅ Configurer l'environnement
+- ✅ Préparer la base de données
+- ✅ Définir les permissions
+
 ## Table des Matières
 
-1. [Prérequis](#prérequis)
-2. [Installation Manuelle](#installation-manuelle)
-3. [Installation avec Docker](#installation-avec-docker)
-4. [Configuration Avancée](#configuration-avancée)
-5. [Dépannage](#dépannage)
+1. [Installation Rapide](#-installation-rapide-recommandé)
+2. [Prérequis](#prérequis)
+3. [Installation Manuelle](#installation-manuelle)
+4. [Installation avec Docker](#installation-avec-docker)
+5. [Configuration Avancée](#configuration-avancée)
+6. [Dépannage](#dépannage)
 
 ## Prérequis
 
@@ -34,7 +51,7 @@ Toutes ces extensions doivent être activées.
 
 ```bash
 # Via Git
-git clone https://github.com/Nitrohebergeur/hostclient/hostclient.git
+git clone https://github.com/Nitrohebergeur/hostclient.git
 cd hostclient
 
 # Ou télécharger l'archive ZIP et extraire
