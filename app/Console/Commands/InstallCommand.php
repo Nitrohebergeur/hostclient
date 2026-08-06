@@ -54,7 +54,7 @@ class InstallCommand extends Command
         $this->info('Checking system requirements...');
         
         $requirements = [
-            'PHP Version >= 8.4' => version_compare(PHP_VERSION, '8.4.0', '>='),
+            'PHP Version >= 8.2' => version_compare(PHP_VERSION, '8.2.0', '>='),
             'BCMath Extension' => extension_loaded('bcmath'),
             'Ctype Extension' => extension_loaded('ctype'),
             'JSON Extension' => extension_loaded('json'),
@@ -128,7 +128,8 @@ class InstallCommand extends Command
 
         if ($password !== $passwordConfirm) {
             $this->error('Passwords do not match!');
-            return $this->createAdmin();
+            $this->createAdmin();
+            return;
         }
 
         // Create roles
