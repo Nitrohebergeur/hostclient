@@ -40,12 +40,18 @@ class DashboardController extends Controller
         $revenueChart = $this->getRevenueChartData();
         $servicesChart = $this->getServicesChartData();
 
+        // Charger le HTML et CSS personnalisé pour la page d'accueil
+        $customHtml = \App\Models\Setting::get('homepage_html');
+        $customCss = \App\Models\Setting::get('homepage_css');
+
         return view('admin.dashboard', compact(
             'stats',
             'recentOrders',
             'recentTickets',
             'revenueChart',
-            'servicesChart'
+            'servicesChart',
+            'customHtml',
+            'customCss'
         ));
     }
 

@@ -47,6 +47,14 @@ class Service extends Model
     protected static $logAttributes = ['status', 'price', 'next_due_date'];
     protected static $logName = 'service';
 
+    public function getActivitylogOptions(): \Spatie\Activitylog\LogOptions
+    {
+        return \Spatie\Activitylog\LogOptions::defaults()
+            ->logOnly(['status', 'price', 'next_due_date'])
+            ->setDescriptionForEvent(fn(string $eventName) => "Service has been {$eventName}")
+            ->useLogName('service');
+    }
+
     // Relationships
     public function user()
     {
