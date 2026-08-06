@@ -4,6 +4,18 @@
 @section('page-title', 'Tableau de bord')
 
 @section('content')
+    @if($customHtml && $customCss)
+        <!-- Page d'accueil personnalisée -->
+        <style>
+            {!! $customCss !!}
+        </style>
+        
+        <div class="custom-homepage-wrapper">
+            {!! $customHtml !!}
+        </div>
+    @else
+        <!-- Dashboard par défaut -->
+
     <!-- Stats Cards -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <!-- Total Clients -->
@@ -186,6 +198,7 @@
             </div>
         </div>
     </div>
+    @endif
 @endsection
 
 @push('scripts')
