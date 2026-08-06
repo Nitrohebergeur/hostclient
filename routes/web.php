@@ -96,6 +96,11 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
     Route::get('settings', [\App\Http\Controllers\Admin\SettingController::class, 'index'])->name('settings.index');
     Route::put('settings', [\App\Http\Controllers\Admin\SettingController::class, 'update'])->name('settings.update');
     
+    // Homepage Customization
+    Route::get('homepage/edit', [\App\Http\Controllers\Admin\HomePageController::class, 'edit'])->name('homepage.edit');
+    Route::put('homepage/update', [\App\Http\Controllers\Admin\HomePageController::class, 'update'])->name('homepage.update');
+    Route::get('homepage/preview', [\App\Http\Controllers\Admin\HomePageController::class, 'preview'])->name('homepage.preview');
+    
     // Modules
     Route::get('modules', [\App\Http\Controllers\Admin\ModuleController::class, 'index'])->name('modules.index');
     Route::post('modules/{module}/install', [\App\Http\Controllers\Admin\ModuleController::class, 'install'])->name('modules.install');

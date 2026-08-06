@@ -19,7 +19,8 @@ class CheckRole
             return redirect()->route('login');
         }
 
-        if ($request->user()->role !== $role) {
+        // Vérification avec Spatie Permission
+        if (!$request->user()->hasRole($role)) {
             abort(403, 'Unauthorized action.');
         }
 
