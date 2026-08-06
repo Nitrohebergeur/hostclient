@@ -34,11 +34,11 @@ fi
 echo ""
 echo "=== Configuration MySQL ==="
 echo "Vérification connexion MySQL..."
-if mysql -u root -e "SELECT 1" 2>&1; then
+if sudo mysql -u root -e "SELECT 1" 2>&1; then
     echo "✓ MySQL répond"
     
     echo "Création base de données..."
-    mysql -u root <<EOF
+    sudo mysql -u root <<EOF
 CREATE DATABASE IF NOT EXISTS ${DB_NAME} CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 CREATE USER IF NOT EXISTS '${DB_USER}'@'localhost' IDENTIFIED BY '${DB_PASSWORD}';
 GRANT ALL PRIVILEGES ON ${DB_NAME}.* TO '${DB_USER}'@'localhost';

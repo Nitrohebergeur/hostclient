@@ -228,9 +228,9 @@ install_mysql() {
     # Créer la base de données et l'utilisateur
     print_info "Configuration de la base de données..."
     
-    # Essayer avec root sans mot de passe d'abord (Debian par défaut)
-    if mysql -u root -e "SELECT 1" > /dev/null 2>&1; then
-        mysql -u root <<-EOSQL 2>/dev/null || {
+    # Essayer avec sudo mysql (Debian/MariaDB par défaut)
+    if sudo mysql -u root -e "SELECT 1" > /dev/null 2>&1; then
+        sudo mysql -u root <<-EOSQL 2>/dev/null || {
             print_warning "Impossible de configurer MySQL, continuons..."
             return 0
         }
