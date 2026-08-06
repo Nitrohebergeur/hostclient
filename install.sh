@@ -116,65 +116,128 @@ install_dependencies() {
     export DEBIAN_FRONTEND=noninteractive
     
     # Update
-    apt-get update -qq
+    print_info "Mise à jour des paquets..."
+    apt-get update -qq || {
+        print_error "Échec de apt-get update"
+        exit 1
+    }
     
     # Installer les outils de base
-    apt-get install -y -qq software-properties-common curl wget git unzip > /dev/null 2>&1
+    print_info "Installation des outils de base..."
+    apt-get install -y software-properties-common curl wget git unzip ca-certificates apt-transport-https lsb-release gnupg2 || {
+        print_error "Échec de l'installation des outils de base"
+        exit 1
+    }
     print_success "Outils de base installés"
     
-    # Ajouter les repos
-    add-apt-repository -y ppa:ondrej/php > /dev/null 2>&1
-    apt-get update -qq
+    # Ajouter le repo PHP pour Debian
+    print_info "Ajout du repository PHP..."
+    if [ "$OS" = "debian" ]; then
+        wget -q https://packages.sury.org/php/apt.gpg -O- | apt-key add - || {
+            print_warning "Impossible d'ajouter la clé GPG avec apt-key, essai avec keyrings..."
+            curl -sSLo /usr/share/keyrings/deb.sury.org-php.gpg https://packages.sury.org/php/apt.gpg
+            echo "deb [signed-by=/usr/share/keyrings/deb.sury.org-php.gpg] https://packages.sury.org/php/ $(lsb_release -sc) main" > /etc/apt/sources.list.d/php.list
+        }
+        apt-get update -qq || {
+            print_error "Échec de la mise à jour après ajout du repo PHP"
+            exit 1
+        }
+    else
+        add-apt-repository -y ppa:ondrej/php
+        apt-get update -qq
+    fi
+    print_success "Repository PHP ajouté"
     
     # Installer PHP 8.2
-    print_info "Installation de PHP 8.2..."
-    apt-get install -y -qq php8.2 php8.2-cli php8.2-fpm php8.2-mysql php8.2-xml php8.2-mbstring \
-        php8.2-curl php8.2-zip php8.2-gd php8.2-bcmath php8.2-intl php8.2-redis \
-        php8.2-soap php8.2-gmp > /dev/null 2>&1
+    print_info "Installation de PHP 8.2 et extensions..."
+    apt-get install -y php8.2 php8.2-cli php8.2-fpm php8.2-mysql php8.2-xml php8.2-mbstring \
+        php8.2-curl php8.2-zip php8.2-gd php8.2-bcmath php8.2-intl \
+        php8.2-soap php8.2-gmp || {
+        print_error "Échec de l'installation de PHP"
+        exit 1
+    }
     print_success "PHP 8.2 installé"
     
     # Installer Composer
     if ! command_exists composer; then
         print_info "Installation de Composer..."
-        curl -sS https://getcomposer.org/installer | php > /dev/null 2>&1
-        mv composer.phar /usr/local/bin/composer
-        chmod +x /usr/local/bin/composer
+        curl -sS https://getcomposer.org/installer -o composer-setup.php || {
+            print_error "Échec du téléchargement de Composer"
+            exit 1
+        }
+        php composer-setup.php --quiet --install-dir=/usr/local/bin --filename=composer || {
+            print_error "Échec de l'installation de Composer"
+            exit 1
+        }
+        rm composer-setup.php
         print_success "Composer installé"
+    else
+        print_success "Composer déjà installé"
     fi
     
     # Installer Node.js
     if ! command_exists node; then
         print_info "Installation de Node.js 20..."
-        curl -fsSL https://deb.nodesource.com/setup_20.x | bash - > /dev/null 2>&1
-        apt-get install -y -qq nodejs > /dev/null 2>&1
+        curl -fsSL https://deb.nodesource.com/setup_20.x | bash - || {
+            print_error "Échec de l'ajout du repo Node.js"
+            exit 1
+        }
+        apt-get install -y nodejs || {
+            print_error "Échec de l'installation de Node.js"
+            exit 1
+        }
         print_success "Node.js installé"
+    else
+        print_success "Node.js déjà installé"
     fi
+    
+    print_success "Toutes les dépendances sont installées"
 }
 
 # Installer et configurer MySQL
 install_mysql() {
     print_step "Installation et configuration de MySQL..."
     
-    # Préconfigurer MySQL
-    echo "mysql-server mysql-server/root_password password $DB_ROOT_PASSWORD" | debconf-set-selections
-    echo "mysql-server mysql-server/root_password_again password $DB_ROOT_PASSWORD" | debconf-set-selections
-    
-    # Installer MySQL
-    apt-get install -y -qq mysql-server > /dev/null 2>&1
-    print_success "MySQL installé"
+    if command_exists mysql; then
+        print_success "MySQL déjà installé"
+    else
+        # Préconfigurer MySQL
+        echo "mysql-server mysql-server/root_password password $DB_ROOT_PASSWORD" | debconf-set-selections
+        echo "mysql-server mysql-server/root_password_again password $DB_ROOT_PASSWORD" | debconf-set-selections
+        
+        # Installer MySQL
+        print_info "Installation de MySQL..."
+        apt-get install -y default-mysql-server 2>&1 | grep -v "^Selecting\|^Preparing\|^Unpacking\|^Setting up\|^Processing"
+        print_success "MySQL installé"
+    fi
     
     # Démarrer MySQL
-    systemctl start mysql
-    systemctl enable mysql > /dev/null 2>&1
+    systemctl start mysql 2>/dev/null || systemctl start mariadb 2>/dev/null
+    systemctl enable mysql > /dev/null 2>&1 || systemctl enable mariadb > /dev/null 2>&1
+    
+    # Attendre que MySQL soit prêt
+    sleep 3
     
     # Créer la base de données et l'utilisateur
     print_info "Configuration de la base de données..."
-    mysql -u root -p"$DB_ROOT_PASSWORD" <<-EOSQL 2>/dev/null
-        CREATE DATABASE IF NOT EXISTS ${DB_NAME} CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-        CREATE USER IF NOT EXISTS '${DB_USER}'@'localhost' IDENTIFIED BY '${DB_PASSWORD}';
-        GRANT ALL PRIVILEGES ON ${DB_NAME}.* TO '${DB_USER}'@'localhost';
-        FLUSH PRIVILEGES;
+    
+    # Essayer avec root sans mot de passe d'abord (Debian par défaut)
+    if mysql -u root -e "SELECT 1" > /dev/null 2>&1; then
+        mysql -u root <<-EOSQL 2>/dev/null
+            ALTER USER 'root'@'localhost' IDENTIFIED BY '${DB_ROOT_PASSWORD}';
+            CREATE DATABASE IF NOT EXISTS ${DB_NAME} CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+            CREATE USER IF NOT EXISTS '${DB_USER}'@'localhost' IDENTIFIED BY '${DB_PASSWORD}';
+            GRANT ALL PRIVILEGES ON ${DB_NAME}.* TO '${DB_USER}'@'localhost';
+            FLUSH PRIVILEGES;
 EOSQL
+    else
+        mysql -u root -p"$DB_ROOT_PASSWORD" <<-EOSQL 2>/dev/null
+            CREATE DATABASE IF NOT EXISTS ${DB_NAME} CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+            CREATE USER IF NOT EXISTS '${DB_USER}'@'localhost' IDENTIFIED BY '${DB_PASSWORD}';
+            GRANT ALL PRIVILEGES ON ${DB_NAME}.* TO '${DB_USER}'@'localhost';
+            FLUSH PRIVILEGES;
+EOSQL
+    fi
     
     print_success "Base de données configurée"
 }
@@ -282,8 +345,12 @@ set_permissions() {
 install_nginx() {
     print_step "Installation de Nginx..."
     
-    apt-get install -y -qq nginx > /dev/null 2>&1
-    print_success "Nginx installé"
+    if command_exists nginx; then
+        print_success "Nginx déjà installé"
+    else
+        apt-get install -y nginx 2>&1 | grep -v "^Selecting\|^Preparing\|^Unpacking\|^Setting up\|^Processing"
+        print_success "Nginx installé"
+    fi
     
     # Configuration Nginx
     local DOMAIN=$(echo $APP_URL | sed 's/https\?:\/\///')
