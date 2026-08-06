@@ -236,7 +236,11 @@ EOFARTISAN
     chmod -R 775 storage bootstrap/cache
     
     print_info "Installation des dépendances PHP..."
-    COMPOSER_ALLOW_SUPERUSER=1 composer install --no-dev --optimize-autoloader --no-interaction -q
+    # Ignorer l'erreur de package:discover, on le fera après
+    COMPOSER_ALLOW_SUPERUSER=1 composer install --no-dev --optimize-autoloader --no-interaction --no-scripts -q 2>&1 || true
+    
+    # Lancer package:discover manuellement après
+    php artisan package:discover --ansi 2>&1 || true
     
     print_info "Configuration de l'environnement..."
     cp .env.example .env
