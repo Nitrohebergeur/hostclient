@@ -41,9 +41,13 @@ return new class extends Migration
             $table->index('due_at');
         });
 
+        // Ajouter la FK services -> invoices maintenant que invoices existe
+        Schema::table('services', function (Blueprint $table) {
+            $table->foreign('invoice_id')->references('id')->on('invoices')->onDelete('set null');
+        });
+
         // Lignes de facture
-        Schema::create('invoice_items', function (Blueprint $table) {
-            $table->id();
+        Schema::create('invoice_items', function (Blueprint $table) {            $table->id();
             $table->foreignId('invoice_id')->constrained()->onDelete('cascade');
             $table->foreignId('service_id')->nullable()->constrained()->onDelete('set null');
             $table->string('description');

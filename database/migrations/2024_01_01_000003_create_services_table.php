@@ -12,26 +12,23 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->foreignId('product_id')->constrained()->onDelete('restrict');
-            $table->foreignId('invoice_id')->nullable()->constrained()->onDelete('set null');
+            // invoice_id sans contrainte FK ici (invoices créé après)
+            $table->unsignedBigInteger('invoice_id')->nullable();
 
             $table->string('name');
             $table->enum('status', ['pending', 'active', 'suspended', 'cancelled', 'terminated'])->default('pending');
             $table->enum('billing_cycle', ['monthly', 'quarterly', 'semiannually', 'annually', 'biennially'])->default('monthly');
 
-            // Dates
             $table->timestamp('activated_at')->nullable();
             $table->timestamp('next_due_date')->nullable();
             $table->timestamp('terminated_at')->nullable();
 
-            // Prix
             $table->decimal('price', 10, 2)->default(0);
             $table->char('currency', 3)->default('EUR');
 
-            // Configuration du module (identifiants de provisionnement)
-            $table->json('module_config')->nullable(); // { server_id, account_id, username, password }
+            $table->json('module_config')->nullable();
             $table->json('custom_fields')->nullable();
 
-            // Notes
             $table->text('admin_notes')->nullable();
             $table->text('client_notes')->nullable();
 
