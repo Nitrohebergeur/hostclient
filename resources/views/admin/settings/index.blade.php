@@ -152,56 +152,83 @@
 
         <!-- Email -->
         <div x-show="tab === 'email'" class="mt-6">
+            @if(session('success'))
+                <div class="mb-4 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl text-green-700 dark:text-green-400 text-sm">
+                    ✓ {{ session('success') }}
+                </div>
+            @endif
+            @if(session('error'))
+                <div class="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-red-700 dark:text-red-400 text-sm">
+                    ✗ {{ session('error') }}
+                </div>
+            @endif
             <div class="card">
-                <div class="card-header"><h3 class="font-bold text-gray-900 dark:text-white">Configuration Email</h3></div>
-                <div class="card-body space-y-5">
-                    <div class="grid sm:grid-cols-2 gap-5">
-                        <div>
-                            <label class="form-label">Driver</label>
-                            <select class="form-input">
-                                <option>SMTP</option>
-                                <option>Mailgun</option>
-                                <option>Postmark</option>
-                                <option>Amazon SES</option>
-                                <option>Sendmail</option>
-                            </select>
+                <div class="card-header">
+                    <h3 class="font-bold text-gray-900 dark:text-white">Configuration Email (SMTP)</h3>
+                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Ces paramètres sont sauvegardés en base de données et appliqués au fichier .env</p>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ route('admin.settings.update') }}" class="space-y-5">
+                        @csrf
+                        @method('PUT')
+                        <input type="hidden" name="group" value="email">
+
+                        <div class="grid sm:grid-cols-2 gap-5">
+                            <div>
+                                <label class="form-label">Driver</label>
+                                <select name="mail_mailer" class="form-input">
+                                    @foreach(['smtp' => 'SMTP', 'mailgun' => 'Mailgun', 'postmark' => 'Postmark', 'ses' => 'Amazon SES', 'sendmail' => 'Sendmail'] as $val => $label)
+                                        <option value="{{ $val }}" {{ ($settings['mail_mailer'] ?? 'smtp') === $val ? 'selected' : '' }}>{{ $label }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div>
+                                <label class="form-label">Hôte SMTP</label>
+                                <input type="text" name="mail_host" value="{{ $settings['mail_host'] ?? '' }}" class="form-input" placeholder="smtp.example.com">
+                            </div>
+                            <div>
+                                <label class="form-label">Port SMTP</label>
+                                <input type="number" name="mail_port" value="{{ $settings['mail_port'] ?? '587' }}" class="form-input">
+                            </div>
+                            <div>
+                                <label class="form-label">Chiffrement</label>
+                                <select name="mail_encryption" class="form-input">
+                                    @foreach(['tls' => 'TLS (587)', 'ssl' => 'SSL (465)', '' => 'Aucun'] as $val => $label)
+                                        <option value="{{ $val }}" {{ ($settings['mail_encryption'] ?? 'tls') === $val ? 'selected' : '' }}>{{ $label }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div>
+                                <label class="form-label">Utilisateur SMTP</label>
+                                <input type="text" name="mail_username" value="{{ $settings['mail_username'] ?? '' }}" class="form-input" placeholder="user@smtp.example.com">
+                            </div>
+                            <div>
+                                <label class="form-label">Mot de passe SMTP</label>
+                                <input type="password" name="mail_password" value="{{ $settings['mail_password'] ?? '' }}" class="form-input" placeholder="••••••••">
+                            </div>
+                            <div>
+                                <label class="form-label">Nom expéditeur</label>
+                                <input type="text" name="mail_from_name" value="{{ $settings['mail_from_name'] ?? 'HostClient' }}" class="form-input">
+                            </div>
+                            <div>
+                                <label class="form-label">Email expéditeur</label>
+                                <input type="email" name="mail_from_address" value="{{ $settings['mail_from_address'] ?? '' }}" class="form-input" placeholder="noreply@votredomaine.com">
+                            </div>
                         </div>
-                        <div>
-                            <label class="form-label">Hôte SMTP</label>
-                            <input type="text" value="smtp.mailtrap.io" class="form-input">
+
+                        <div class="flex gap-3">
+                            <button type="submit" class="btn btn-primary">Enregistrer</button>
                         </div>
-                        <div>
-                            <label class="form-label">Port SMTP</label>
-                            <input type="number" value="587" class="form-input">
-                        </div>
-                        <div>
-                            <label class="form-label">Chiffrement</label>
-                            <select class="form-input">
-                                <option>TLS</option>
-                                <option>SSL</option>
-                                <option>Aucun</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="form-label">Utilisateur SMTP</label>
-                            <input type="text" class="form-input" placeholder="user@smtp.example.com">
-                        </div>
-                        <div>
-                            <label class="form-label">Mot de passe SMTP</label>
-                            <input type="password" class="form-input" placeholder="••••••••">
-                        </div>
-                        <div>
-                            <label class="form-label">Nom expéditeur</label>
-                            <input type="text" value="HostClient" class="form-input">
-                        </div>
-                        <div>
-                            <label class="form-label">Email expéditeur</label>
-                            <input type="email" value="noreply@hostclient.io" class="form-input">
-                        </div>
-                    </div>
-                    <div class="flex gap-3">
-                        <button class="btn btn-primary">Enregistrer</button>
-                        <button type="button" class="btn btn-secondary">Envoyer email de test</button>
+                    </form>
+
+                    <!-- Test email séparé -->
+                    <div class="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+                        <h4 class="font-semibold text-gray-900 dark:text-white text-sm mb-3">Tester la configuration</h4>
+                        <form method="POST" action="{{ route('admin.settings.test-email') }}" class="flex gap-3">
+                            @csrf
+                            <input type="email" name="test_email" class="form-input max-w-xs" placeholder="destinataire@example.com" required>
+                            <button type="submit" class="btn btn-secondary">Envoyer un email de test</button>
+                        </form>
                     </div>
                 </div>
             </div>

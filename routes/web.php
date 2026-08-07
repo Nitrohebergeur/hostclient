@@ -97,9 +97,20 @@ Route::middleware(['auth'])->prefix('client')->name('client.')->group(function (
 });
 
 // ─── Admin Panel ─────────────────────────────────────────────────────────────
+use App\Http\Controllers\Admin\SettingController;
+use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Admin\ProductController;
+use App\Http\Controllers\Admin\ServerController;
+use App\Http\Controllers\Admin\TicketController as AdminTicketController;
+use App\Http\Controllers\Admin\InvoiceController as AdminInvoiceController;
+
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', fn() => view('admin.dashboard'))->name('dashboard');
-    // Les routes admin seront ajoutées dans la prochaine étape
+
+    // Paramètres (avec email configurable)
+    Route::get('/settings',            [SettingController::class, 'index'])->name('settings.index');
+    Route::put('/settings',            [SettingController::class, 'update'])->name('settings.update');
+    Route::post('/settings/test-email',[SettingController::class, 'testEmail'])->name('settings.test-email');
 });
 
 // ─── Installateur ─────────────────────────────────────────────────────────────
