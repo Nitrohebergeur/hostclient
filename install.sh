@@ -461,13 +461,20 @@ setup_storage() {
 
     php "$INSTALL_DIR/artisan" storage:link --no-interaction 2>/dev/null || true
 
+    # Corriger les permissions AVANT de changer le proprietaire
+    log_info "Application des permissions sur les fichiers et dossiers..."
+    find "$INSTALL_DIR" -type f -exec chmod 644 {} \;
+    find "$INSTALL_DIR" -type d -exec chmod 755 {} \;
+    
+    # Permissions speciales pour storage et bootstrap/cache
+    chmod -R 775 "$INSTALL_DIR/storage"
+    chmod -R 775 "$INSTALL_DIR/bootstrap/cache"
+
+    # Changer le proprietaire en dernier
+    log_info "Changement du proprietaire vers www-data..."
     chown -R www-data:www-data "$INSTALL_DIR" 2>/dev/null || \
     chown -R nginx:nginx "$INSTALL_DIR" 2>/dev/null || \
     log_warn "Impossible de changer le proprietaire — ajustez manuellement."
-
-    chmod -R 755 "$INSTALL_DIR"
-    chmod -R 775 "$INSTALL_DIR/storage"
-    chmod -R 775 "$INSTALL_DIR/bootstrap/cache"
 
     log_ok "Permissions configurees"
 }
@@ -476,7 +483,21 @@ optimize_app() {
     log_step "Optimisation de l'application"
     cd "$INSTALL_DIR"
 
+    # Vider les caches avant de les regenerer
+    log_info "Vidage des anciens caches..."
+    rm -rf "$INSTALL_DIR/bootstrap/cache/*.php" 2>/dev/null || true
+    php "$INSTALL_DIR/artisan" clear-compiled --no-interaction 2>/dev/null || true
+    php "$INSTALL_DIR/artisan" cache:clear --no-interaction 2>/dev/null || true
+    php "$INSTALL_DIR/artisan" config:clear --no-interaction 2>/dev/null || true
+    php "$INSTALL_DIR/artisan" route:clear --no-interaction 2>/dev/null || true
+    php "$INSTALL_DIR/artisan" view:clear --no-interaction 2>/dev/null || true
+
+    # Regenerer l'autoload Composer
+    log_info "Regeneration de l'autoload Composer..."
+    cd "$INSTALL_DIR" && composer dump-autoload --optimize --no-interaction 2>/dev/null || true
+
     if [ "$APP_ENV" = "production" ]; then
+        log_info "Mise en cache des configurations (production)..."
         php "$INSTALL_DIR/artisan" config:cache --no-interaction
         php "$INSTALL_DIR/artisan" route:cache  --no-interaction
         php "$INSTALL_DIR/artisan" view:cache   --no-interaction
@@ -595,12 +616,22 @@ setup_nginx() {
     fi
 
     # Redemarrer PHP-FPM
+    log_info "Redemarrage de PHP-FPM..."
     if systemctl is-active --quiet php8.4-fpm 2>/dev/null; then
         systemctl restart php8.4-fpm
+        log_ok "PHP-FPM 8.4 redemarre"
+    elif systemctl is-active --quiet php8.3-fpm 2>/dev/null; then
+        systemctl restart php8.3-fpm
+        log_ok "PHP-FPM 8.3 redemarre"
+    elif systemctl is-active --quiet php8.2-fpm 2>/dev/null; then
+        systemctl restart php8.2-fpm
+        log_ok "PHP-FPM 8.2 redemarre"
     elif systemctl is-active --quiet php-fpm 2>/dev/null; then
         systemctl restart php-fpm
+        log_ok "PHP-FPM redemarre"
+    else
+        log_warn "PHP-FPM non trouve — redemarrage manuel necessaire"
     fi
-    log_ok "PHP-FPM redemarre"
 }
 
 setup_supervisor() {
