@@ -1,143 +1,105 @@
 <!DOCTYPE html>
-<html lang="fr" class="h-full">
+<html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Inscription - {{ config('app.name') }}</title>
+    <title>Créer un compte — {{ config('hostclient.company_name', 'HostClient') }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    <script src="https://unpkg.com/lucide@latest"></script>
 </head>
-<body class="h-full bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-    <div class="min-h-screen flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-        <div class="sm:mx-auto sm:w-full sm:max-w-md">
-            <div class="flex justify-center">
-                <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
-                    <i data-lucide="cloud" class="w-8 h-8 text-white"></i>
-                </div>
+<body>
+<div class="hc-auth-page">
+    <div class="hc-auth-side">
+        <a href="{{ route('home') }}" class="hc-brand hc-brand-light">
+            <div class="hc-brand-mark">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M3 12 L12 3 L21 12 M5 10 V21 H19 V10"/>
+                </svg>
             </div>
-            <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900 dark:text-white">
-                {{ config('hostclient.company_name', config('app.name')) }}
-            </h2>
-            <p class="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
-                Créez votre compte et commencez dès maintenant
-            </p>
+            <span>{{ config('hostclient.company_name', 'HostClient') }}</span>
+        </a>
+
+        <div>
+            <h2>Rejoignez {{ config('hostclient.company_name', 'HostClient') }} en quelques secondes.</h2>
+            <p>Créez votre compte gratuitement et lancez votre premier service.</p>
+            <ul class="hc-auth-side-features" style="list-style: none; padding: 0;">
+                <li>Inscription gratuite, sans engagement</li>
+                <li>Déploiement en moins de 2 minutes</li>
+                <li>Support technique 24/7</li>
+                <li>Migration offerte sur demande</li>
+            </ul>
         </div>
 
-        <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-            <div class="bg-white dark:bg-gray-800 py-8 px-4 shadow-2xl sm:rounded-2xl sm:px-10 border border-gray-200 dark:border-gray-700">
-                @if ($errors->any())
-                    <div class="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-                        <div class="flex items-start">
-                            <i data-lucide="alert-circle" class="w-5 h-5 text-red-600 dark:text-red-400 mr-3 mt-0.5 flex-shrink-0"></i>
-                            <div>
-                                @foreach ($errors->all() as $error)
-                                    <p class="text-sm text-red-600 dark:text-red-400">{{ $error }}</p>
-                                @endforeach
-                            </div>
-                        </div>
-                    </div>
-                @endif
+        <p style="font-size: var(--hc-text-sm); color: rgba(255,255,255,0.6);">
+            © {{ date('Y') }} {{ config('hostclient.company_name', 'HostClient') }}
+        </p>
+    </div>
 
-                <form method="POST" action="{{ route('register') }}" class="space-y-5">
-                    @csrf
+    <div class="hc-auth-form-side">
+        <div class="hc-auth-form">
+            <h1>Créer un compte</h1>
+            <p class="hc-auth-subtitle">Quelques informations pour démarrer.</p>
 
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label for="first_name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                <i data-lucide="user" class="w-4 h-4 inline mr-1"></i>
-                                Prénom
-                            </label>
-                            <input id="first_name" type="text" name="first_name" value="{{ old('first_name') }}"
-                                class="appearance-none block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition"
-                                placeholder="Jean" required>
-                        </div>
-                        <div>
-                            <label for="last_name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                Nom
-                            </label>
-                            <input id="last_name" type="text" name="last_name" value="{{ old('last_name') }}"
-                                class="appearance-none block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition"
-                                placeholder="Dupont" required>
-                        </div>
-                    </div>
+            @if($errors->any())
+                <x-alert type="danger">
+                    {{ $errors->first() }}
+                </x-alert>
+            @endif
 
-                    <div>
-                        <label for="email" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            <i data-lucide="mail" class="w-4 h-4 inline mr-1"></i>
-                            Adresse email
-                        </label>
-                        <input id="email" type="email" name="email" value="{{ old('email') }}"
-                            class="appearance-none block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition"
-                            placeholder="vous@exemple.com" required>
-                    </div>
+            <form method="POST" action="{{ route('register') }}">
+                @csrf
 
-                    <div>
-                        <label for="password" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            <i data-lucide="lock" class="w-4 h-4 inline mr-1"></i>
-                            Mot de passe
-                        </label>
-                        <input id="password" type="password" name="password"
-                            class="appearance-none block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition"
-                            placeholder="••••••••" required>
-                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Minimum 8 caractères</p>
-                    </div>
+                <x-form-input
+                    label="Nom complet"
+                    name="name"
+                    required
+                    placeholder="Jean Dupont"
+                    :value="old('name')"
+                    autocomplete="name"
+                />
 
-                    <div>
-                        <label for="password_confirmation" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            <i data-lucide="check-circle" class="w-4 h-4 inline mr-1"></i>
-                            Confirmer le mot de passe
-                        </label>
-                        <input id="password_confirmation" type="password" name="password_confirmation"
-                            class="appearance-none block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition"
-                            placeholder="••••••••" required>
-                    </div>
+                <x-form-input
+                    label="Adresse e-mail"
+                    name="email"
+                    type="email"
+                    required
+                    placeholder="vous@exemple.com"
+                    :value="old('email')"
+                    autocomplete="email"
+                />
 
-                    <div class="flex items-start">
-                        <input type="checkbox" name="terms" required class="w-4 h-4 mt-0.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
-                        <label class="ml-2 text-sm text-gray-600 dark:text-gray-400">
-                            J'accepte les <a href="#" class="text-blue-600 hover:underline">conditions d'utilisation</a> 
-                            et la <a href="#" class="text-blue-600 hover:underline">politique de confidentialité</a>
-                        </label>
-                    </div>
+                <x-form-input
+                    label="Mot de passe"
+                    name="password"
+                    type="password"
+                    required
+                    placeholder="Minimum 8 caractères"
+                    autocomplete="new-password"
+                />
 
-                    <button type="submit" class="w-full flex justify-center items-center px-4 py-3 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition transform hover:scale-105">
-                        <i data-lucide="user-plus" class="w-4 h-4 mr-2"></i>
-                        Créer mon compte
-                    </button>
-                </form>
+                <x-form-input
+                    label="Confirmer le mot de passe"
+                    name="password_confirmation"
+                    type="password"
+                    required
+                    placeholder="••••••••"
+                    autocomplete="new-password"
+                />
 
-                <div class="mt-6">
-                    <div class="relative">
-                        <div class="absolute inset-0 flex items-center">
-                            <div class="w-full border-t border-gray-300 dark:border-gray-600"></div>
-                        </div>
-                        <div class="relative flex justify-center text-sm">
-                            <span class="px-2 bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400">
-                                Déjà client ?
-                            </span>
-                        </div>
-                    </div>
+                <label style="display: flex; align-items: flex-start; gap: var(--hc-space-2); margin-bottom: var(--hc-space-6); font-size: var(--hc-text-sm); color: var(--hc-text-muted);">
+                    <input type="checkbox" name="terms" required style="margin-top: 3px;">
+                    <span>J'accepte les <a href="#" style="color: var(--hc-primary);">CGV</a> et la <a href="#" style="color: var(--hc-primary);">politique de confidentialité</a>.</span>
+                </label>
 
-                    <div class="mt-6">
-                        <a href="{{ route('login') }}" class="w-full flex justify-center items-center px-4 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-lg shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition">
-                            <i data-lucide="log-in" class="w-4 h-4 mr-2"></i>
-                            Se connecter
-                        </a>
-                    </div>
-                </div>
-            </div>
+                <x-button type="submit" variant="primary" size="lg" style="width: 100%;">
+                    Créer mon compte
+                </x-button>
+            </form>
 
-            <div class="mt-6 text-center">
-                <a href="{{ route('home') }}" class="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white flex items-center justify-center">
-                    <i data-lucide="arrow-left" class="w-4 h-4 mr-2"></i>
-                    Retour à l'accueil
-                </a>
+            <div class="hc-auth-footer">
+                Déjà un compte ? <a href="{{ route('login') }}">Se connecter</a>
             </div>
         </div>
     </div>
-
-    <script>
-        lucide.createIcons();
-    </script>
+</div>
 </body>
 </html>
