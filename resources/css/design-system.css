@@ -25,12 +25,20 @@
 
   /* === Semantic === */
   --hc-success: #10b981;
+  --hc-success-50: #ecfdf5;
+  --hc-success-100: #d1fae5;
   --hc-success-bg: #d1fae5;
   --hc-warning: #f59e0b;
+  --hc-warning-50: #fffbeb;
+  --hc-warning-100: #fef3c7;
   --hc-warning-bg: #fef3c7;
   --hc-danger: #ef4444;
+  --hc-danger-50: #fef2f2;
+  --hc-danger-100: #fee2e2;
   --hc-danger-bg: #fee2e2;
   --hc-info: #3b82f6;
+  --hc-info-50: #eff6ff;
+  --hc-info-100: #dbeafe;
   --hc-info-bg: #dbeafe;
 
   /* === Surfaces === */
@@ -239,11 +247,16 @@ body {
   border: 1px solid var(--hc-border);
   border-radius: var(--hc-radius-lg);
   padding: var(--hc-space-5);
+  transition: box-shadow var(--hc-transition), transform var(--hc-transition);
+}
+.hc-stat:hover {
+  box-shadow: var(--hc-shadow-md);
 }
 .hc-stat-label {
   font-size: var(--hc-text-sm);
   color: var(--hc-text-muted);
   margin-bottom: var(--hc-space-2);
+  font-weight: 500;
 }
 .hc-stat-value {
   font-size: var(--hc-text-3xl);
@@ -746,4 +759,192 @@ body {
 
 @media (min-width: 1024px) {
   .hc-auth-side { display: flex; }
+}
+
+/* ============================================================
+   Page Header (ClientXMS-style)
+   ============================================================ */
+.hc-page-header {
+  margin-bottom: var(--hc-space-6);
+}
+.hc-page-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--hc-space-4);
+  flex-wrap: wrap;
+}
+.hc-page-header-title h2 {
+  font-size: var(--hc-text-2xl);
+  font-weight: 700;
+  margin: 0;
+  color: var(--hc-text);
+  letter-spacing: -0.01em;
+}
+.hc-page-header-title p {
+  margin: var(--hc-space-1) 0 0;
+  color: var(--hc-text-muted);
+  font-size: var(--hc-text-sm);
+}
+.hc-page-header-actions {
+  display: flex;
+  gap: var(--hc-space-2);
+  flex-wrap: wrap;
+}
+
+.hc-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: var(--hc-space-2);
+  font-size: var(--hc-text-sm);
+  color: var(--hc-text-muted);
+  margin-bottom: var(--hc-space-3);
+}
+.hc-breadcrumb a {
+  color: var(--hc-text-muted);
+  text-decoration: none;
+  transition: color var(--hc-transition);
+}
+.hc-breadcrumb a:hover { color: var(--hc-primary); }
+.hc-breadcrumb .hc-breadcrumb-sep {
+  color: var(--hc-gray-300);
+}
+.hc-breadcrumb .hc-breadcrumb-current {
+  color: var(--hc-text);
+  font-weight: 500;
+}
+
+/* ============================================================
+   Filters Bar (ClientXMS-style)
+   ============================================================ */
+.hc-filters {
+  display: flex;
+  gap: var(--hc-space-3);
+  flex-wrap: wrap;
+  align-items: end;
+  padding: var(--hc-space-4);
+}
+.hc-filters-field {
+  flex: 1;
+  min-width: 180px;
+}
+.hc-filters-field-fixed {
+  flex: 0 0 auto;
+  min-width: 140px;
+}
+.hc-filters-actions {
+  display: flex;
+  gap: var(--hc-space-2);
+  align-items: end;
+}
+
+/* ============================================================
+   Info Grid (ClientXMS-style detail layout)
+   ============================================================ */
+.hc-info-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: var(--hc-space-6);
+}
+@media (max-width: 1024px) {
+  .hc-info-grid { grid-template-columns: 1fr; }
+}
+
+/* ============================================================
+   Definition List (info card)
+   ============================================================ */
+.hc-dl {
+  margin: 0;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0;
+  font-size: var(--hc-text-sm);
+}
+.hc-dl-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--hc-space-3) 0;
+  border-bottom: 1px solid var(--hc-border);
+  gap: var(--hc-space-3);
+}
+.hc-dl-row:last-child { border-bottom: none; }
+.hc-dl-label {
+  color: var(--hc-text-muted);
+  font-weight: 500;
+}
+.hc-dl-value {
+  font-weight: 600;
+  color: var(--hc-text);
+  text-align: right;
+  word-break: break-word;
+}
+
+/* ============================================================
+   User Avatar (ClientXMS-style)
+   ============================================================ */
+.hc-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: var(--hc-text-sm);
+  flex-shrink: 0;
+}
+.hc-avatar-sm { width: 28px; height: 28px; font-size: var(--hc-text-xs); }
+.hc-avatar-lg { width: 56px; height: 56px; font-size: var(--hc-text-lg); }
+.hc-avatar-primary { background: var(--hc-primary-50); color: var(--hc-primary); }
+.hc-avatar-success { background: var(--hc-success-50); color: var(--hc-success); }
+.hc-avatar-warning { background: var(--hc-warning-50); color: var(--hc-warning); }
+.hc-avatar-danger  { background: var(--hc-danger-50);  color: var(--hc-danger);  }
+.hc-avatar-neutral { background: var(--hc-gray-100);   color: var(--hc-gray-700); }
+
+/* ============================================================
+   Activity Feed
+   ============================================================ */
+.hc-activity-item {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--hc-space-3);
+  padding: var(--hc-space-3) var(--hc-space-5);
+  border-bottom: 1px solid var(--hc-border);
+}
+.hc-activity-item:last-child { border-bottom: none; }
+.hc-activity-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--hc-primary-50);
+  color: var(--hc-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.hc-activity-icon svg { width: 16px; height: 16px; }
+
+/* ============================================================
+   Empty state refinement
+   ============================================================ */
+.hc-empty-state {
+  padding: var(--hc-space-12) var(--hc-space-6);
+  text-align: center;
+}
+.hc-empty-state .hc-empty-icon {
+  font-size: 48px;
+  margin-bottom: var(--hc-space-4);
+  opacity: 0.7;
+}
+.hc-empty-state h3 {
+  font-size: var(--hc-text-lg);
+  font-weight: 600;
+  margin: 0 0 var(--hc-space-2);
+}
+.hc-empty-state p {
+  color: var(--hc-text-muted);
+  font-size: var(--hc-text-sm);
+  margin: 0 0 var(--hc-space-4);
 }

@@ -1,22 +1,32 @@
 @props([
     'title' => null,
+    'subtitle' => null,
     'actions' => null,
     'padding' => true,
+    'breadcrumb' => null,
 ])
 
-<div {{ $attributes->merge(['class' => 'hc-card']) }} style="margin-bottom: var(--hc-space-6);">
-    @if($title || $actions)
-        <div style="display: flex; align-items: center; justify-content: space-between; padding: var(--hc-space-5) var(--hc-space-6); border-bottom: 1px solid var(--hc-border); gap: var(--hc-space-4); flex-wrap: wrap;">
-            @if($title)
-                <h2 style="font-size: var(--hc-text-lg); font-weight: 600; margin: 0;">{{ $title }}</h2>
-            @endif
-            @if($actions)
-                <div style="display: flex; gap: var(--hc-space-2);">
-                    {{ $actions }}
-                </div>
-            @endif
+<div {{ $attributes->merge(['class' => 'hc-page-header']) }}>
+    @if($breadcrumb)
+        <div class="hc-breadcrumb">
+            {{ $breadcrumb }}
         </div>
     @endif
+    <div class="hc-page-header-row">
+        <div class="hc-page-header-title">
+            @if($title)
+                <h2>{{ $title }}</h2>
+                @if($subtitle)
+                    <p>{{ $subtitle }}</p>
+                @endif
+            @endif
+        </div>
+        @if($actions)
+            <div class="hc-page-header-actions">
+                {{ $actions }}
+            </div>
+        @endif
+    </div>
 
     <div class="{{ $padding ? 'hc-card-body' : '' }}">
         {{ $slot }}
