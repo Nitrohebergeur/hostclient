@@ -366,11 +366,28 @@ SQL
 install_php_deps() {
     log_step "Installation des dependances PHP (Composer)"
     cd "$INSTALL_DIR"
+
+    log_info "Resolution des dependances..."
+
     if [ "$APP_ENV" = "production" ]; then
-        composer install --no-dev --optimize-autoloader --no-interaction --quiet
+        composer install --no-dev --optimize-autoloader --no-interaction 2>&1 || {
+            log_warn "Echec standard, tentative avec --ignore-platform-reqs..."
+            composer install --no-dev --optimize-autoloader --no-interaction --ignore-platform-reqs 2>&1 || {
+                log_err "Echec de l'installation des dependances PHP."
+                log_err "Verifiez votre connexion ou les versions dans composer.json"
+                exit 1
+            }
+        }
     else
-        composer install --optimize-autoloader --no-interaction --quiet
+        composer install --optimize-autoloader --no-interaction 2>&1 || {
+            log_warn "Echec standard, tentative avec --ignore-platform-reqs..."
+            composer install --optimize-autoloader --no-interaction --ignore-platform-reqs 2>&1 || {
+                log_err "Echec de l'installation des dependances PHP."
+                exit 1
+            }
+        }
     fi
+
     log_ok "Dependances PHP installees"
 }
 

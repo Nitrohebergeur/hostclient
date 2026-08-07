@@ -12,7 +12,7 @@ use ZipArchive;
 
 class AutoUpdateService
 {
-    protected string $githubRepo = 'hostclient/hostclient';
+    protected string $githubRepo = 'Nitrohebergeur/hostclient';
     protected string $tempPath;
     protected string $backupPath;
 
