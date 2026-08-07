@@ -285,16 +285,91 @@ php artisan view:cache
 # ============================================================
 print_step "Configuration de Nginx"
 
-cat > /etc/nginx/sites-available/hostclient <<EOFNGINX
+# Vérifier si un certificat SSL existe
+SSL_EXISTS=false
+if [ -f "/etc/letsencrypt/live/${DOMAIN}/fullchain.pem" ]; then
+    SSL_EXISTS=true
+    print_info "Certificat SSL détecté pour ${DOMAIN}"
+fi
+
+# Configuration avec SSL si disponible
+if [ "$SSL_EXISTS" = true ]; then
+    cat > /etc/nginx/sites-available/hostclient <<EOFNGINX
 server {
     listen 80;
+    listen [::]:80;
     server_name ${DOMAIN};
+    return 301 https://\$server_name\$request_uri;
+}
+
+server {
+    listen 443 ssl http2;
+    listen [::]:443 ssl http2;
+    server_name ${DOMAIN};
+
     root $(pwd)/public;
-    index index.php;
+    index index.php index.html;
     charset utf-8;
 
-    add_header X-Frame-Options "SAMEORIGIN";
-    add_header X-Content-Type-Options "nosniff";
+    # SSL Configuration
+    ssl_certificate /etc/letsencrypt/live/${DOMAIN}/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/${DOMAIN}/privkey.pem;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers HIGH:!aNULL:!MD5;
+    ssl_prefer_server_ciphers on;
+    ssl_session_cache shared:SSL:10m;
+    ssl_session_timeout 10m;
+
+    # Security Headers
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-XSS-Protection "1; mode=block" always;
+    add_header Referrer-Policy "no-referrer-when-downgrade" always;
+
+    # Logs
+    access_log /var/log/nginx/${DOMAIN}-access.log;
+    error_log /var/log/nginx/${DOMAIN}-error.log;
+
+    location / {
+        try_files \$uri \$uri/ /index.php?\$query_string;
+    }
+
+    location = /favicon.ico { access_log off; log_not_found off; }
+    location = /robots.txt  { access_log off; log_not_found off; }
+    error_page 404 /index.php;
+
+    location ~ \.php$ {
+        fastcgi_pass unix:/var/run/php/php8.2-fpm.sock;
+        fastcgi_param SCRIPT_FILENAME \$realpath_root\$fastcgi_script_name;
+        include fastcgi_params;
+        fastcgi_hide_header X-Powered-By;
+    }
+
+    location ~ /\.(?!well-known).* {
+        deny all;
+    }
+}
+EOFNGINX
+    print_success "Configuration Nginx avec SSL créée"
+else
+    # Configuration HTTP seulement
+    cat > /etc/nginx/sites-available/hostclient <<EOFNGINX
+server {
+    listen 80;
+    listen [::]:80;
+    server_name ${DOMAIN};
+
+    root $(pwd)/public;
+    index index.php index.html;
+    charset utf-8;
+
+    # Security Headers
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-Content-Type-Options "nosniff" always;
+
+    # Logs
+    access_log /var/log/nginx/${DOMAIN}-access.log;
+    error_log /var/log/nginx/${DOMAIN}-error.log;
 
     location / {
         try_files \$uri \$uri/ /index.php?\$query_string;
@@ -315,15 +390,22 @@ server {
     }
 }
 EOFNGINX
+    print_success "Configuration Nginx (HTTP) créée"
+fi
 
 ln -sf /etc/nginx/sites-available/hostclient /etc/nginx/sites-enabled/hostclient
 rm -f /etc/nginx/sites-enabled/default
-nginx -t
-systemctl restart nginx
-systemctl restart php8.2-fpm
-systemctl enable nginx php8.2-fpm
 
-print_success "Nginx configuré pour ${DOMAIN}"
+# Test et redémarrage
+if nginx -t 2>&1; then
+    systemctl restart nginx
+    systemctl restart php8.2-fpm
+    systemctl enable nginx php8.2-fpm
+    print_success "Nginx configuré pour ${DOMAIN}"
+else
+    print_error "Erreur dans la configuration Nginx"
+    exit 1
+fi
 
 # ============================================================
 # 8. Cron
