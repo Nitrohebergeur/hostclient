@@ -500,6 +500,20 @@ Dossier    : $(pwd)
 EOFCREDS
 chmod 600 "${CREDS_FILE}"
 
+# Sauvegarde .env
+cp .env ".env.backup.$(date +%Y%m%d_%H%M%S)"
+chmod 600 .env
+
+# ============================================================
+# 10. Optimisation finale
+# ============================================================
+print_step "Optimisation finale"
+php artisan optimize:clear 2>/dev/null || true
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
+print_success "Optimisations appliquées"
+
 # ============================================================
 # 10. Résumé final
 # ============================================================
