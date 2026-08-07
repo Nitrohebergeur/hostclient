@@ -344,6 +344,36 @@ body {
   height: 72px;
   gap: var(--hc-space-8);
 }
+
+/* Topbar (minimal) */
+.hc-topbar {
+  background: var(--hc-bg-elevated);
+  border-bottom: 1px solid var(--hc-border);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  backdrop-filter: saturate(180%) blur(8px);
+}
+.hc-topbar-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 64px;
+}
+.hc-topbar-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--hc-space-3);
+  font-weight: 700;
+  font-size: var(--hc-text-base);
+  color: var(--hc-text);
+  text-decoration: none;
+}
+.hc-topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--hc-space-2);
+}
 .hc-brand {
   display: inline-flex;
   align-items: center;
