@@ -290,10 +290,23 @@ print_success "Permissions corrigées"
 
 # NPM + build
 print_info "Installation des dépendances JavaScript..."
-npm install --silent
-npm install @tailwindcss/vite --save-dev --silent
-print_info "Compilation des assets..."
+npm install
+# Installer @tailwindcss/vite explicitement (requis par vite.config.js)
+npm install @tailwindcss/vite tailwindcss --save-dev
+print_info "Compilation des assets Vite..."
 npm run build
+
+# Vérifier que le manifest Vite existe (critique pour Laravel)
+if [ ! -f "public/build/manifest.json" ]; then
+    print_error "Le manifest Vite n'a pas été généré. Nouvelle tentative..."
+    npm install @tailwindcss/vite tailwindcss --save-dev
+    npm run build
+    if [ ! -f "public/build/manifest.json" ]; then
+        print_error "Échec de la compilation des assets. Vérifiez les erreurs npm ci-dessus."
+        exit 1
+    fi
+fi
+print_success "Assets compilés (manifest.json généré)"
 print_success "Assets compilés"
 
 # ============================================================
