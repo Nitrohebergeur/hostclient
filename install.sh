@@ -598,3 +598,65 @@ setup_cron() {
         log_ok "Cron configure dans $CRON_FILE"
     fi
 }
+
+print_success() {
+    local DOMAIN
+    DOMAIN=$(echo "$APP_URL" | sed 's|https\?://||' | sed 's|/.*||')
+
+    echo ""
+    echo -e "${GREEN}${BOLD}"
+    echo "  ╔══════════════════════════════════════════════════════════╗"
+    echo "  ║                                                          ║"
+    echo "  ║   HostClient installe avec succes !                      ║"
+    echo "  ║                                                          ║"
+    echo "  ╚══════════════════════════════════════════════════════════╝"
+    echo -e "${NC}"
+    echo -e "  ${BOLD}Acces a votre application :${NC}"
+    echo -e "  Site       : ${CYAN}${APP_URL}${NC}"
+    echo -e "  Admin      : ${CYAN}${APP_URL}/admin/dashboard${NC}"
+    echo -e "  Email      : ${CYAN}${ADMIN_EMAIL}${NC}"
+    echo -e "  Mot de passe : ${YELLOW}(celui que vous avez saisi)${NC}"
+    echo ""
+    echo -e "  ${BOLD}Fichiers importants :${NC}"
+    echo -e "  Installation  : ${CYAN}${INSTALL_DIR}${NC}"
+    echo -e "  Configuration : ${CYAN}${INSTALL_DIR}/.env${NC}"
+    echo -e "  Logs          : ${CYAN}${INSTALL_DIR}/storage/logs${NC}"
+    echo -e "  Nginx         : ${CYAN}/etc/nginx/sites-available/hostclient${NC}"
+    echo -e "  Supervisor    : ${CYAN}/etc/supervisor/conf.d/hostclient.conf${NC}"
+    echo ""
+    echo -e "  ${BOLD}Commandes utiles :${NC}"
+    echo -e "  ${CYAN}php artisan cache:clear${NC}       # Vider le cache"
+    echo -e "  ${CYAN}supervisorctl status${NC}          # Etat des workers"
+    echo -e "  ${CYAN}systemctl status nginx${NC}        # Etat de Nginx"
+    echo ""
+    echo -e "  ${BOLD}Prochaines etapes :${NC}"
+    echo -e "  1. Pointez votre DNS vers ce serveur"
+    echo -e "  2. SSL : ${CYAN}certbot --nginx -d ${DOMAIN}${NC}"
+    echo ""
+    echo -e "  ${YELLOW}Support : https://github.com/Nitrohebergeur/hostclient/issues${NC}"
+    echo ""
+}
+
+# ── Point d'entree ─────────────────────────────────────────────────────────────
+main() {
+    clear
+    print_banner
+    check_root
+    detect_os
+    check_dependencies
+    collect_config
+    clone_repository
+    setup_env
+    setup_database
+    install_php_deps
+    install_node_deps
+    run_migrations
+    setup_storage
+    optimize_app
+    setup_nginx
+    setup_supervisor
+    setup_cron
+    print_success
+}
+
+main "$@"
