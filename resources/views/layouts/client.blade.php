@@ -1,240 +1,184 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" x-data="{ darkMode: false }" :class="{ 'dark': darkMode }">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-
-    <title>{{ config('app.name', 'HostClient') }} - @yield('title', 'Dashboard')</title>
-
-    <!-- Fonts -->
-    <link rel="preconnect" href="https://rsms.me/">
-    <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
+    <title>{{ config('hostclient.company_name', 'HostClient') }} — @yield('title', 'Espace client')</title>
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    @stack('styles')
+    <script src="https://unpkg.com/lucide@latest"></script>
+    @livewireStyles
 </head>
-<body class="font-sans antialiased">
-    <div class="min-h-screen bg-gray-50 dark:bg-gray-900">
-        <!-- Navigation -->
-        <nav class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-50" x-data="{ mobileMenuOpen: false }">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="flex justify-between h-16">
-                    <!-- Logo -->
-                    <div class="flex items-center">
-                        <a href="{{ route('client.dashboard') }}" class="flex items-center space-x-2">
-                            <div class="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-                                <i data-lucide="server" class="w-5 h-5 text-white"></i>
-                            </div>
-                            <span class="text-xl font-bold text-gray-900 dark:text-white hidden sm:block">
-                                {{ config('hostclient.company_name', config('app.name')) }}
-                            </span>
-                        </a>
-                    </div>
+<body>
 
-                    <!-- Desktop Navigation -->
-                    <div class="hidden md:flex md:items-center md:space-x-1">
-                        <a href="{{ route('client.dashboard') }}" class="flex items-center px-3 py-2 text-sm font-medium rounded-lg {{ request()->routeIs('client.dashboard') ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
-                            <i data-lucide="home" class="w-4 h-4 mr-2"></i>
-                            Tableau de bord
-                        </a>
-                        <a href="{{ route('client.services.index') }}" class="flex items-center px-3 py-2 text-sm font-medium rounded-lg {{ request()->routeIs('client.services.*') ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
-                            <i data-lucide="server" class="w-4 h-4 mr-2"></i>
-                            Services
-                        </a>
-                        <a href="{{ route('client.invoices.index') }}" class="flex items-center px-3 py-2 text-sm font-medium rounded-lg {{ request()->routeIs('client.invoices.*') ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
-                            <i data-lucide="file-text" class="w-4 h-4 mr-2"></i>
-                            Factures
-                            @if(isset($unpaidInvoicesCount) && $unpaidInvoicesCount > 0)
-                                <span class="ml-2 bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">{{ $unpaidInvoicesCount }}</span>
-                            @endif
-                        </a>
-                        <a href="{{ route('client.tickets.index') }}" class="flex items-center px-3 py-2 text-sm font-medium rounded-lg {{ request()->routeIs('client.tickets.*') ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
-                            <i data-lucide="message-circle" class="w-4 h-4 mr-2"></i>
-                            Support
-                        </a>
-                        <a href="{{ route('store.index') }}" class="flex items-center px-3 py-2 text-sm font-medium rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
-                            <i data-lucide="shopping-cart" class="w-4 h-4 mr-2"></i>
-                            Boutique
-                        </a>
-                    </div>
+<div style="display: flex; min-height: 100vh; background: var(--hc-bg);">
 
-                    <!-- Right Side -->
-                    <div class="flex items-center space-x-2">
-                        <!-- Balance -->
-                        <div class="hidden sm:flex items-center px-3 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg">
-                            <i data-lucide="wallet" class="w-4 h-4 mr-2 text-gray-500 dark:text-gray-400"></i>
-                            <span class="text-sm font-medium text-gray-900 dark:text-white">
-                                {{ number_format(auth()->user()->balance, 2) }} {{ auth()->user()->currency }}
-                            </span>
-                        </div>
-
-                        <!-- Dark Mode Toggle -->
-                        <button @click="darkMode = !darkMode" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
-                            <i data-lucide="sun" class="w-5 h-5 text-gray-500 dark:text-gray-400" x-show="!darkMode"></i>
-                            <i data-lucide="moon" class="w-5 h-5 text-gray-500 dark:text-gray-400" x-show="darkMode" style="display: none;"></i>
-                        </button>
-
-                        <!-- User Dropdown -->
-                        <div class="relative" x-data="{ open: false }">
-                            <button @click="open = !open" class="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
-                                <div class="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-                                    <span class="text-white font-medium text-sm">{{ substr(auth()->user()->first_name, 0, 1) }}</span>
-                                </div>
-                                <span class="hidden md:block text-sm font-medium text-gray-700 dark:text-gray-300">
-                                    {{ auth()->user()->first_name }}
-                                </span>
-                                <i data-lucide="chevron-down" class="w-4 h-4 text-gray-500 dark:text-gray-400 hidden md:block"></i>
-                            </button>
-
-                            <div x-show="open" @click.away="open = false" x-transition class="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-lg shadow-lg py-1 border border-gray-200 dark:border-gray-700">
-                                <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
-                                    <p class="text-sm font-medium text-gray-900 dark:text-white">
-                                        {{ auth()->user()->first_name }} {{ auth()->user()->last_name }}
-                                    </p>
-                                    <p class="text-xs text-gray-500 dark:text-gray-400 truncate">
-                                        {{ auth()->user()->email }}
-                                    </p>
-                                </div>
-
-                                <a href="{{ route('client.profile.edit') }}" class="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
-                                    <i data-lucide="user" class="w-4 h-4 mr-3"></i>
-                                    Mon profil
-                                </a>
-                                <a href="{{ route('client.api-keys.index') }}" class="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
-                                    <i data-lucide="key" class="w-4 h-4 mr-3"></i>
-                                    Clés API
-                                </a>
-
-                                @if(auth()->user()->hasRole('admin'))
-                                    <div class="border-t border-gray-200 dark:border-gray-700 my-1"></div>
-                                    <a href="{{ route('admin.dashboard') }}" class="flex items-center px-4 py-2 text-sm text-blue-600 dark:text-blue-400 hover:bg-gray-100 dark:hover:bg-gray-700">
-                                        <i data-lucide="shield" class="w-4 h-4 mr-3"></i>
-                                        Administration
-                                    </a>
-                                @endif
-
-                                <div class="border-t border-gray-200 dark:border-gray-700 my-1"></div>
-                                <form method="POST" action="{{ route('logout') }}">
-                                    @csrf
-                                    <button type="submit" class="flex items-center w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700">
-                                        <i data-lucide="log-out" class="w-4 h-4 mr-3"></i>
-                                        Déconnexion
-                                    </button>
-                                </form>
-                            </div>
-                        </div>
-
-                        <!-- Mobile menu button -->
-                        <button @click="mobileMenuOpen = !mobileMenuOpen" class="md:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
-                            <i data-lucide="menu" class="w-6 h-6 text-gray-500 dark:text-gray-400"></i>
-                        </button>
-                    </div>
+    {{-- Sidebar --}}
+    <aside style="width: 260px; background: var(--hc-bg-elevated); border-right: 1px solid var(--hc-border); display: flex; flex-direction: column; position: sticky; top: 0; height: 100vh; flex-shrink: 0;" class="hc-sidebar">
+        {{-- Logo --}}
+        <div style="padding: var(--hc-space-5) var(--hc-space-6); border-bottom: 1px solid var(--hc-border);">
+            <a href="{{ route('client.dashboard') }}" class="hc-brand">
+                <div class="hc-brand-mark">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 12 L12 3 L21 12 M5 10 V21 H19 V10"/>
+                    </svg>
                 </div>
-            </div>
+                <span style="font-size: var(--hc-text-base);">{{ config('hostclient.company_name', 'HostClient') }}</span>
+            </a>
+        </div>
 
-            <!-- Mobile Navigation -->
-            <div x-show="mobileMenuOpen" @click.away="mobileMenuOpen = false" x-transition class="md:hidden border-t border-gray-200 dark:border-gray-700">
-                <div class="px-2 pt-2 pb-3 space-y-1">
-                    <a href="{{ route('client.dashboard') }}" class="flex items-center px-3 py-2 text-base font-medium rounded-lg {{ request()->routeIs('client.dashboard') ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
-                        <i data-lucide="home" class="w-5 h-5 mr-3"></i>
-                        Tableau de bord
-                    </a>
-                    <a href="{{ route('client.services.index') }}" class="flex items-center px-3 py-2 text-base font-medium rounded-lg {{ request()->routeIs('client.services.*') ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
-                        <i data-lucide="server" class="w-5 h-5 mr-3"></i>
-                        Services
-                    </a>
-                    <a href="{{ route('client.invoices.index') }}" class="flex items-center px-3 py-2 text-base font-medium rounded-lg {{ request()->routeIs('client.invoices.*') ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
-                        <i data-lucide="file-text" class="w-5 h-5 mr-3"></i>
-                        Factures
-                    </a>
-                    <a href="{{ route('client.tickets.index') }}" class="flex items-center px-3 py-2 text-base font-medium rounded-lg {{ request()->routeIs('client.tickets.*') ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
-                        <i data-lucide="message-circle" class="w-5 h-5 mr-3"></i>
-                        Support
-                    </a>
-                    <a href="{{ route('store.index') }}" class="flex items-center px-3 py-2 text-base font-medium rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
-                        <i data-lucide="shopping-cart" class="w-5 h-5 mr-3"></i>
-                        Boutique
-                    </a>
+        {{-- Navigation --}}
+        <nav style="flex: 1; padding: var(--hc-space-4); overflow-y: auto;">
+            <a href="{{ route('client.dashboard') }}" class="hc-nav-link {{ request()->routeIs('client.dashboard') ? 'hc-nav-link-active' : '' }}">
+                <i data-lucide="layout-dashboard" style="width: 18px; height: 18px;"></i>
+                <span>Tableau de bord</span>
+            </a>
+            <a href="{{ route('client.services.index') }}" class="hc-nav-link {{ request()->routeIs('client.services.*') ? 'hc-nav-link-active' : '' }}">
+                <i data-lucide="server" style="width: 18px; height: 18px;"></i>
+                <span>Mes services</span>
+            </a>
+            <a href="{{ route('client.orders.index') }}" class="hc-nav-link {{ request()->routeIs('client.orders.*') ? 'hc-nav-link-active' : '' }}">
+                <i data-lucide="package" style="width: 18px; height: 18px;"></i>
+                <span>Commandes</span>
+            </a>
+            <a href="{{ route('client.invoices.index') }}" class="hc-nav-link {{ request()->routeIs('client.invoices.*') ? 'hc-nav-link-active' : '' }}">
+                <i data-lucide="file-text" style="width: 18px; height: 18px;"></i>
+                <span>Factures</span>
+            </a>
+            <a href="{{ route('client.tickets.index') }}" class="hc-nav-link {{ request()->routeIs('client.tickets.*') ? 'hc-nav-link-active' : '' }}">
+                <i data-lucide="message-circle" style="width: 18px; height: 18px;"></i>
+                <span>Support</span>
+            </a>
 
-                    <!-- Balance (Mobile) -->
-                    <div class="sm:hidden flex items-center px-3 py-2 mt-3 bg-gray-100 dark:bg-gray-700 rounded-lg">
-                        <i data-lucide="wallet" class="w-5 h-5 mr-3 text-gray-500 dark:text-gray-400"></i>
-                        <span class="text-sm font-medium text-gray-900 dark:text-white">
-                            Solde: {{ number_format(auth()->user()->balance, 2) }} {{ auth()->user()->currency }}
-                        </span>
-                    </div>
-                </div>
+            <div style="margin-top: var(--hc-space-6); padding-top: var(--hc-space-4); border-top: 1px solid var(--hc-border);">
+                <a href="{{ route('store.index') }}" class="hc-nav-link">
+                    <i data-lucide="shopping-cart" style="width: 18px; height: 18px;"></i>
+                    <span>Boutique</span>
+                </a>
+                <a href="{{ route('client.api-keys.index') }}" class="hc-nav-link {{ request()->routeIs('client.api-keys.*') ? 'hc-nav-link-active' : '' }}">
+                    <i data-lucide="key" style="width: 18px; height: 18px;"></i>
+                    <span>Clés API</span>
+                </a>
             </div>
         </nav>
 
-        <!-- Flash Messages -->
-        @if(session('success') || session('error') || session('warning') || session('info'))
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-                @if(session('success'))
-                    <div class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-800 dark:text-green-200 px-4 py-3 rounded-lg flex items-start" x-data="{ show: true }" x-show="show">
-                        <i data-lucide="check-circle" class="w-5 h-5 mr-3 mt-0.5 flex-shrink-0"></i>
-                        <div class="flex-1">{{ session('success') }}</div>
-                        <button @click="show = false" class="ml-4">
-                            <i data-lucide="x" class="w-4 h-4"></i>
-                        </button>
+        {{-- User block --}}
+        <div style="padding: var(--hc-space-4); border-top: 1px solid var(--hc-border);">
+            <div style="display: flex; align-items: center; gap: var(--hc-space-3); padding: var(--hc-space-3); background: var(--hc-gray-50); border-radius: var(--hc-radius);">
+                <div style="width: 36px; height: 36px; background: var(--hc-primary); color: var(--hc-text-inverse); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600;">
+                    {{ strtoupper(substr(auth()->user()->first_name ?? 'U', 0, 1)) }}
+                </div>
+                <div style="flex: 1; min-width: 0;">
+                    <div style="font-size: var(--hc-text-sm); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                        {{ auth()->user()->first_name }} {{ auth()->user()->last_name }}
                     </div>
-                @endif
-
-                @if(session('error'))
-                    <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-800 dark:text-red-200 px-4 py-3 rounded-lg flex items-start" x-data="{ show: true }" x-show="show">
-                        <i data-lucide="x-circle" class="w-5 h-5 mr-3 mt-0.5 flex-shrink-0"></i>
-                        <div class="flex-1">{{ session('error') }}</div>
-                        <button @click="show = false" class="ml-4">
-                            <i data-lucide="x" class="w-4 h-4"></i>
-                        </button>
-                    </div>
-                @endif
-
-                @if(session('warning'))
-                    <div class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 text-yellow-800 dark:text-yellow-200 px-4 py-3 rounded-lg flex items-start" x-data="{ show: true }" x-show="show">
-                        <i data-lucide="alert-triangle" class="w-5 h-5 mr-3 mt-0.5 flex-shrink-0"></i>
-                        <div class="flex-1">{{ session('warning') }}</div>
-                        <button @click="show = false" class="ml-4">
-                            <i data-lucide="x" class="w-4 h-4"></i>
-                        </button>
-                    </div>
-                @endif
-
-                @if(session('info'))
-                    <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 text-blue-800 dark:text-blue-200 px-4 py-3 rounded-lg flex items-start" x-data="{ show: true }" x-show="show">
-                        <i data-lucide="info" class="w-5 h-5 mr-3 mt-0.5 flex-shrink-0"></i>
-                        <div class="flex-1">{{ session('info') }}</div>
-                        <button @click="show = false" class="ml-4">
-                            <i data-lucide="x" class="w-4 h-4"></i>
-                        </button>
-                    </div>
-                @endif
-            </div>
-        @endif
-
-        <!-- Page Content -->
-        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            @yield('content')
-        </main>
-
-        <!-- Footer -->
-        <footer class="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 mt-12">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-                <div class="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
-                    <p class="text-sm text-gray-500 dark:text-gray-400">
-                        © {{ date('Y') }} {{ config('hostclient.company_name', config('app.name')) }}. Tous droits réservés.
-                    </p>
-                    <div class="flex space-x-6 text-sm text-gray-500 dark:text-gray-400">
-                        <a href="#" class="hover:text-gray-700 dark:hover:text-gray-300">Conditions d'utilisation</a>
-                        <a href="#" class="hover:text-gray-700 dark:hover:text-gray-300">Confidentialité</a>
-                        <a href="{{ route('client.tickets.create') }}" class="hover:text-gray-700 dark:hover:text-gray-300">Support</a>
+                    <div style="font-size: var(--hc-text-xs); color: var(--hc-text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                        {{ auth()->user()->email }}
                     </div>
                 </div>
             </div>
-        </footer>
-    </div>
+        </div>
+    </aside>
 
-    @stack('scripts')
+    {{-- Main --}}
+    <div style="flex: 1; display: flex; flex-direction: column; min-width: 0;">
+
+        {{-- Topbar --}}
+        <header style="background: var(--hc-bg-elevated); border-bottom: 1px solid var(--hc-border); padding: var(--hc-space-4) var(--hc-space-8); display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 30;">
+            <div>
+                <h1 style="font-size: var(--hc-text-xl); font-weight: 600; margin: 0;">@yield('title', 'Espace client')</h1>
+                @hasSection('subtitle')
+                    <p style="font-size: var(--hc-text-sm); color: var(--hc-text-muted); margin: 0;">@yield('subtitle')</p>
+                @endif
+            </div>
+
+            <div style="display: flex; align-items: center; gap: var(--hc-space-3);">
+                {{-- Balance pill --}}
+                <div style="display: flex; align-items: center; gap: var(--hc-space-2); padding: var(--hc-space-2) var(--hc-space-3); background: var(--hc-gray-50); border-radius: var(--hc-radius-full); font-size: var(--hc-text-sm);">
+                    <i data-lucide="wallet" style="width: 16px; height: 16px; color: var(--hc-text-muted);"></i>
+                    <span style="font-weight: 600;">{{ number_format(auth()->user()->balance ?? 0, 2) }} €</span>
+                </div>
+
+                {{-- User menu --}}
+                <div x-data="{ open: false }" style="position: relative;">
+                    <button @click="open = !open" style="background: transparent; border: none; padding: var(--hc-space-2); border-radius: var(--hc-radius); cursor: pointer; display: flex; align-items: center; gap: var(--hc-space-2);">
+                        <i data-lucide="chevron-down" style="width: 16px; height: 16px;"></i>
+                        <span style="font-size: var(--hc-text-sm); font-weight: 500;">Mon compte</span>
+                    </button>
+
+                    <div x-show="open" @click.away="open = false" x-transition style="position: absolute; right: 0; top: 100%; margin-top: var(--hc-space-2); background: var(--hc-bg-elevated); border: 1px solid var(--hc-border); border-radius: var(--hc-radius); box-shadow: var(--hc-shadow-lg); min-width: 220px; overflow: hidden;">
+                        <a href="{{ route('client.profile.edit') }}" style="display: flex; align-items: center; gap: var(--hc-space-3); padding: var(--hc-space-3) var(--hc-space-4); color: var(--hc-text); text-decoration: none; font-size: var(--hc-text-sm);">
+                            <i data-lucide="user" style="width: 16px; height: 16px;"></i>
+                            Mon profil
+                        </a>
+                        @if(auth()->user()->hasRole('admin'))
+                            <div style="border-top: 1px solid var(--hc-border);"></div>
+                            <a href="{{ route('admin.dashboard') }}" style="display: flex; align-items: center; gap: var(--hc-space-3); padding: var(--hc-space-3) var(--hc-space-4); color: var(--hc-primary); text-decoration: none; font-size: var(--hc-text-sm); font-weight: 500;">
+                                <i data-lucide="shield" style="width: 16px; height: 16px;"></i>
+                                Administration
+                            </a>
+                        @endif
+                        <div style="border-top: 1px solid var(--hc-border);"></div>
+                        <form method="POST" action="{{ route('logout') }}" style="margin: 0;">
+                            @csrf
+                            <button type="submit" style="display: flex; align-items: center; gap: var(--hc-space-3); padding: var(--hc-space-3) var(--hc-space-4); color: var(--hc-danger); background: transparent; border: none; width: 100%; text-align: left; cursor: pointer; font-size: var(--hc-text-sm);">
+                                <i data-lucide="log-out" style="width: 16px; height: 16px;"></i>
+                                Déconnexion
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        {{-- Flash messages --}}
+        @if(session('success') || session('error') || session('warning'))
+            <div style="padding: var(--hc-space-4) var(--hc-space-8);">
+                @if(session('success')) <x-alert type="success">{{ session('success') }}</x-alert> @endif
+                @if(session('error')) <x-alert type="danger">{{ session('error') }}</x-alert> @endif
+                @if(session('warning')) <x-alert type="warning">{{ session('warning') }}</x-alert> @endif
+            </div>
+        @endif
+
+        {{-- Page content --}}
+        <main style="padding: var(--hc-space-8); flex: 1;">
+            @yield('content')
+        </main>
+    </div>
+</div>
+
+@livewireScripts
+<script>lucide.createIcons();</script>
+<style>
+.hc-nav-link {
+    display: flex;
+    align-items: center;
+    gap: var(--hc-space-3);
+    padding: var(--hc-space-3);
+    color: var(--hc-text-muted);
+    text-decoration: none;
+    border-radius: var(--hc-radius);
+    font-size: var(--hc-text-sm);
+    font-weight: 500;
+    margin-bottom: 2px;
+    transition: background var(--hc-transition), color var(--hc-transition);
+}
+.hc-nav-link:hover {
+    background: var(--hc-gray-50);
+    color: var(--hc-text);
+}
+.hc-nav-link-active {
+    background: var(--hc-primary-50);
+    color: var(--hc-primary);
+}
+.hc-nav-link-active:hover {
+    background: var(--hc-primary-100);
+    color: var(--hc-primary-dark);
+}
+@media (max-width: 768px) {
+    .hc-sidebar { display: none !important; }
+}
+</style>
 </body>
 </html>

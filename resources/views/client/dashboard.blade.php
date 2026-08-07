@@ -1,292 +1,128 @@
-@extends('layouts.client-simple')
+@extends('layouts.client')
 
-@section('title', 'Dashboard')
+@section('title', 'Tableau de bord')
+@section('subtitle', 'Aperçu de vos services et de votre facturation')
 
 @section('content')
-    <!-- Welcome Section -->
-    <div class="bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl shadow-2xl p-8 mb-8 text-white">
-        <h1 class="text-4xl font-bold mb-2">Bienvenue, {{ auth()->user()->first_name }} !</h1>
-        <p class="text-blue-100 text-lg">Gérez vos services, factures et tickets depuis votre tableau de bord.</p>
+    {{-- Welcome --}}
+    <div style="background: linear-gradient(135deg, var(--hc-primary), #6366f1); color: var(--hc-text-inverse); padding: var(--hc-space-8); border-radius: var(--hc-radius-lg); margin-bottom: var(--hc-space-8);">
+        <h2 style="font-size: var(--hc-text-3xl); font-weight: 700; margin: 0 0 var(--hc-space-2) 0;">Bonjour, {{ auth()->user()->first_name }} 👋</h2>
+        <p style="margin: 0; opacity: 0.9;">Voici un aperçu de vos services et de votre facturation.</p>
     </div>
 
-    <!-- Quick Stats -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <!-- Active Services -->
-        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 border border-gray-200 dark:border-gray-700">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Services Actifs</p>
-                    <p class="text-4xl font-bold text-gray-900 dark:text-white mt-2">
-                        {{ $stats['active_services'] ?? 0 }}
-                    </p>
-                </div>
-                <div class="text-5xl">🖥️</div>
-            </div>
-            <a href="{{ route('client.services.index') }}" class="text-sm text-blue-600 hover:underline mt-3 block">
-                Voir mes services →
-            </a>
-        </div>
-
-        <!-- Unpaid Invoices -->
-        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 border border-gray-200 dark:border-gray-700">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Factures Impayées</p>
-                    <p class="text-4xl font-bold text-gray-900 dark:text-white mt-2">
-                        {{ $stats['unpaid_invoices'] ?? 0 }}
-                    </p>
-                </div>
-                <div class="text-5xl">📄</div>
-            </div>
-            <a href="{{ route('client.invoices.index') }}" class="text-sm text-blue-600 hover:underline mt-3 block">
-                Voir mes factures →
-            </a>
-        </div>
-
-        <!-- Open Tickets -->
-        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 border border-gray-200 dark:border-gray-700">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Tickets Ouverts</p>
-                    <p class="text-4xl font-bold text-gray-900 dark:text-white mt-2">
-                        {{ $stats['open_tickets'] ?? 0 }}
-                    </p>
-                </div>
-                <div class="text-5xl">💬</div>
-            </div>
-            <a href="{{ route('client.tickets.index') }}" class="text-sm text-blue-600 hover:underline mt-3 block">
-                Voir mes tickets →
-            </a>
-        </div>
-
-        <!-- Account Balance -->
-        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 border border-gray-200 dark:border-gray-700">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Solde du Compte</p>
-                    <p class="text-4xl font-bold text-gray-900 dark:text-white mt-2">
-                        {{ number_format(auth()->user()->balance ?? 0, 2) }} €
-                    </p>
-                </div>
-                <div class="text-5xl">💰</div>
-            </div>
-            <button class="text-sm text-blue-600 hover:underline mt-3 block">
-                Recharger →
-            </button>
-        </div>
+    {{-- Stats --}}
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: var(--hc-space-4); margin-bottom: var(--hc-space-8);">
+        <x-stat label="Services actifs" :value="$stats['active_services'] ?? 0" />
+        <x-stat label="Factures impayées" :value="$stats['unpaid_invoices'] ?? 0" />
+        <x-stat label="Tickets ouverts" :value="$stats['open_tickets'] ?? 0" />
+        <x-stat label="Solde du compte" :value="number_format(auth()->user()->balance ?? 0, 2) . ' €'" />
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <!-- Recent Services -->
-        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700">
-            <div class="p-6 border-b border-gray-200 dark:border-gray-700">
-                <h2 class="text-xl font-bold text-gray-900 dark:text-white">Mes Services</h2>
-            </div>
-            <div class="p-6 space-y-4">
+    {{-- Two columns --}}
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--hc-space-6);">
+        {{-- Recent services --}}
+        <x-card header="Mes services récents" :padding="false">
+            <div style="padding: var(--hc-space-5);">
                 @forelse($recentServices ?? [] as $service)
-                    <div class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                        <div class="flex items-center space-x-3">
-                            <div class="text-3xl">🖥️</div>
+                    <div style="display: flex; align-items: center; justify-content: space-between; padding: var(--hc-space-3) 0; {{ !$loop->last ? 'border-bottom: 1px solid var(--hc-border);' : '' }}">
+                        <div style="display: flex; align-items: center; gap: var(--hc-space-3);">
+                            <div style="width: 40px; height: 40px; background: var(--hc-primary-50); color: var(--hc-primary); border-radius: var(--hc-radius); display: flex; align-items: center; justify-content: center;">
+                                <i data-lucide="server" style="width: 20px; height: 20px;"></i>
+                            </div>
                             <div>
-                                <p class="text-sm font-medium text-gray-900 dark:text-white">{{ $service->name }}</p>
-                                <p class="text-xs text-gray-500 dark:text-gray-400">{{ $service->billing_cycle ?? 'Mensuel' }}</p>
+                                <div style="font-weight: 600; font-size: var(--hc-text-sm);">{{ $service->name }}</div>
+                                <div style="font-size: var(--hc-text-xs); color: var(--hc-text-muted);">{{ $service->product->name ?? '' }}</div>
                             </div>
                         </div>
-                        <span class="px-3 py-1 rounded-full text-xs font-medium {{ $service->status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800' }}">
+                        <x-badge :variant="$service->status === 'active' ? 'success' : 'neutral'">
                             {{ ucfirst($service->status) }}
-                        </span>
+                        </x-badge>
                     </div>
                 @empty
-                    <div class="text-center py-12">
-                        <div class="text-6xl mb-4">📦</div>
-                        <p class="text-gray-500 dark:text-gray-400 mb-4">Vous n'avez pas encore de service</p>
-                        <a href="{{ route('store.index') }}" class="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold">
-                            🛒 Commander un service
-                        </a>
-                    </div>
+                    <x-empty-state
+                        title="Aucun service actif"
+                        description="Découvrez nos offres d'hébergement et lancez votre premier service."
+                        icon="📦"
+                    >
+                        <x-button :href="route('store.index')" variant="primary">Voir la boutique</x-button>
+                    </x-empty-state>
                 @endforelse
             </div>
-        </div>
+            @if(($recentServices ?? collect())->count() > 0)
+                <div style="padding: var(--hc-space-3) var(--hc-space-5); border-top: 1px solid var(--hc-border); text-align: center;">
+                    <a href="{{ route('client.services.index') }}" style="color: var(--hc-primary); font-size: var(--hc-text-sm); font-weight: 500;">
+                        Voir tous mes services →
+                    </a>
+                </div>
+            @endif
+        </x-card>
 
-        <!-- Recent Invoices -->
-        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700">
-            <div class="p-6 border-b border-gray-200 dark:border-gray-700">
-                <h2 class="text-xl font-bold text-gray-900 dark:text-white">Mes Factures</h2>
-            </div>
-            <div class="p-6 space-y-4">
+        {{-- Recent invoices --}}
+        <x-card header="Mes factures récentes" :padding="false">
+            <div style="padding: var(--hc-space-5);">
                 @forelse($recentInvoices ?? [] as $invoice)
-                    <div class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                        <div class="flex items-center space-x-3">
-                            <div class="text-3xl">📄</div>
+                    <div style="display: flex; align-items: center; justify-content: space-between; padding: var(--hc-space-3) 0; {{ !$loop->last ? 'border-bottom: 1px solid var(--hc-border);' : '' }}">
+                        <div style="display: flex; align-items: center; gap: var(--hc-space-3);">
+                            <div style="width: 40px; height: 40px; background: var(--hc-info-bg); color: var(--hc-info); border-radius: var(--hc-radius); display: flex; align-items: center; justify-content: center;">
+                                <i data-lucide="file-text" style="width: 20px; height: 20px;"></i>
+                            </div>
                             <div>
-                                <p class="text-sm font-medium text-gray-900 dark:text-white">{{ $invoice->invoice_number }}</p>
-                                <p class="text-xs text-gray-500 dark:text-gray-400">Échéance: {{ $invoice->due_date ? $invoice->due_date->format('d/m/Y') : 'N/A' }}</p>
+                                <div style="font-weight: 600; font-size: var(--hc-text-sm);">{{ $invoice->invoice_number }}</div>
+                                <div style="font-size: var(--hc-text-xs); color: var(--hc-text-muted);">
+                                    Échéance : {{ $invoice->due_date?->format(config('hostclient.date_format', 'd/m/Y')) ?? 'N/A' }}
+                                </div>
                             </div>
                         </div>
-                        <div class="text-right">
-                            <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ number_format($invoice->total ?? 0, 2) }} €</p>
-                            <span class="text-xs px-2 py-1 rounded-full {{ $invoice->status === 'paid' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
+                        <div style="text-align: right;">
+                            <div style="font-weight: 600; font-size: var(--hc-text-sm);">{{ number_format($invoice->total ?? 0, 2) }} €</div>
+                            <x-badge :variant="$invoice->status === 'paid' ? 'success' : 'danger'">
                                 {{ $invoice->status === 'paid' ? 'Payée' : 'Impayée' }}
-                            </span>
+                            </x-badge>
                         </div>
                     </div>
                 @empty
-                    <div class="text-center py-12">
-                        <div class="text-6xl mb-4">📭</div>
-                        <p class="text-gray-500 dark:text-gray-400">Aucune facture pour le moment</p>
-                    </div>
+                    <x-empty-state
+                        title="Aucune facture"
+                        description="Vos factures apparaîtront ici dès qu'une commande sera passée."
+                        icon="📭"
+                    />
                 @endforelse
             </div>
-        </div>
-    </div>
-@endsection
-    <!-- Welcome Section -->
-    <div class="bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg shadow-lg p-8 mb-8 text-white">
-        <h1 class="text-3xl font-bold mb-2">Bienvenue, {{ auth()->user()->first_name }} !</h1>
-        <p class="text-blue-100">Gérez vos services, factures et tickets de support depuis votre tableau de bord.</p>
-    </div>
-
-    <!-- Quick Stats -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <!-- Active Services -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Services Actifs</p>
-                    <p class="text-3xl font-bold text-gray-900 dark:text-white mt-2">
-                        {{ $stats['active_services'] ?? 0 }}
-                    </p>
+            @if(($recentInvoices ?? collect())->count() > 0)
+                <div style="padding: var(--hc-space-3) var(--hc-space-5); border-top: 1px solid var(--hc-border); text-align: center;">
+                    <a href="{{ route('client.invoices.index') }}" style="color: var(--hc-primary); font-size: var(--hc-text-sm); font-weight: 500;">
+                        Voir toutes mes factures →
+                    </a>
                 </div>
-                <div class="w-12 h-12 bg-green-100 dark:bg-green-900/20 rounded-lg flex items-center justify-center">
-                    <i data-lucide="server" class="w-6 h-6 text-green-600 dark:text-green-400"></i>
-                </div>
-            </div>
-            <a href="{{ route('client.services.index') }}" class="text-sm text-blue-600 dark:text-blue-400 hover:underline mt-3 block">
-                Voir mes services →
-            </a>
-        </div>
-
-        <!-- Unpaid Invoices -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Factures Impayées</p>
-                    <p class="text-3xl font-bold text-gray-900 dark:text-white mt-2">
-                        {{ $stats['unpaid_invoices'] ?? 0 }}
-                    </p>
-                </div>
-                <div class="w-12 h-12 bg-red-100 dark:bg-red-900/20 rounded-lg flex items-center justify-center">
-                    <i data-lucide="file-text" class="w-6 h-6 text-red-600 dark:text-red-400"></i>
-                </div>
-            </div>
-            <a href="{{ route('client.invoices.index') }}" class="text-sm text-blue-600 dark:text-blue-400 hover:underline mt-3 block">
-                Voir mes factures →
-            </a>
-        </div>
-
-        <!-- Open Tickets -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Tickets Ouverts</p>
-                    <p class="text-3xl font-bold text-gray-900 dark:text-white mt-2">
-                        {{ $stats['open_tickets'] ?? 0 }}
-                    </p>
-                </div>
-                <div class="w-12 h-12 bg-orange-100 dark:bg-orange-900/20 rounded-lg flex items-center justify-center">
-                    <i data-lucide="message-circle" class="w-6 h-6 text-orange-600 dark:text-orange-400"></i>
-                </div>
-            </div>
-            <a href="{{ route('client.tickets.index') }}" class="text-sm text-blue-600 dark:text-blue-400 hover:underline mt-3 block">
-                Voir mes tickets →
-            </a>
-        </div>
-
-        <!-- Account Balance -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Solde du Compte</p>
-                    <p class="text-3xl font-bold text-gray-900 dark:text-white mt-2">
-                        {{ number_format(auth()->user()->balance, 2) }} €
-                    </p>
-                </div>
-                <div class="w-12 h-12 bg-blue-100 dark:bg-blue-900/20 rounded-lg flex items-center justify-center">
-                    <i data-lucide="wallet" class="w-6 h-6 text-blue-600 dark:text-blue-400"></i>
-                </div>
-            </div>
-            <button class="text-sm text-blue-600 dark:text-blue-400 hover:underline mt-3 block">
-                Recharger →
-            </button>
-        </div>
+            @endif
+        </x-card>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <!-- Recent Services -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow">
-            <div class="p-6 border-b border-gray-200 dark:border-gray-700">
-                <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Mes Services</h2>
-            </div>
-            <div class="p-6 space-y-4">
-                @forelse($recentServices ?? [] as $service)
-                    <div class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                        <div class="flex items-center space-x-3">
-                            <div class="w-10 h-10 bg-blue-100 dark:bg-blue-900/20 rounded-full flex items-center justify-center">
-                                <i data-lucide="server" class="w-5 h-5 text-blue-600 dark:text-blue-400"></i>
-                            </div>
-                            <div>
-                                <p class="text-sm font-medium text-gray-900 dark:text-white">{{ $service->name }}</p>
-                                <p class="text-xs text-gray-500 dark:text-gray-400">{{ $service->product->name }}</p>
-                            </div>
-                        </div>
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $service->status === 'active' ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300' : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300' }}">
-                            {{ ucfirst($service->status) }}
-                        </span>
-                    </div>
-                @empty
-                    <div class="text-center py-12">
-                        <i data-lucide="server" class="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-4"></i>
-                        <p class="text-gray-500 dark:text-gray-400 mb-4">Vous n'avez pas encore de service</p>
-                        <a href="{{ route('store.index') }}" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-                            <i data-lucide="shopping-cart" class="w-4 h-4 mr-2"></i>
-                            Commander un service
-                        </a>
-                    </div>
-                @endforelse
-            </div>
-        </div>
-
-        <!-- Recent Invoices -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow">
-            <div class="p-6 border-b border-gray-200 dark:border-gray-700">
-                <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Mes Factures</h2>
-            </div>
-            <div class="p-6 space-y-4">
-                @forelse($recentInvoices ?? [] as $invoice)
-                    <div class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                        <div class="flex items-center space-x-3">
-                            <div class="w-10 h-10 bg-purple-100 dark:bg-purple-900/20 rounded-full flex items-center justify-center">
-                                <i data-lucide="file-text" class="w-5 h-5 text-purple-600 dark:text-purple-400"></i>
-                            </div>
-                            <div>
-                                <p class="text-sm font-medium text-gray-900 dark:text-white">{{ $invoice->invoice_number }}</p>
-                                <p class="text-xs text-gray-500 dark:text-gray-400">Échéance: {{ $invoice->due_date->format('d/m/Y') }}</p>
-                            </div>
-                        </div>
-                        <div class="text-right">
-                            <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ number_format($invoice->total, 2) }} €</p>
-                            <span class="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full {{ $invoice->status === 'paid' ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300' : 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-300' }}">
-                                {{ $invoice->status === 'paid' ? 'Payée' : 'Impayée' }}
-                            </span>
-                        </div>
-                    </div>
-                @empty
-                    <div class="text-center py-12">
-                        <i data-lucide="file-text" class="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-4"></i>
-                        <p class="text-gray-500 dark:text-gray-400">Aucune facture pour le moment</p>
-                    </div>
-                @endforelse
-            </div>
+    {{-- Quick actions --}}
+    <div style="margin-top: var(--hc-space-8);">
+        <h3 style="font-size: var(--hc-text-lg); font-weight: 600; margin-bottom: var(--hc-space-4);">Actions rapides</h3>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: var(--hc-space-3);">
+            <x-button :href="route('store.index')" variant="primary">
+                <i data-lucide="shopping-cart" style="width: 16px; height: 16px;"></i>
+                Commander
+            </x-button>
+            <x-button :href="route('client.tickets.create')" variant="secondary">
+                <i data-lucide="message-circle" style="width: 16px; height: 16px;"></i>
+                Ouvrir un ticket
+            </x-button>
+            <x-button :href="route('client.profile.edit')" variant="secondary">
+                <i data-lucide="user" style="width: 16px; height: 16px;"></i>
+                Mon profil
+            </x-button>
         </div>
     </div>
+</div>
+
+<style>
+@media (max-width: 768px) {
+    main > div[style*="grid-template-columns: 1fr 1fr"] {
+        grid-template-columns: 1fr !important;
+    }
+}
+</style>
 @endsection
