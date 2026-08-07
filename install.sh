@@ -308,9 +308,10 @@ setup_env() {
 import re, sys
 key = sys.argv[1]
 val = sys.argv[2]
+# Toujours entourer la valeur de guillemets doubles pour les caracteres speciaux
 with open('.env', 'r') as f:
     content = f.read()
-content = re.sub(r'^' + re.escape(key) + r'=.*', key + '=' + val, content, flags=re.MULTILINE)
+content = re.sub(r'^' + re.escape(key) + r'=.*', key + '=\"' + val.replace('\"', '\\\\\"') + '\"', content, flags=re.MULTILINE)
 with open('.env', 'w') as f:
     f.write(content)
 " "$key" "$val"
