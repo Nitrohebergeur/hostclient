@@ -1,223 +1,109 @@
 @extends('layouts.app')
 
-@section('title', $product->name)
+@section('title', $product->name . ' — ' . config('hostclient.company_name', 'HostClient'))
 
 @section('content')
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    <!-- Breadcrumb -->
-    <nav class="flex mb-8" aria-label="Breadcrumb">
-        <ol class="inline-flex items-center space-x-1 md:space-x-3">
-            <li>
-                <a href="{{ route('store.index') }}" class="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white">
-                    Boutique
-                </a>
-            </li>
-            <li>
-                <div class="flex items-center">
-                    <i data-lucide="chevron-right" class="w-4 h-4 text-gray-400 mx-1"></i>
-                    <a href="{{ route('store.category', $category) }}" class="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white">
-                        {{ $category->name }}
-                    </a>
-                </div>
-            </li>
-            <li>
-                <div class="flex items-center">
-                    <i data-lucide="chevron-right" class="w-4 h-4 text-gray-400 mx-1"></i>
-                    <span class="text-gray-500 dark:text-gray-400">{{ $product->name }}</span>
-                </div>
-            </li>
-        </ol>
+<div class="hc-container" style="padding-top: var(--hc-space-8); padding-bottom: var(--hc-space-16);">
+
+    {{-- Breadcrumb --}}
+    <nav style="margin-bottom: var(--hc-space-6); font-size: var(--hc-text-sm);">
+        <a href="{{ route('store.index') }}" style="color: var(--hc-text-muted);">Boutique</a>
+        <span style="color: var(--hc-text-subtle); margin: 0 var(--hc-space-2);">/</span>
+        <a href="{{ route('store.category', $category) }}" style="color: var(--hc-text-muted);">{{ $category->name }}</a>
+        <span style="color: var(--hc-text-subtle); margin: 0 var(--hc-space-2);">/</span>
+        <span style="color: var(--hc-text); font-weight: 500;">{{ $product->name }}</span>
     </nav>
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-12">
-        <!-- Product Details -->
-        <div class="lg:col-span-2">
-            <div class="card">
-                <div class="p-8">
-                    <div class="flex items-start justify-between mb-6">
-                        <div>
-                            <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-2">{{ $product->name }}</h1>
-                            <p class="text-gray-600 dark:text-gray-400">{{ $category->name }}</p>
-                        </div>
-                        
-                        @if(!$product->isInStock())
-                            <span class="badge badge-danger">En rupture</span>
-                        @elseif($product->is_featured)
-                            <span class="badge badge-success">Populaire</span>
-                        @endif
+    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: var(--hc-space-8);">
+        {{-- Détails --}}
+        <div>
+            <x-card>
+                <div style="display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: var(--hc-space-4);">
+                    <div>
+                        <h1 style="font-size: var(--hc-text-3xl); font-weight: 700; margin-bottom: var(--hc-space-2);">{{ $product->name }}</h1>
+                        <p style="color: var(--hc-text-muted); font-size: var(--hc-text-sm);">{{ $category->name }}</p>
                     </div>
-
-                    <div class="prose prose-gray dark:prose-invert max-w-none mb-8">
-                        {!! nl2br(e($product->description)) !!}
-                    </div>
-
-                    @if($product->features)
-                        <div class="mb-8">
-                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Fonctionnalités incluses</h3>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                @foreach($product->features as $feature)
-                                    <div class="flex items-center">
-                                        <i data-lucide="check" class="w-5 h-5 text-green-500 mr-3"></i>
-                                        <span class="text-gray-700 dark:text-gray-300">{{ $feature }}</span>
-                                    </div>
-                                @endforeach
-                            </div>
-                        </div>
+                    @if(!$product->isInStock())
+                        <x-badge variant="danger">En rupture</x-badge>
+                    @elseif($product->is_featured)
+                        <x-badge variant="success">Populaire</x-badge>
                     @endif
-
-                    <!-- Specifications -->
-                    <div class="border-t border-gray-200 dark:border-gray-700 pt-8">
-                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Spécifications</h3>
-                        <dl class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Type</dt>
-                                <dd class="text-sm text-gray-900 dark:text-white">{{ ucfirst($product->type) }}</dd>
-                            </div>
-                            <div>
-                                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Cycle de facturation</dt>
-                                <dd class="text-sm text-gray-900 dark:text-white">{{ ucfirst($product->billing_cycle) }}</dd>
-                            </div>
-                            @if($product->auto_setup)
-                                <div>
-                                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Configuration</dt>
-                                    <dd class="text-sm text-gray-900 dark:text-white">Automatique</dd>
-                                </div>
-                            @endif
-                            @if(!$product->is_unlimited_stock)
-                                <div>
-                                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Stock disponible</dt>
-                                    <dd class="text-sm text-gray-900 dark:text-white">{{ $product->stock }}</dd>
-                                </div>
-                            @endif
-                        </dl>
-                    </div>
                 </div>
-            </div>
+
+                <p style="font-size: var(--hc-text-base); color: var(--hc-text-muted); line-height: 1.6; margin-bottom: var(--hc-space-6);">
+                    {{ $product->description }}
+                </p>
+
+                @if($product->features && is_array($product->features) && count($product->features) > 0)
+                    <h3 style="font-size: var(--hc-text-lg); font-weight: 600; margin-bottom: var(--hc-space-3);">Caractéristiques</h3>
+                    <ul style="list-style: none; padding: 0; margin: 0;">
+                        @foreach($product->features as $feature)
+                            <li style="padding: var(--hc-space-2) 0; display: flex; align-items: center; gap: var(--hc-space-3);">
+                                <span style="color: var(--hc-success);">✓</span>
+                                <span>{{ $feature }}</span>
+                            </li>
+                        @endforeach
+                    </ul>
+                @endif
+            </x-card>
         </div>
 
-        <!-- Order Form -->
+        {{-- Sidebar commande --}}
         <div>
-            <div class="card sticky top-8">
-                <div class="p-6">
-                    <form action="{{ route('store.cart.add') }}" method="POST" x-data="orderForm()">
-                        @csrf
-                        <input type="hidden" name="product_id" value="{{ $product->id }}">
-
-                        <div class="text-center mb-6">
-                            <div class="text-3xl font-bold text-gray-900 dark:text-white" x-text="formatPrice(price)"></div>
-                            <div class="text-gray-500 dark:text-gray-400" x-text="'par ' + billingCycle"></div>
-                            
-                            @if($product->setup_fee > 0)
-                                <div class="text-sm text-gray-500 dark:text-gray-400 mt-2">
-                                    + {{ $product->setup_fee }}€ frais d'installation
-                                </div>
-                            @endif
+            <x-card>
+                <div style="margin-bottom: var(--hc-space-6);">
+                    <div style="font-size: var(--hc-text-4xl); font-weight: 800; line-height: 1;">
+                        {{ number_format($product->price, 2) }} €
+                    </div>
+                    <div style="color: var(--hc-text-muted); font-size: var(--hc-text-sm); margin-top: var(--hc-space-1);">
+                        HT / {{ $product->billing_cycle }}
+                    </div>
+                    @if($product->setup_fee > 0)
+                        <div style="color: var(--hc-text-muted); font-size: var(--hc-text-sm); margin-top: var(--hc-space-2);">
+                            + {{ number_format($product->setup_fee, 2) }} € de frais d'installation
                         </div>
-
-                        <!-- Billing Cycle -->
-                        <div class="mb-6">
-                            <label class="label">Cycle de facturation</label>
-                            <select name="billing_cycle" x-model="billingCycle" @change="updatePrice()" class="input">
-                                <option value="monthly">Mensuel</option>
-                                <option value="quarterly">Trimestriel (-5%)</option>
-                                <option value="semi_annually">Semestriel (-10%)</option>
-                                <option value="annually">Annuel (-15%)</option>
-                                <option value="biennially">Biennal (-20%)</option>
-                                <option value="triennially">Triennal (-25%)</option>
-                            </select>
-                        </div>
-
-                        <!-- Quantity -->
-                        <div class="mb-6">
-                            <label class="label">Quantité</label>
-                            <select name="quantity" class="input">
-                                @for($i = 1; $i <= min(10, $product->stock ?: 10); $i++)
-                                    <option value="{{ $i }}">{{ $i }}</option>
-                                @endfor
-                            </select>
-                        </div>
-
-                        <!-- Configuration Options -->
-                        @if($product->config)
-                            <div class="mb-6">
-                                <h4 class="font-medium text-gray-900 dark:text-white mb-3">Configuration</h4>
-                                @foreach($product->config as $key => $option)
-                                    <div class="mb-4">
-                                        <label class="label">{{ $option['label'] ?? ucfirst($key) }}</label>
-                                        @if($option['type'] === 'select')
-                                            <select name="config[{{ $key }}]" class="input">
-                                                @foreach($option['options'] as $value => $label)
-                                                    <option value="{{ $value }}">{{ $label }}</option>
-                                                @endforeach
-                                            </select>
-                                        @elseif($option['type'] === 'text')
-                                            <input type="text" name="config[{{ $key }}]" placeholder="{{ $option['placeholder'] ?? '' }}" class="input">
-                                        @endif
-                                    </div>
-                                @endforeach
-                            </div>
-                        @endif
-
-                        <!-- Add to Cart -->
-                        @if($product->isInStock())
-                            @auth
-                                <button type="submit" class="btn-primary w-full mb-3">
-                                    <i data-lucide="shopping-cart" class="w-4 h-4 mr-2"></i>
-                                    Ajouter au panier
-                                </button>
-                            @else
-                                <a href="{{ route('register') }}" class="btn-primary w-full mb-3 text-center block">
-                                    <i data-lucide="user-plus" class="w-4 h-4 mr-2"></i>
-                                    S'inscrire pour commander
-                                </a>
-                            @endauth
-                        @else
-                            <button type="button" disabled class="btn bg-gray-300 text-gray-500 cursor-not-allowed w-full mb-3">
-                                <i data-lucide="x-circle" class="w-4 h-4 mr-2"></i>
-                                Non disponible
-                            </button>
-                        @endif
-
-                        <!-- Support -->
-                        <div class="text-center">
-                            <a href="{{ auth() ? route('client.tickets.create') : route('login') }}" class="text-sm text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white">
-                                <i data-lucide="help-circle" class="w-4 h-4 inline mr-1"></i>
-                                Besoin d'aide ?
-                            </a>
-                        </div>
-                    </form>
+                    @endif
                 </div>
-            </div>
+
+                <form action="{{ route('store.cart.add') }}" method="POST">
+                    @csrf
+                    <input type="hidden" name="product_id" value="{{ $product->id }}">
+
+                    <x-form-select
+                        label="Cycle de facturation"
+                        name="billing_cycle"
+                        :options="['monthly' => 'Mensuel', 'yearly' => 'Annuel']"
+                        required
+                    />
+
+                    <x-form-input
+                        label="Quantité"
+                        name="quantity"
+                        type="number"
+                        :value="1"
+                        placeholder="1"
+                    />
+
+                    <x-button type="submit" variant="primary" size="lg" style="width: 100%;">
+                        Ajouter au panier
+                    </x-button>
+                </form>
+
+                <div style="margin-top: var(--hc-space-6); padding-top: var(--hc-space-6); border-top: 1px solid var(--hc-border); font-size: var(--hc-text-sm); color: var(--hc-text-muted);">
+                    <p style="margin-bottom: var(--hc-space-2);">✓ Activation immédiate</p>
+                    <p style="margin-bottom: var(--hc-space-2);">✓ Support 24/7 inclus</p>
+                    <p>✓ Migration gratuite sur demande</p>
+                </div>
+            </x-card>
         </div>
     </div>
 </div>
 
-@push('scripts')
-<script>
-function orderForm() {
-    return {
-        basePrice: {{ $product->price }},
-        billingCycle: '{{ $product->billing_cycle }}',
-        price: {{ $product->price }},
-        
-        updatePrice() {
-            const multipliers = {
-                monthly: 1,
-                quarterly: 3 * 0.95,
-                semi_annually: 6 * 0.9,
-                annually: 12 * 0.85,
-                biennially: 24 * 0.8,
-                triennially: 36 * 0.75
-            };
-            
-            this.price = Math.round(this.basePrice * (multipliers[this.billingCycle] || 1) * 100) / 100;
-        },
-        
-        formatPrice(price) {
-            return price.toFixed(2) + '€';
-        }
+<style>
+@media (max-width: 768px) {
+    .hc-container > div[style*="grid-template-columns: 2fr 1fr"] {
+        grid-template-columns: 1fr !important;
     }
 }
-</script>
-@endpush
+</style>
 @endsection
