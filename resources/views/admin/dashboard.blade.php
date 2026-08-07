@@ -1,245 +1,156 @@
 @extends('layouts.admin')
 
-@section('title', 'Dashboard Admin')
-@section('page-title', 'Tableau de bord')
+@section('title', 'Tableau de bord')
 
 @section('content')
     @if($customHtml && $customCss)
-        <!-- Page d'accueil personnalisée -->
-        <style>
-            {!! $customCss !!}
-        </style>
-        
-        <div class="custom-homepage-wrapper">
-            {!! $customHtml !!}
-        </div>
+        {{-- Page d'accueil personnalisée --}}
+        <style>{!! $customCss !!}</style>
+        <div class="custom-homepage-wrapper">{!! $customHtml !!}</div>
     @else
-        <!-- Dashboard par défaut -->
+        {{-- Dashboard par défaut --}}
 
-    <!-- Stats Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <!-- Total Clients -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Clients Totaux</p>
-                    <p class="text-3xl font-bold text-gray-900 dark:text-white mt-2">
-                        {{ $stats['total_clients'] ?? 0 }}
-                    </p>
-                    <p class="text-sm text-green-600 dark:text-green-400 mt-1">
-                        +{{ $stats['new_clients_this_month'] ?? 0 }} ce mois
-                    </p>
-                </div>
-                <div class="w-12 h-12 bg-blue-100 dark:bg-blue-900/20 rounded-lg flex items-center justify-center">
-                    <i data-lucide="users" class="w-6 h-6 text-blue-600 dark:text-blue-400"></i>
-                </div>
-            </div>
+        {{-- Stats principales --}}
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: var(--hc-space-4); margin-bottom: var(--hc-space-8);">
+            <x-stat label="Clients" :value="$stats['total_clients'] ?? 0" />
+            <x-stat label="Services actifs" :value="$stats['active_services'] ?? 0" />
+            <x-stat label="Revenu ce mois" :value="number_format($stats['monthly_revenue'] ?? 0, 2) . ' €'" />
+            <x-stat label="Tickets ouverts" :value="$stats['open_tickets'] ?? 0" />
         </div>
 
-        <!-- Active Services -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Services Actifs</p>
-                    <p class="text-3xl font-bold text-gray-900 dark:text-white mt-2">
-                        {{ $stats['active_services'] ?? 0 }}
-                    </p>
-                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                        {{ $stats['pending_services'] ?? 0 }} en attente
-                    </p>
+        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: var(--hc-space-6); margin-bottom: var(--hc-space-8);">
+            {{-- Chart revenus --}}
+            <x-card header="Revenus (30 derniers jours)">
+                <div style="height: 280px;">
+                    <canvas id="revenueChart"></canvas>
                 </div>
-                <div class="w-12 h-12 bg-green-100 dark:bg-green-900/20 rounded-lg flex items-center justify-center">
-                    <i data-lucide="server" class="w-6 h-6 text-green-600 dark:text-green-400"></i>
-                </div>
-            </div>
-        </div>
+            </x-card>
 
-        <!-- Revenue This Month -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Revenu ce mois</p>
-                    <p class="text-3xl font-bold text-gray-900 dark:text-white mt-2">
-                        {{ number_format($stats['revenue_this_month'] ?? 0, 2) }} €
-                    </p>
-                    <p class="text-sm text-green-600 dark:text-green-400 mt-1">
-                        +{{ $stats['revenue_growth'] ?? 0 }}% vs mois dernier
-                    </p>
-                </div>
-                <div class="w-12 h-12 bg-purple-100 dark:bg-purple-900/20 rounded-lg flex items-center justify-center">
-                    <i data-lucide="trending-up" class="w-6 h-6 text-purple-600 dark:text-purple-400"></i>
-                </div>
-            </div>
-        </div>
-
-        <!-- Pending Tickets -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Tickets Ouverts</p>
-                    <p class="text-3xl font-bold text-gray-900 dark:text-white mt-2">
-                        {{ $stats['open_tickets'] ?? 0 }}
-                    </p>
-                    <p class="text-sm text-orange-600 dark:text-orange-400 mt-1">
-                        {{ $stats['urgent_tickets'] ?? 0 }} urgents
-                    </p>
-                </div>
-                <div class="w-12 h-12 bg-orange-100 dark:bg-orange-900/20 rounded-lg flex items-center justify-center">
-                    <i data-lucide="message-circle" class="w-6 h-6 text-orange-600 dark:text-orange-400"></i>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        <!-- Revenue Chart -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Revenus (30 derniers jours)</h3>
-            <div class="h-64 flex items-center justify-center text-gray-400">
-                <canvas id="revenueChart"></canvas>
-            </div>
-        </div>
-
-        <!-- Recent Orders -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-            <div class="flex items-center justify-between mb-4">
-                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Commandes Récentes</h3>
-                <a href="{{ route('admin.orders.index') }}" class="text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400">
-                    Voir tout
-                </a>
-            </div>
-            <div class="space-y-3">
-                @forelse($recent_orders ?? [] as $order)
-                    <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                        <div class="flex items-center space-x-3">
-                            <div class="w-10 h-10 bg-blue-100 dark:bg-blue-900/20 rounded-full flex items-center justify-center">
-                                <i data-lucide="shopping-bag" class="w-5 h-5 text-blue-600 dark:text-blue-400"></i>
-                            </div>
+            {{-- Commandes récentes --}}
+            <x-card header="Commandes récentes" :padding="false">
+                <div style="padding: var(--hc-space-5);">
+                    @forelse($recentOrders ?? [] as $order)
+                        <div style="display: flex; align-items: center; justify-content: space-between; padding: var(--hc-space-3) 0; {{ !$loop->last ? 'border-bottom: 1px solid var(--hc-border);' : '' }}">
                             <div>
-                                <p class="text-sm font-medium text-gray-900 dark:text-white">{{ $order->order_number }}</p>
-                                <p class="text-xs text-gray-500 dark:text-gray-400">{{ $order->user->full_name }}</p>
+                                <div style="font-weight: 600; font-size: var(--hc-text-sm);">{{ $order->order_number }}</div>
+                                <div style="font-size: var(--hc-text-xs); color: var(--hc-text-muted);">{{ $order->user?->first_name ?? '—' }}</div>
+                            </div>
+                            <div style="text-align: right;">
+                                <div style="font-weight: 600; font-size: var(--hc-text-sm);">{{ number_format($order->total, 2) }} €</div>
+                                <x-badge :variant="$order->status === 'completed' ? 'success' : 'warning'">{{ ucfirst($order->status) }}</x-badge>
                             </div>
                         </div>
-                        <div class="text-right">
-                            <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ number_format($order->total, 2) }} €</p>
-                            <span class="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full {{ $order->status === 'completed' ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300' : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-300' }}">
-                                {{ ucfirst($order->status) }}
-                            </span>
-                        </div>
-                    </div>
-                @empty
-                    <p class="text-sm text-gray-500 dark:text-gray-400 text-center py-8">Aucune commande récente</p>
-                @endforelse
-            </div>
+                    @empty
+                        <x-empty-state title="Aucune commande" icon="📭" />
+                    @endforelse
+                </div>
+                <div style="padding: var(--hc-space-3) var(--hc-space-5); border-top: 1px solid var(--hc-border); text-align: center;">
+                    <a href="{{ route('admin.orders.index') }}" style="color: var(--hc-primary); font-size: var(--hc-text-sm); font-weight: 500;">
+                        Voir toutes les commandes →
+                    </a>
+                </div>
+            </x-card>
         </div>
-    </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <!-- Unpaid Invoices -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-            <div class="flex items-center justify-between mb-4">
-                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Factures Impayées</h3>
-                <a href="{{ route('admin.invoices.index') }}" class="text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400">
-                    Voir tout
-                </a>
-            </div>
-            <div class="space-y-3">
-                @forelse($unpaid_invoices ?? [] as $invoice)
-                    <div class="flex items-center justify-between p-3 bg-red-50 dark:bg-red-900/10 rounded-lg border border-red-200 dark:border-red-800/30">
-                        <div class="flex items-center space-x-3">
-                            <div class="w-10 h-10 bg-red-100 dark:bg-red-900/20 rounded-full flex items-center justify-center">
-                                <i data-lucide="file-text" class="w-5 h-5 text-red-600 dark:text-red-400"></i>
-                            </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--hc-space-6);">
+            {{-- Factures impayées --}}
+            <x-card header="Factures impayées" :padding="false">
+                <div style="padding: var(--hc-space-5);">
+                    @forelse($recent_invoices ?? ($recentInvoices ?? []) as $invoice)
+                        <div style="display: flex; align-items: center; justify-content: space-between; padding: var(--hc-space-3) 0; {{ !$loop->last ? 'border-bottom: 1px solid var(--hc-border);' : '' }}">
                             <div>
-                                <p class="text-sm font-medium text-gray-900 dark:text-white">{{ $invoice->invoice_number }}</p>
-                                <p class="text-xs text-gray-500 dark:text-gray-400">{{ $invoice->user->full_name }}</p>
+                                <div style="font-weight: 600; font-size: var(--hc-text-sm);">{{ $invoice->invoice_number }}</div>
+                                <div style="font-size: var(--hc-text-xs); color: var(--hc-text-muted);">{{ $invoice->user?->first_name ?? '—' }} · échéance {{ $invoice->due_date?->format('d/m/Y') ?? '—' }}</div>
+                            </div>
+                            <div style="text-align: right;">
+                                <div style="font-weight: 600; font-size: var(--hc-text-sm); color: var(--hc-danger);">{{ number_format($invoice->balance ?? 0, 2) }} €</div>
                             </div>
                         </div>
-                        <div class="text-right">
-                            <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ number_format($invoice->balance, 2) }} €</p>
-                            <p class="text-xs text-red-600 dark:text-red-400">Échéance: {{ $invoice->due_date->format('d/m/Y') }}</p>
+                    @empty
+                        <x-empty-state title="Aucune facture impayée" icon="✅" />
+                    @endforelse
+                </div>
+                <div style="padding: var(--hc-space-3) var(--hc-space-5); border-top: 1px solid var(--hc-border); text-align: center;">
+                    <a href="{{ route('admin.invoices.index') }}" style="color: var(--hc-primary); font-size: var(--hc-text-sm); font-weight: 500;">
+                        Voir toutes les factures →
+                    </a>
+                </div>
+            </x-card>
+
+            {{-- Tickets récents --}}
+            <x-card header="Tickets récents" :padding="false">
+                <div style="padding: var(--hc-space-5);">
+                    @forelse($recentTickets ?? [] as $ticket)
+                        <div style="display: flex; align-items: center; justify-content: space-between; padding: var(--hc-space-3) 0; {{ !$loop->last ? 'border-bottom: 1px solid var(--hc-border);' : '' }}">
+                            <div style="flex: 1; min-width: 0; margin-right: var(--hc-space-3);">
+                                <div style="font-weight: 600; font-size: var(--hc-text-sm); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ $ticket->subject }}</div>
+                                <div style="font-size: var(--hc-text-xs); color: var(--hc-text-muted);">{{ $ticket->user?->first_name ?? '—' }}</div>
+                            </div>
+                            <x-badge :variant="$ticket->priority === 'urgent' ? 'danger' : 'info'">
+                                {{ ucfirst($ticket->priority ?? 'normal') }}
+                            </x-badge>
                         </div>
-                    </div>
-                @empty
-                    <p class="text-sm text-gray-500 dark:text-gray-400 text-center py-8">Aucune facture impayée</p>
-                @endforelse
-            </div>
+                    @empty
+                        <x-empty-state title="Aucun ticket ouvert" icon="✅" />
+                    @endforelse
+                </div>
+                <div style="padding: var(--hc-space-3) var(--hc-space-5); border-top: 1px solid var(--hc-border); text-align: center;">
+                    <a href="{{ route('admin.tickets.index') }}" style="color: var(--hc-primary); font-size: var(--hc-text-sm); font-weight: 500;">
+                        Voir tous les tickets →
+                    </a>
+                </div>
+            </x-card>
         </div>
 
-        <!-- Recent Tickets -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-            <div class="flex items-center justify-between mb-4">
-                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Tickets Récents</h3>
-                <a href="{{ route('admin.tickets.index') }}" class="text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400">
-                    Voir tout
-                </a>
-            </div>
-            <div class="space-y-3">
-                @forelse($recent_tickets ?? [] as $ticket)
-                    <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                        <div class="flex items-center space-x-3">
-                            <div class="w-10 h-10 bg-orange-100 dark:bg-orange-900/20 rounded-full flex items-center justify-center">
-                                <i data-lucide="message-circle" class="w-5 h-5 text-orange-600 dark:text-orange-400"></i>
-                            </div>
-                            <div class="flex-1 min-w-0">
-                                <p class="text-sm font-medium text-gray-900 dark:text-white truncate">{{ $ticket->subject }}</p>
-                                <p class="text-xs text-gray-500 dark:text-gray-400">{{ $ticket->user->full_name }}</p>
-                            </div>
-                        </div>
-                        <div class="flex items-center space-x-2">
-                            <span class="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full {{ $ticket->priority === 'urgent' ? 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-300' : 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-300' }}">
-                                {{ ucfirst($ticket->priority) }}
-                            </span>
-                        </div>
-                    </div>
-                @empty
-                    <p class="text-sm text-gray-500 dark:text-gray-400 text-center py-8">Aucun ticket récent</p>
-                @endforelse
-            </div>
-        </div>
-    </div>
+        <style>
+        @media (max-width: 1024px) {
+            main > div[style*="grid-template-columns: 2fr 1fr"],
+            main > div[style*="grid-template-columns: 1fr 1fr"] {
+                grid-template-columns: 1fr !important;
+            }
+        }
+        </style>
     @endif
 @endsection
 
+@stack('scripts')
 @push('scripts')
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
-    // Revenue Chart
+(function () {
     const ctx = document.getElementById('revenueChart');
-    if (ctx) {
-        new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: @json($chart_labels ?? []),
-                datasets: [{
-                    label: 'Revenus',
-                    data: @json($chart_data ?? []),
-                    borderColor: 'rgb(59, 130, 246)',
-                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                    tension: 0.4,
-                    fill: true
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: false
-                    }
+    if (!ctx) return;
+
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: @json($revenueChart['labels'] ?? []),
+            datasets: [{
+                label: 'Revenus',
+                data: @json($revenueChart['data'] ?? []),
+                borderColor: '#0066ff',
+                backgroundColor: 'rgba(0, 102, 255, 0.1)',
+                tension: 0.4,
+                fill: true,
+                borderWidth: 2,
+                pointRadius: 3,
+                pointHoverRadius: 5,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: { callback: (v) => v + ' €' },
+                    grid: { color: '#e2e8f0' }
                 },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            callback: function(value) {
-                                return value + ' €';
-                            }
-                        }
-                    }
-                }
+                x: { grid: { display: false } }
             }
-        });
-    }
+        }
+    });
+})();
 </script>
 @endpush
