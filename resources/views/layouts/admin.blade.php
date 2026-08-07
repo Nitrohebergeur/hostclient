@@ -1,282 +1,177 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" x-data="{ darkMode: false }" :class="{ 'dark': darkMode }">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-
-    <title>{{ config('app.name', 'HostClient') }} - @yield('title', 'Admin')</title>
-
-    <!-- Fonts -->
-    <link rel="preconnect" href="https://rsms.me/">
-    <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
+    <title>{{ config('hostclient.company_name', 'HostClient') }} Admin — @yield('title', 'Dashboard')</title>
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <script src="https://unpkg.com/lucide@latest"></script>
+    @livewireStyles
     @stack('styles')
 </head>
-<body class="font-sans antialiased">
-    <div class="min-h-screen bg-gray-50 dark:bg-gray-900" x-data="{ sidebarOpen: true }">
-        <!-- Sidebar -->
-        <aside 
-            x-show="sidebarOpen" 
-            x-transition:enter="transition ease-out duration-200"
-            x-transition:enter-start="-translate-x-full"
-            x-transition:enter-end="translate-x-0"
-            x-transition:leave="transition ease-in duration-150"
-            x-transition:leave-start="translate-x-0"
-            x-transition:leave-end="-translate-x-full"
-            class="fixed inset-y-0 left-0 z-50 w-64 bg-white dark:bg-gray-800 shadow-lg transition-transform duration-200 lg:translate-x-0"
-        >
-            <!-- Logo -->
-            <div class="flex items-center justify-between h-16 px-6 border-b border-gray-200 dark:border-gray-700">
-                <a href="{{ route('admin.dashboard') }}" class="flex items-center space-x-2">
-                    <div class="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-                        <i data-lucide="server" class="w-5 h-5 text-white"></i>
-                    </div>
-                    <span class="text-xl font-bold text-gray-900 dark:text-white">Admin</span>
-                </a>
-                <button @click="sidebarOpen = false" class="lg:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
-                    <i data-lucide="x" class="w-5 h-5 text-gray-500 dark:text-gray-400"></i>
-                </button>
-            </div>
+<body>
 
-            <!-- Navigation -->
-            <nav class="flex-1 px-4 py-4 space-y-1 overflow-y-auto">
-                <!-- Dashboard -->
-                <a href="{{ route('admin.dashboard') }}" class="flex items-center px-4 py-3 text-sm font-medium rounded-lg {{ request()->routeIs('admin.dashboard') ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
-                    <i data-lucide="layout-dashboard" class="w-5 h-5 mr-3"></i>
-                    Tableau de bord
-                </a>
+<div style="display: flex; min-height: 100vh; background: var(--hc-bg);">
 
-                <!-- Clients -->
-                <div x-data="{ open: {{ request()->routeIs('admin.clients.*') ? 'true' : 'false' }} }">
-                    <button @click="open = !open" class="w-full flex items-center justify-between px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
-                        <div class="flex items-center">
-                            <i data-lucide="users" class="w-5 h-5 mr-3"></i>
-                            Clients
-                        </div>
-                        <i data-lucide="chevron-down" class="w-4 h-4 transition-transform" :class="{ 'rotate-180': open }"></i>
-                    </button>
-                    <div x-show="open" x-collapse class="ml-4 mt-1 space-y-1">
-                        <a href="{{ route('admin.clients.index') }}" class="block px-4 py-2 text-sm text-gray-600 dark:text-gray-400 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
-                            Tous les clients
-                        </a>
-                        <a href="{{ route('admin.clients.create') }}" class="block px-4 py-2 text-sm text-gray-600 dark:text-gray-400 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
-                            Ajouter un client
-                        </a>
-                    </div>
+    {{-- Sidebar --}}
+    <aside style="width: 260px; background: var(--hc-gray-900); color: var(--hc-gray-300); display: flex; flex-direction: column; position: sticky; top: 0; height: 100vh; flex-shrink: 0;" class="hc-sidebar">
+
+        {{-- Logo --}}
+        <div style="padding: var(--hc-space-5) var(--hc-space-6); border-bottom: 1px solid var(--hc-gray-800);">
+            <a href="{{ route('admin.dashboard') }}" style="display: flex; align-items: center; gap: var(--hc-space-3); text-decoration: none; color: var(--hc-text-inverse); font-weight: 700; font-size: var(--hc-text-base);">
+                <div style="width: 36px; height: 36px; background: var(--hc-primary); border-radius: var(--hc-radius); display: flex; align-items: center; justify-content: center;">
+                    <i data-lucide="shield" style="width: 20px; height: 20px; color: white;"></i>
                 </div>
-
-                <!-- Products & Services -->
-                <div x-data="{ open: {{ request()->routeIs('admin.products.*') || request()->routeIs('admin.categories.*') || request()->routeIs('admin.services.*') ? 'true' : 'false' }} }">
-                    <button @click="open = !open" class="w-full flex items-center justify-between px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
-                        <div class="flex items-center">
-                            <i data-lucide="package" class="w-5 h-5 mr-3"></i>
-                            Produits & Services
-                        </div>
-                        <i data-lucide="chevron-down" class="w-4 h-4 transition-transform" :class="{ 'rotate-180': open }"></i>
-                    </button>
-                    <div x-show="open" x-collapse class="ml-4 mt-1 space-y-1">
-                        <a href="{{ route('admin.products.index') }}" class="block px-4 py-2 text-sm text-gray-600 dark:text-gray-400 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
-                            Produits
-                        </a>
-                        <a href="{{ route('admin.categories.index') }}" class="block px-4 py-2 text-sm text-gray-600 dark:text-gray-400 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
-                            Catégories
-                        </a>
-                        <a href="{{ route('admin.services.index') }}" class="block px-4 py-2 text-sm text-gray-600 dark:text-gray-400 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
-                            Services actifs
-                        </a>
-                    </div>
-                </div>
-
-                <!-- Orders -->
-                <a href="{{ route('admin.orders.index') }}" class="flex items-center px-4 py-3 text-sm font-medium rounded-lg {{ request()->routeIs('admin.orders.*') ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
-                    <i data-lucide="shopping-bag" class="w-5 h-5 mr-3"></i>
-                    Commandes
-                </a>
-
-                <!-- Invoices -->
-                <a href="{{ route('admin.invoices.index') }}" class="flex items-center px-4 py-3 text-sm font-medium rounded-lg {{ request()->routeIs('admin.invoices.*') ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
-                    <i data-lucide="file-text" class="w-5 h-5 mr-3"></i>
-                    Factures
-                </a>
-
-                <!-- Transactions -->
-                <a href="{{ route('admin.transactions.index') }}" class="flex items-center px-4 py-3 text-sm font-medium rounded-lg {{ request()->routeIs('admin.transactions.*') ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
-                    <i data-lucide="credit-card" class="w-5 h-5 mr-3"></i>
-                    Transactions
-                </a>
-
-                <!-- Tickets -->
-                <a href="{{ route('admin.tickets.index') }}" class="flex items-center px-4 py-3 text-sm font-medium rounded-lg {{ request()->routeIs('admin.tickets.*') ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
-                    <i data-lucide="message-circle" class="w-5 h-5 mr-3"></i>
-                    Support
-                    @if(isset($openTicketsCount) && $openTicketsCount > 0)
-                        <span class="ml-auto bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full">{{ $openTicketsCount }}</span>
-                    @endif
-                </a>
-
-                <!-- Divider -->
-                <div class="border-t border-gray-200 dark:border-gray-700 my-4"></div>
-
-                <!-- Billing -->
-                <div x-data="{ open: {{ request()->routeIs('admin.payment-gateways.*') || request()->routeIs('admin.coupons.*') ? 'true' : 'false' }} }">
-                    <button @click="open = !open" class="w-full flex items-center justify-between px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
-                        <div class="flex items-center">
-                            <i data-lucide="dollar-sign" class="w-5 h-5 mr-3"></i>
-                            Facturation
-                        </div>
-                        <i data-lucide="chevron-down" class="w-4 h-4 transition-transform" :class="{ 'rotate-180': open }"></i>
-                    </button>
-                    <div x-show="open" x-collapse class="ml-4 mt-1 space-y-1">
-                        <a href="{{ route('admin.payment-gateways.index') }}" class="block px-4 py-2 text-sm text-gray-600 dark:text-gray-400 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
-                            Passerelles de paiement
-                        </a>
-                        <a href="{{ route('admin.coupons.index') }}" class="block px-4 py-2 text-sm text-gray-600 dark:text-gray-400 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
-                            Coupons
-                        </a>
-                    </div>
-                </div>
-
-                <!-- Modules -->
-                <a href="{{ route('admin.modules.index') }}" class="flex items-center px-4 py-3 text-sm font-medium rounded-lg {{ request()->routeIs('admin.modules.*') ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
-                    <i data-lucide="puzzle" class="w-5 h-5 mr-3"></i>
-                    Modules
-                </a>
-
-                <!-- System -->
-                <div x-data="{ open: {{ request()->routeIs('admin.settings.*') || request()->routeIs('admin.users.*') || request()->routeIs('admin.roles.*') || request()->routeIs('admin.activity.*') ? 'true' : 'false' }} }">
-                    <button @click="open = !open" class="w-full flex items-center justify-between px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
-                        <div class="flex items-center">
-                            <i data-lucide="settings" class="w-5 h-5 mr-3"></i>
-                            Système
-                        </div>
-                        <i data-lucide="chevron-down" class="w-4 h-4 transition-transform" :class="{ 'rotate-180': open }"></i>
-                    </button>
-                    <div x-show="open" x-collapse class="ml-4 mt-1 space-y-1">
-                        <a href="{{ route('admin.settings.index') }}" class="block px-4 py-2 text-sm text-gray-600 dark:text-gray-400 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
-                            Paramètres
-                        </a>
-                        <a href="{{ route('admin.users.index') }}" class="block px-4 py-2 text-sm text-gray-600 dark:text-gray-400 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
-                            Utilisateurs
-                        </a>
-                        <a href="{{ route('admin.roles.index') }}" class="block px-4 py-2 text-sm text-gray-600 dark:text-gray-400 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
-                            Rôles & Permissions
-                        </a>
-                        <a href="{{ route('admin.activity.index') }}" class="block px-4 py-2 text-sm text-gray-600 dark:text-gray-400 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
-                            Journal d'activité
-                        </a>
-                    </div>
-                </div>
-            </nav>
-
-            <!-- User Profile -->
-            <div class="border-t border-gray-200 dark:border-gray-700 p-4">
-                <div class="flex items-center space-x-3">
-                    <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-                        <span class="text-white font-medium">{{ substr(auth()->user()->first_name, 0, 1) }}</span>
-                    </div>
-                    <div class="flex-1 min-w-0">
-                        <p class="text-sm font-medium text-gray-900 dark:text-white truncate">
-                            {{ auth()->user()->first_name }} {{ auth()->user()->last_name }}
-                        </p>
-                        <p class="text-xs text-gray-500 dark:text-gray-400 truncate">
-                            {{ auth()->user()->email }}
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </aside>
-
-        <!-- Main Content -->
-        <div class="lg:pl-64">
-            <!-- Top Navigation -->
-            <header class="sticky top-0 z-40 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shadow-sm">
-                <div class="flex items-center justify-between h-16 px-6">
-                    <div class="flex items-center space-x-4">
-                        <button @click="sidebarOpen = !sidebarOpen" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 lg:hidden">
-                            <i data-lucide="menu" class="w-5 h-5 text-gray-500 dark:text-gray-400"></i>
-                        </button>
-                        <h1 class="text-xl font-semibold text-gray-900 dark:text-white">
-                            @yield('page-title', 'Dashboard')
-                        </h1>
-                    </div>
-
-                    <div class="flex items-center space-x-4">
-                        <!-- Dark Mode Toggle -->
-                        <button @click="darkMode = !darkMode" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
-                            <i data-lucide="sun" class="w-5 h-5 text-gray-500 dark:text-gray-400" x-show="!darkMode"></i>
-                            <i data-lucide="moon" class="w-5 h-5 text-gray-500 dark:text-gray-400" x-show="darkMode" style="display: none;"></i>
-                        </button>
-
-                        <!-- Client View -->
-                        <a href="{{ route('client.dashboard') }}" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700" title="Vue client">
-                            <i data-lucide="eye" class="w-5 h-5 text-gray-500 dark:text-gray-400"></i>
-                        </a>
-
-                        <!-- Logout -->
-                        <form method="POST" action="{{ route('logout') }}">
-                            @csrf
-                            <button type="submit" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700" title="Déconnexion">
-                                <i data-lucide="log-out" class="w-5 h-5 text-gray-500 dark:text-gray-400"></i>
-                            </button>
-                        </form>
-                    </div>
-                </div>
-            </header>
-
-            <!-- Flash Messages -->
-            @if(session('success') || session('error') || session('warning') || session('info'))
-                <div class="px-6 py-4">
-                    @if(session('success'))
-                        <div class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-800 dark:text-green-200 px-4 py-3 rounded-lg flex items-start" x-data="{ show: true }" x-show="show">
-                            <i data-lucide="check-circle" class="w-5 h-5 mr-3 mt-0.5 flex-shrink-0"></i>
-                            <div class="flex-1">{{ session('success') }}</div>
-                            <button @click="show = false" class="ml-4">
-                                <i data-lucide="x" class="w-4 h-4"></i>
-                            </button>
-                        </div>
-                    @endif
-
-                    @if(session('error'))
-                        <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-800 dark:text-red-200 px-4 py-3 rounded-lg flex items-start" x-data="{ show: true }" x-show="show">
-                            <i data-lucide="x-circle" class="w-5 h-5 mr-3 mt-0.5 flex-shrink-0"></i>
-                            <div class="flex-1">{{ session('error') }}</div>
-                            <button @click="show = false" class="ml-4">
-                                <i data-lucide="x" class="w-4 h-4"></i>
-                            </button>
-                        </div>
-                    @endif
-
-                    @if(session('warning'))
-                        <div class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 text-yellow-800 dark:text-yellow-200 px-4 py-3 rounded-lg flex items-start" x-data="{ show: true }" x-show="show">
-                            <i data-lucide="alert-triangle" class="w-5 h-5 mr-3 mt-0.5 flex-shrink-0"></i>
-                            <div class="flex-1">{{ session('warning') }}</div>
-                            <button @click="show = false" class="ml-4">
-                                <i data-lucide="x" class="w-4 h-4"></i>
-                            </button>
-                        </div>
-                    @endif
-
-                    @if(session('info'))
-                        <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 text-blue-800 dark:text-blue-200 px-4 py-3 rounded-lg flex items-start" x-data="{ show: true }" x-show="show">
-                            <i data-lucide="info" class="w-5 h-5 mr-3 mt-0.5 flex-shrink-0"></i>
-                            <div class="flex-1">{{ session('info') }}</div>
-                            <button @click="show = false" class="ml-4">
-                                <i data-lucide="x" class="w-4 h-4"></i>
-                            </button>
-                        </div>
-                    @endif
-                </div>
-            @endif
-
-            <!-- Page Content -->
-            <main class="p-6">
-                @yield('content')
-            </main>
+                <span>{{ config('hostclient.company_name', 'HostClient') }}<br><span style="font-size: var(--hc-text-xs); font-weight: 500; color: var(--hc-gray-400);">Console admin</span></span>
+            </a>
         </div>
-    </div>
 
-    @stack('scripts')
+        {{-- Nav --}}
+        <nav style="flex: 1; padding: var(--hc-space-4); overflow-y: auto;">
+            @php
+                $navGroups = [
+                    ['label' => null, 'items' => [
+                        ['route' => 'admin.dashboard', 'icon' => 'layout-dashboard', 'label' => 'Tableau de bord'],
+                    ]],
+                    ['label' => 'Clients & Ventes', 'items' => [
+                        ['route' => 'admin.clients.index', 'icon' => 'users', 'label' => 'Clients'],
+                        ['route' => 'admin.orders.index', 'icon' => 'shopping-bag', 'label' => 'Commandes'],
+                        ['route' => 'admin.invoices.index', 'icon' => 'file-text', 'label' => 'Factures'],
+                        ['route' => 'admin.transactions.index', 'icon' => 'credit-card', 'label' => 'Transactions'],
+                    ]],
+                    ['label' => 'Catalogue', 'items' => [
+                        ['route' => 'admin.products.index', 'icon' => 'package', 'label' => 'Produits'],
+                        ['route' => 'admin.categories.index', 'icon' => 'folder', 'label' => 'Catégories'],
+                        ['route' => 'admin.services.index', 'icon' => 'server', 'label' => 'Services'],
+                        ['route' => 'admin.coupons.index', 'icon' => 'ticket', 'label' => 'Coupons'],
+                    ]],
+                    ['label' => 'Support', 'items' => [
+                        ['route' => 'admin.tickets.index', 'icon' => 'message-circle', 'label' => 'Tickets'],
+                    ]],
+                    ['label' => 'Configuration', 'items' => [
+                        ['route' => 'admin.payment-gateways.index', 'icon' => 'wallet', 'label' => 'Paiement'],
+                        ['route' => 'admin.modules.index', 'icon' => 'puzzle', 'label' => 'Modules'],
+                        ['route' => 'admin.settings.index', 'icon' => 'settings', 'label' => 'Paramètres'],
+                        ['route' => 'admin.users.index', 'icon' => 'user-cog', 'label' => 'Utilisateurs'],
+                        ['route' => 'admin.roles.index', 'icon' => 'key', 'label' => 'Rôles & permissions'],
+                        ['route' => 'admin.activity.index', 'icon' => 'activity', 'label' => 'Journal d\'activité'],
+                        ['route' => 'admin.homepage.edit', 'icon' => 'layout', 'label' => 'Page d\'accueil'],
+                    ]],
+                ];
+            @endphp
+
+            @foreach($navGroups as $group)
+                @if($group['label'])
+                    <div style="padding: var(--hc-space-3) var(--hc-space-3) var(--hc-space-2); font-size: var(--hc-text-xs); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--hc-gray-500);">
+                        {{ $group['label'] }}
+                    </div>
+                @endif
+                @foreach($group['items'] as $item)
+                    @php
+                        $isActive = request()->routeIs(
+                            $item['route'],
+                            str_replace('.index', '.*', $item['route'])
+                        );
+                    @endphp
+                    <a href="{{ route($item['route']) }}" class="hc-nav-link-admin {{ $isActive ? 'hc-nav-link-admin-active' : '' }}">
+                        <i data-lucide="{{ $item['icon'] }}" style="width: 18px; height: 18px;"></i>
+                        <span>{{ $item['label'] }}</span>
+                    </a>
+                @endforeach
+            @endforeach
+        </nav>
+
+        {{-- User --}}
+        <div style="padding: var(--hc-space-4); border-top: 1px solid var(--hc-gray-800);">
+            <div style="display: flex; align-items: center; gap: var(--hc-space-3); padding: var(--hc-space-3); background: var(--hc-gray-800); border-radius: var(--hc-radius);">
+                <div style="width: 36px; height: 36px; background: var(--hc-primary); color: var(--hc-text-inverse); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600;">
+                    {{ strtoupper(substr(auth()->user()->first_name ?? 'A', 0, 1)) }}
+                </div>
+                <div style="flex: 1; min-width: 0;">
+                    <div style="font-size: var(--hc-text-sm); font-weight: 600; color: var(--hc-text-inverse); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                        {{ auth()->user()->first_name }} {{ auth()->user()->last_name }}
+                    </div>
+                    <div style="font-size: var(--hc-text-xs); color: var(--hc-gray-400); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                        {{ auth()->user()->email }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    {{-- Main --}}
+    <div style="flex: 1; display: flex; flex-direction: column; min-width: 0;">
+
+        {{-- Topbar --}}
+        <header style="background: var(--hc-bg-elevated); border-bottom: 1px solid var(--hc-border); padding: var(--hc-space-4) var(--hc-space-8); display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 30;">
+            <h1 style="font-size: var(--hc-text-xl); font-weight: 600; margin: 0;">@yield('title', 'Tableau de bord')</h1>
+
+            <div style="display: flex; align-items: center; gap: var(--hc-space-2);">
+                @if(Route::has('client.dashboard'))
+                    <a href="{{ route('client.dashboard') }}" class="hc-btn hc-btn-ghost hc-btn-sm" title="Voir en tant que client">
+                        <i data-lucide="eye" style="width: 16px; height: 16px;"></i>
+                        Vue client
+                    </a>
+                @endif
+                <form method="POST" action="{{ route('logout') }}" style="margin: 0;">
+                    @csrf
+                    <button type="submit" class="hc-btn hc-btn-ghost hc-btn-sm">
+                        <i data-lucide="log-out" style="width: 16px; height: 16px;"></i>
+                        Déconnexion
+                    </button>
+                </form>
+            </div>
+        </header>
+
+        {{-- Flash --}}
+        @if(session('success') || session('error') || session('warning'))
+            <div style="padding: var(--hc-space-4) var(--hc-space-8);">
+                @if(session('success')) <x-alert type="success">{{ session('success') }}</x-alert> @endif
+                @if(session('error')) <x-alert type="danger">{{ session('error') }}</x-alert> @endif
+                @if(session('warning')) <x-alert type="warning">{{ session('warning') }}</x-alert> @endif
+            </div>
+        @endif
+
+        {{-- Content --}}
+        <main style="padding: var(--hc-space-8); flex: 1;">
+            @yield('content')
+        </main>
+    </div>
+</div>
+
+@livewireScripts
+<script>lucide.createIcons();</script>
+<style>
+.hc-nav-link-admin {
+    display: flex;
+    align-items: center;
+    gap: var(--hc-space-3);
+    padding: var(--hc-space-3);
+    color: var(--hc-gray-300);
+    text-decoration: none;
+    border-radius: var(--hc-radius);
+    font-size: var(--hc-text-sm);
+    font-weight: 500;
+    margin-bottom: 2px;
+    transition: background var(--hc-transition), color var(--hc-transition);
+}
+.hc-nav-link-admin:hover {
+    background: var(--hc-gray-800);
+    color: var(--hc-text-inverse);
+}
+.hc-nav-link-admin-active {
+    background: var(--hc-primary);
+    color: var(--hc-text-inverse);
+}
+.hc-nav-link-admin-active:hover {
+    background: var(--hc-primary-dark);
+}
+@media (max-width: 1024px) {
+    .hc-sidebar { display: none !important; }
+}
+</style>
+@stack('scripts')
 </body>
 </html>
