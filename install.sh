@@ -281,6 +281,9 @@ clone_repository() {
         rm -rf "$INSTALL_DIR"
     fi
 
+    # Se placer dans un repertoire parent stable avant de cloner
+    cd "$(dirname "$INSTALL_DIR")"
+
     log_info "Clonage depuis $REPO (branche: $BRANCH)..."
     git clone --branch "$BRANCH" --depth 1 "$REPO" "$INSTALL_DIR"
 
