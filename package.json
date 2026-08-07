@@ -39,7 +39,7 @@
         "monaco-editor": "^0.52.2",
         "preline": "2.4.1",
         "quill": "^2.0.3",
-        "sortablejs": "^1.15.2",
+        "sortablejs": "^1.15.7",
         "sweetalert2": "^11.22.2",
         "tom-select": "^2.4.3"
     }
