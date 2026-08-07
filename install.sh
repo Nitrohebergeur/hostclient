@@ -409,26 +409,36 @@ run_migrations() {
     php "$INSTALL_DIR/artisan" key:generate --no-interaction --force
     log_ok "Cle d'application generee"
 
+    # Publier les migrations Spatie Permission (table permissions/roles)
+    php "$INSTALL_DIR/artisan" vendor:publish \
+        --provider="Spatie\Permission\PermissionServiceProvider" \
+        --force --no-interaction 2>/dev/null || true
+    log_ok "Migrations Spatie publiees"
+
     php "$INSTALL_DIR/artisan" migrate --force --no-interaction
     log_ok "Migrations executees"
 
     php "$INSTALL_DIR/artisan" db:seed --force --no-interaction
     log_ok "Donnees initiales inserees"
 
+    # Creer le compte admin avec les infos saisies
     php "$INSTALL_DIR/artisan" tinker --no-interaction <<PHP 2>/dev/null || true
 \$user = \App\Models\User::updateOrCreate(
     ['email' => '${ADMIN_EMAIL}'],
     [
-        'name'             => '${ADMIN_NAME}',
-        'password'         => \Illuminate\Support\Facades\Hash::make('${ADMIN_PASS}'),
-        'status'           => 'active',
-        'email_verified_at'=> now(),
+        'name'              => '${ADMIN_NAME}',
+        'password'          => \Illuminate\Support\Facades\Hash::make('${ADMIN_PASS}'),
+        'status'            => 'active',
+        'email_verified_at' => now(),
     ]
 );
-\$user->assignRole('admin');
+if (!\Spatie\Permission\Models\Role::where('name', 'admin')->exists()) {
+    \Spatie\Permission\Models\Role::create(['name' => 'admin', 'guard_name' => 'web']);
+}
+\$user->syncRoles(['admin']);
 exit;
 PHP
-    log_ok "Compte administrateur cree"
+    log_ok "Compte administrateur cree : ${ADMIN_EMAIL}"
 }
 
 setup_storage() {
