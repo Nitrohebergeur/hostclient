@@ -125,6 +125,9 @@ Route::prefix('store')->name('store.')->group(function () {
     Route::post('/checkout', [\App\Http\Controllers\StoreController::class, 'checkout'])->name('checkout');
 });
 
+// Page /offres : liste publique des produits créés par l'admin
+Route::get('/offres', [\App\Http\Controllers\PublicOfferController::class, 'index'])->name('offers');
+
 // Payment webhook routes
 Route::post('/webhooks/stripe', [\App\Http\Controllers\WebhookController::class, 'stripe'])->name('webhooks.stripe');
 Route::post('/webhooks/paypal', [\App\Http\Controllers\WebhookController::class, 'paypal'])->name('webhooks.paypal');
