@@ -1,8 +1,8 @@
 <?php
 
 /*
- * This file is part of the CLIENTXCMS project.
- * It is the property of the CLIENTXCMS association.
+ * This file is part of the Hostclient project.
+ * It is the property of the Hostclient association.
  */
 
 use Illuminate\Database\Migrations\Migration;

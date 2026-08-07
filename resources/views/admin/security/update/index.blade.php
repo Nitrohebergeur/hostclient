@@ -1,17 +1,17 @@
 <?php
 /*
- * This file is part of the CLIENTXCMS project.
- * It is the property of the CLIENTXCMS association.
+ * This file is part of the Hostclient project.
+ * It is the property of the Hostclient association.
  *
  * Personal and non-commercial use of this source code is permitted.
  * However, any use in a project that generates profit (directly or indirectly),
- * or any reuse for commercial purposes, requires prior authorization from CLIENTXCMS.
+ * or any reuse for commercial purposes, requires prior authorization from Hostclient.
  *
  * To request permission or for more information, please contact our support:
- * https://clientxcms.com/client/support
+ * https://Hostclient.com/client/support
  *
- * Learn more about CLIENTXCMS License at:
- * https://clientxcms.com/eula
+ * Learn more about Hostclient License at:
+ * https://Hostclient.com/eula
  *
  * Year: 2025
  */
@@ -30,7 +30,7 @@
                 <h3 class="text-sm font-bold">{{ __('admin.update.beta_warning_title') }}</h3>
                 <div class="mt-1 text-xs">
                     {{ __('admin.update.beta_warning_message') }}
-                    <a href="https://docs.clientxcms.com/installation/upgrade" target="_blank" class="underline font-semibold hover:text-yellow-900 dark:hover:text-yellow-100">
+                    <a href="https://docs.Hostclient.com/installation/upgrade" target="_blank" class="underline font-semibold hover:text-yellow-900 dark:hover:text-yellow-100">
                         {{ __('admin.update.beta_warning_link') }}
                     </a>
                 </div>

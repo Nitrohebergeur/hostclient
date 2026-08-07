@@ -3,9 +3,9 @@
         <h2 class="text-gray-600 dark:text-neutral-400">Lorem ipsum dolor sit amet, consectetur adipiscing elit</h2>
     </div>
     <div class="flex justify-center gap-x-6 sm:gap-x-12 lg:gap-x-24">
-        <img src="https://clientxcms.com/assets/images/logo/LogoBlueText.png" class="lg:py-5 w-24 md:w-24 h-20 lg:w-32 mx-auto sm:mx-0">
-        <img src="https://clientxcms.com/assets/images/logo/LogoBlueText.png" class="lg:py-5 w-24 md:w-24 h-20 lg:w-32 mx-auto sm:mx-0">
-        <img src="https://clientxcms.com/assets/images/logo/LogoBlueText.png" class="lg:py-5 w-24 md:w-24 h-20 lg:w-32 mx-auto sm:mx-0">
-        <img src="https://clientxcms.com/assets/images/logo/LogoBlueText.png" class="lg:py-5 w-24 md:w-24 h-20 lg:w-32 mx-auto sm:mx-0">
+        <img src="https://Hostclient.com/assets/images/logo/LogoBlueText.png" class="lg:py-5 w-24 md:w-24 h-20 lg:w-32 mx-auto sm:mx-0">
+        <img src="https://Hostclient.com/assets/images/logo/LogoBlueText.png" class="lg:py-5 w-24 md:w-24 h-20 lg:w-32 mx-auto sm:mx-0">
+        <img src="https://Hostclient.com/assets/images/logo/LogoBlueText.png" class="lg:py-5 w-24 md:w-24 h-20 lg:w-32 mx-auto sm:mx-0">
+        <img src="https://Hostclient.com/assets/images/logo/LogoBlueText.png" class="lg:py-5 w-24 md:w-24 h-20 lg:w-32 mx-auto sm:mx-0">
     </div>
 </div>

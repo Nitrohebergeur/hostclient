@@ -19,12 +19,12 @@ class ThemeSeeder extends Seeder
     {
         if (SocialNetwork::count() == 0) {
 
-            $this->createSocialNetwork('bi bi-twitter-x', 'Twitter', 'https://twitter.com/ClientXCMS');
-            $this->createSocialNetwork('bi bi-facebook', 'Facebook', 'https://www.facebook.com/ClientXCMS');
-            $this->createSocialNetwork('bi bi-instagram', 'Instagram', 'https://www.instagram.com/ClientXCMS');
-            $this->createSocialNetwork('bi bi-twitch', 'Twitch', 'https://www.twitch.tv/ClientXCMS');
-            $this->createSocialNetwork('bi bi-discord', 'Discord', 'https://discord.gg/ClientXCMS');
-            $this->createSocialNetwork('bi bi-linkedin', 'Linkedin', 'https://www.linkedin.com/company/ClientXCMS');
+            $this->createSocialNetwork('bi bi-twitter-x', 'Twitter', 'https://twitter.com/Hostclient');
+            $this->createSocialNetwork('bi bi-facebook', 'Facebook', 'https://www.facebook.com/Hostclient');
+            $this->createSocialNetwork('bi bi-instagram', 'Instagram', 'https://www.instagram.com/Hostclient');
+            $this->createSocialNetwork('bi bi-twitch', 'Twitch', 'https://www.twitch.tv/Hostclient');
+            $this->createSocialNetwork('bi bi-discord', 'Discord', 'https://discord.gg/Hostclient');
+            $this->createSocialNetwork('bi bi-linkedin', 'Linkedin', 'https://www.linkedin.com/company/Hostclient');
         }
         if (MenuLink::where('type', 'bottom')->count() == 0) {
             MenuLink::newBottonMenu();

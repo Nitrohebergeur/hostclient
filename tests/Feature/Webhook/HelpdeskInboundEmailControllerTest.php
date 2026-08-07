@@ -24,7 +24,7 @@ class HelpdeskInboundEmailControllerTest extends TestCase
         $response = $this->withHeader('X-Helpdesk-Webhook-Token', (string) setting('helpdesk_inbound_webhook_token'))
             ->postJson('/api/client/webhooks/helpdesk/inbound-email', [
                 'from' => 'Client Test <client@example.test>',
-                'recipient' => 'support@clientxcms.test',
+                'recipient' => 'support@Hostclient.test',
                 'subject' => 'Problème de facturation',
                 'stripped-text' => 'Bonjour, voici mon souci.',
             ]);
@@ -55,7 +55,7 @@ class HelpdeskInboundEmailControllerTest extends TestCase
         $response = $this->withHeader('X-Helpdesk-Webhook-Token', (string) setting('helpdesk_inbound_webhook_token'))
             ->postJson('/api/client/webhooks/helpdesk/inbound-email', [
                 'from' => 'ghost@example.test',
-                'recipient' => 'support@clientxcms.test',
+                'recipient' => 'support@Hostclient.test',
                 'subject' => 'Aide',
                 'stripped-text' => 'Bonjour',
             ]);

@@ -1,18 +1,18 @@
 <?php
 
 /*
- * This file is part of the CLIENTXCMS project.
- * It is the property of the CLIENTXCMS association.
+ * This file is part of the Hostclient project.
+ * It is the property of the Hostclient association.
  *
  * Personal and non-commercial use of this source code is permitted.
  * However, any use in a project that generates profit (directly or indirectly),
- * or any reuse for commercial purposes, requires prior authorization from CLIENTXCMS.
+ * or any reuse for commercial purposes, requires prior authorization from Hostclient.
  *
  * To request permission or for more information, please contact our support:
- * https://clientxcms.com/client/support
+ * https://Hostclient.com/client/support
  *
- * Learn more about CLIENTXCMS License at:
- * https://clientxcms.com/eula
+ * Learn more about Hostclient License at:
+ * https://Hostclient.com/eula
  *
  * Year: 2025
  */
@@ -44,29 +44,29 @@ class Kernel extends ConsoleKernel
             ->everyThreeHours()->sentryMonitor()
             ->name('services:renewals')
             ->sendOutputTo(storage_path('logs/services-renewals.log'));
-        $schedule->command('clientxcms:helpdesk-close')
+        $schedule->command('Hostclient:helpdesk-close')
             ->daily()->at('12:00')->sentryMonitor()
-            ->name('clientxcms:helpdesk-close')
+            ->name('Hostclient:helpdesk-close')
             ->sendOutputTo(storage_path('logs/helpdesk-close.log'));
         $schedule->command('services:notify-expiration')
             ->daily()->at('09:00')->sentryMonitor()
             ->name('services:notify-expiration')
             ->sendOutputTo(storage_path('logs/services-notify-expiration.log'));
-        $schedule->command('clientxcms:invoice-delete')
+        $schedule->command('Hostclient:invoice-delete')
             ->daily()->at('00:00')->sentryMonitor()
-            ->name('clientxcms:invoice-delete')
+            ->name('Hostclient:invoice-delete')
             ->sendOutputTo(storage_path('logs/invoice-delete.log'))->sentryMonitor();
-        $schedule->command('clientxcms:purge-metadata')
+        $schedule->command('Hostclient:purge-metadata')
             ->weekly()->mondays()
-            ->name('clientxcms:purge-metadata')
+            ->name('Hostclient:purge-metadata')
             ->sendOutputTo(storage_path('logs/purge-metadata.log'))->sentryMonitor();
-        $schedule->command('clientxcms:purge-basket')
+        $schedule->command('Hostclient:purge-basket')
             ->weekly()->thursdays()
-            ->name('clientxcms:purge-basket')
+            ->name('Hostclient:purge-basket')
             ->sendOutputTo(storage_path('logs/purge-basket.log'))->sentryMonitor();
-        $schedule->command('clientxcms:telemetry')
+        $schedule->command('Hostclient:telemetry')
             ->daily()->at('00:00')
-            ->name('clientxcms:telemetry')
+            ->name('Hostclient:telemetry')
             ->sendOutputTo(storage_path('logs/telemetry.log'))->sentryMonitor();
     }
 

@@ -1,6 +1,6 @@
 /**
  * Custom Element - PopupWindow
- * @author CLIENTXCMS
+ * @author Hostclient
  * @date 29-03-21
  * @example <a href="link" id="email-1" width="650" height="450" is="popup-window"></a>
  *

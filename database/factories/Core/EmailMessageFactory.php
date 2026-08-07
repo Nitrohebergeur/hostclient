@@ -23,7 +23,7 @@ class EmailMessageFactory extends Factory
             'recipient_id' => Customer::first()->id,
             'subject' => 'test',
             'content' => 'test',
-            'recipient' => 'test@clientxcms.com',
+            'recipient' => 'test@Hostclient.com',
             'template' => EmailTemplate::first()->id,
         ];
     }

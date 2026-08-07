@@ -7,7 +7,7 @@ x-common-variables: &common-variables
 
 services:
   app:
-    image: clientxcms/panel:master
+    image: Hostclient/panel:master
     restart: always
     volumes:
       - .github/logs/nginx/:/var/log/nginx/
@@ -32,8 +32,8 @@ services:
         REDIS_HOST: "${REDIS_HOST:-127.0.0.1}"
         DB_HOST: "${DB_HOST:-database}"
         DB_PORT: "${DB_PORT:-3306}"
-        DB_NAME: "${DB_NAME:-clientxcms}"
-        DB_PASSWORD: "${DB_PASSWORD:-clientxcms}"
+        DB_NAME: "${DB_NAME:-Hostclient}"
+        DB_PASSWORD: "${DB_PASSWORD:-Hostclient}"
         MAIL_FROM: "${MAIL_FROM:-noreply@example.com}"
         MAIL_DRIVER: "${MAIL_DRIVER:-smtp}"
         MAIL_HOST: "${MAIL_HOST:-smtp.exemple.com}"
@@ -45,7 +45,7 @@ services:
         OAUTH_CLIENT_ID: "${OAUTH_CLIENT_ID:-XXXX}"
         OAUTH_CLIENT_SECRET: "${OAUTH_CLIENT_SECRET:-XXXX}"
     networks:
-        - clientxcms-network
+        - Hostclient-network
   database:
     image: mariadb:10.5
     restart: always
@@ -55,20 +55,20 @@ services:
     volumes:
       - mariadb-data:/var/lib/mysql
     environment:
-      MYSQL_PASSWORD: "clientxcms"
-      MYSQL_ROOT_PASSWORD: "clientxcms"
-      MYSQL_DATABASE: "clientxcms"
-      MYSQL_USER: "clientxcms"
+      MYSQL_PASSWORD: "Hostclient"
+      MYSQL_ROOT_PASSWORD: "Hostclient"
+      MYSQL_DATABASE: "Hostclient"
+      MYSQL_USER: "Hostclient"
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-pclientxcms"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-pHostclient"]
       interval: 5s
       timeout: 5s
       retries: 10
     networks:
-      - clientxcms-network
+      - Hostclient-network
 
 networks:
-  clientxcms-network:
+  Hostclient-network:
     driver: bridge
 
 volumes:

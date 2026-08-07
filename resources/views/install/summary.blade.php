@@ -1,17 +1,17 @@
 <?php
 /*
- * This file is part of the CLIENTXCMS project.
- * It is the property of the CLIENTXCMS association.
+ * This file is part of the Hostclient project.
+ * It is the property of the Hostclient association.
  *
  * Personal and non-commercial use of this source code is permitted.
  * However, any use in a project that generates profit (directly or indirectly),
- * or any reuse for commercial purposes, requires prior authorization from CLIENTXCMS.
+ * or any reuse for commercial purposes, requires prior authorization from Hostclient.
  *
  * To request permission or for more information, please contact our support:
- * https://clientxcms.com/client/support
+ * https://Hostclient.com/client/support
  *
- * Learn more about CLIENTXCMS License at:
- * https://clientxcms.com/eula
+ * Learn more about Hostclient License at:
+ * https://Hostclient.com/eula
  *
  * Year: 2025
  */
@@ -25,7 +25,7 @@
     <ul class="mt-3 flex flex-col">
         <li class="inline-flex items-center gap-x-2 py-3 px-4 text-sm border text-gray-800 -mt-px first:rounded-t-lg first:mt-0 last:rounded-b-lg dark:border-gray-700 dark:text-gray-200">
             <div class="flex items-center justify-between w-full">
-                <span>ClientXCMS Version</span>
+                <span>Hostclient Version</span>
                 <span>{{ ctx_version() }}</span>
             </div>
         </li>

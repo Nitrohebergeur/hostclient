@@ -1,17 +1,17 @@
 <?php
 /*
- * This file is part of the CLIENTXCMS project.
- * It is the property of the CLIENTXCMS association.
+ * This file is part of the Hostclient project.
+ * It is the property of the Hostclient association.
  *
  * Personal and non-commercial use of this source code is permitted.
  * However, any use in a project that generates profit (directly or indirectly),
- * or any reuse for commercial purposes, requires prior authorization from CLIENTXCMS.
+ * or any reuse for commercial purposes, requires prior authorization from Hostclient.
  *
  * To request permission or for more information, please contact our support:
- * https://clientxcms.com/client/support
+ * https://Hostclient.com/client/support
  *
- * Learn more about CLIENTXCMS License at:
- * https://clientxcms.com/eula
+ * Learn more about Hostclient License at:
+ * https://Hostclient.com/eula
  *
  * Year: 2025
  */
@@ -31,8 +31,8 @@
     <div class="mt-7 p-4 bg-white border border-gray-200 rounded-xl shadow-sm dark:bg-gray-800 dark:border-gray-700">
 <div data-hs-stepper>
 
-    <a class="flex-none text-xl font-semibold dark:text-white" href="https://clientxcms.com" aria-label="CLIENTXCMS">
-        <img src="{{ Vite::asset('resources/global/clientxcms_text.png') }}" class="p-3">
+    <a class="flex-none text-xl font-semibold dark:text-white" href="https://Hostclient.com" aria-label="Hostclient">
+        <img src="{{ Vite::asset('resources/global/Hostclient_text.png') }}" class="p-3">
     </a>
     
     <!-- Stepper Nav -->

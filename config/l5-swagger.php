@@ -5,7 +5,7 @@ return [
     'documentations' => [
         'application' => [
             'api' => [
-                'title' => 'CLIENTXCMS New Gen API',
+                'title' => 'Hostclient New Gen API',
             ],
             'routes' => [
                 'api' => 'api/documentation',

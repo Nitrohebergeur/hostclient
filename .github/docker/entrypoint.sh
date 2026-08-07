@@ -28,7 +28,7 @@ DOMAIN=$(extract_domain)
 echo "Detected domain: $DOMAIN"
 
 echo "Configuring nginx..."
-if [ -f /etc/nginx/http.d/clientxcms.conf ]; then
+if [ -f /etc/nginx/http.d/Hostclient.conf ]; then
     echo "Using existing nginx config"
     if [ "$LETSENCRYPT_EMAIL" ]; then
         echo "Checking for cert renewal"
@@ -44,21 +44,21 @@ else
 
     if [ -z "$LETSENCRYPT_EMAIL" ]; then
         echo "Using HTTP configuration"
-        cp .github/docker/default.conf /etc/nginx/http.d/clientxcms.conf
+        cp .github/docker/default.conf /etc/nginx/http.d/Hostclient.conf
     else
         echo "Using HTTPS configuration"
-        cp .github/docker/default_ssl.conf /etc/nginx/http.d/clientxcms.conf
+        cp .github/docker/default_ssl.conf /etc/nginx/http.d/Hostclient.conf
 
         echo "Generating SSL certificates"
         if ! certbot certonly -d "$DOMAIN" --standalone -m "$LETSENCRYPT_EMAIL" --agree-tos -n; then
             echo "ERROR: Certificate generation failed"
             echo "Falling back to HTTP configuration"
-            cp .github/docker/default.conf /etc/nginx/http.d/clientxcms.conf
+            cp .github/docker/default.conf /etc/nginx/http.d/Hostclient.conf
         fi
     fi
 
     echo "Updating domain in nginx config"
-    sed -i "s|<domain>|$DOMAIN|g" /etc/nginx/http.d/clientxcms.conf
+    sed -i "s|<domain>|$DOMAIN|g" /etc/nginx/http.d/Hostclient.conf
 fi
 
 DB_PORT=${DB_PORT:-3306}

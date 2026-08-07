@@ -1,17 +1,17 @@
 <?php
 /*
- * This file is part of the CLIENTXCMS project.
- * It is the property of the CLIENTXCMS association.
+ * This file is part of the Hostclient project.
+ * It is the property of the Hostclient association.
  *
  * Personal and non-commercial use of this source code is permitted.
  * However, any use in a project that generates profit (directly or indirectly),
- * or any reuse for commercial purposes, requires prior authorization from CLIENTXCMS.
+ * or any reuse for commercial purposes, requires prior authorization from Hostclient.
  *
  * To request permission or for more information, please contact our support:
- * https://clientxcms.com/client/support
+ * https://Hostclient.com/client/support
  *
- * Learn more about CLIENTXCMS License at:
- * https://clientxcms.com/eula
+ * Learn more about Hostclient License at:
+ * https://Hostclient.com/eula
  *
  * Year: 2025
  */
@@ -20,7 +20,7 @@
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
-    <title>@yield('title') - CLIENTXCMS</title>
+    <title>@yield('title') - Hostclient</title>
 
     @vite('resources/themes/default/js/app.js')
     @vite('resources/themes/default/css/app.scss')
@@ -37,11 +37,11 @@
     <nav class="max-w-7xl flex basis-full items-center w-full mx-auto px-4 sm:px-6 lg:px-8" aria-label="Global">
 
   <a
-    href="https://clientxcms.com/client/support"
-    aria-label="CLIENTXCMS"
+    href="https://Hostclient.com/client/support"
+    aria-label="Hostclient"
     class="flex-none text-xl font-semibold dark:text-white dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600"
   >
-    CLIENTXCMS
+    Hostclient
     <span class="bg-gray-100 text-xs text-gray-500 font-semibold rounded-full py-1 px-2 dark:bg-gray-700 dark:text-gray-400 hs-tooltip-toggle hs-tooltip inline-block relative">
       v{{ ctx_version() }}
         @if ($appIsGit)

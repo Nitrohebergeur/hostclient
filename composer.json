@@ -1,13 +1,13 @@
 {
-    "name": "clientxcms/clientxcms",
+    "name": "Hostclient/Hostclient",
     "type": "project",
-    "description": "ClientXCMS is a powerful and configurable CMS designed for hosting companies.",
+    "description": "Hostclient is a powerful and configurable CMS designed for hosting companies.",
     "keywords": [
         "laravel",
         "framework",
         "cms",
         "hosting",
-        "clientxcms"
+        "Hostclient"
     ],
     "license": "Proprietary",
     "require": {

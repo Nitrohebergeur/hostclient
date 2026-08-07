@@ -1,18 +1,18 @@
 <?php
 
 /*
- * This file is part of the CLIENTXCMS project.
- * It is the property of the CLIENTXCMS association.
+ * This file is part of the Hostclient project.
+ * It is the property of the Hostclient association.
  *
  * Personal and non-commercial use of this source code is permitted.
  * However, any use in a project that generates profit (directly or indirectly),
- * or any reuse for commercial purposes, requires prior authorization from CLIENTXCMS.
+ * or any reuse for commercial purposes, requires prior authorization from Hostclient.
  *
  * To request permission or for more information, please contact our support:
- * https://clientxcms.com/client/support
+ * https://Hostclient.com/client/support
  *
- * Learn more about CLIENTXCMS License at:
- * https://clientxcms.com/eula
+ * Learn more about Hostclient License at:
+ * https://Hostclient.com/eula
  *
  * Year: 2025
  */
@@ -29,19 +29,19 @@ use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
 class ExportPricingCommand extends Command
 {
-    protected $signature = 'pricing:export {filename? : output filename (default: CLIENTXCMS_pricing_YYYYMMDD_HHMMSS.xlsx)}';
+    protected $signature = 'pricing:export {filename? : output filename (default: Hostclient_pricing_YYYYMMDD_HHMMSS.xlsx)}';
 
     protected $description = 'Export all pricing data into an Excel file, grouped by product groups.';
 
     public function handle(): int
     {
         $filename = $this->argument('filename')
-            ?? 'CLIENTXCMS_pricing_'.now()->format('Ymd_His').'.xlsx';
+            ?? 'Hostclient_pricing_'.now()->format('Ymd_His').'.xlsx';
 
         $spreadsheet = new Spreadsheet;
         $summary = $spreadsheet->getActiveSheet();
         $summary->setTitle('Groupes');
-        $summary->setCellValue('A1', 'CLIENTXCMS Pricing – Récapitulatif');
+        $summary->setCellValue('A1', 'Hostclient Pricing – Récapitulatif');
         $summary->mergeCells('A1:G1');
         $summary->getStyle('A1')->getFont()->setBold(true)->setSize(16);
 
@@ -59,7 +59,7 @@ class ExportPricingCommand extends Command
                 foreach ($parents as $group) {
                     $sheet = $spreadsheet->createSheet();
                     $sheet->setTitle(Str::limit($group->trans('name'), 28));
-                    $sheet->setCellValue('A1', "CLIENTXCMS Pricing – {$group->trans('name')}");
+                    $sheet->setCellValue('A1', "Hostclient Pricing – {$group->trans('name')}");
                     $sheet->mergeCells('A1:G1');
                     $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(14);
 

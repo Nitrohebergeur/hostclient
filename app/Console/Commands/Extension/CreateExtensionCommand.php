@@ -1,18 +1,18 @@
 <?php
 
 /*
- * This file is part of the CLIENTXCMS project.
- * It is the property of the CLIENTXCMS association.
+ * This file is part of the Hostclient project.
+ * It is the property of the Hostclient association.
  *
  * Personal and non-commercial use of this source code is permitted.
  * However, any use in a project that generates profit (directly or indirectly),
- * or any reuse for commercial purposes, requires prior authorization from CLIENTXCMS.
+ * or any reuse for commercial purposes, requires prior authorization from Hostclient.
  *
  * To request permission or for more information, please contact our support:
- * https://clientxcms.com/client/support
+ * https://Hostclient.com/client/support
  *
- * Learn more about CLIENTXCMS License at:
- * https://clientxcms.com/eula
+ * Learn more about Hostclient License at:
+ * https://Hostclient.com/eula
  *
  * Year: 2025
  */
@@ -29,7 +29,7 @@ class CreateExtensionCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'clientxcms:create-extension {--name= : Extension name} {--uuid= : Extension UUID}
+    protected $signature = 'Hostclient:create-extension {--name= : Extension name} {--uuid= : Extension UUID}
     {--description=This is a new extension.}
     {--type=addon : addon or module}
     {--author-name= : Author name}
@@ -49,7 +49,7 @@ class CreateExtensionCommand extends Command
      *
      * @var string
      */
-    protected $description = 'Create a new extension for the CLIENTXCMS.';
+    protected $description = 'Create a new extension for the Hostclient.';
 
     /**
      * Execute the console command.
@@ -137,9 +137,9 @@ class CreateExtensionCommand extends Command
 
     private function composerJson(string $name, string $uuid, string $type, string $description)
     {
-        $_type = 'clientxcms-'.substr($type, 0, -1);
+        $_type = 'Hostclient-'.substr($type, 0, -1);
         $composer = [
-            'name' => "clientxcms/$uuid",
+            'name' => "Hostclient/$uuid",
             'description' => $description,
             'type' => $_type,
             'require' => [

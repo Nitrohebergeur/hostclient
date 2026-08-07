@@ -137,14 +137,14 @@ class RegistrationTest extends TestCase
 
     public function test_register_with_banned_email()
     {
-        Setting::updateSettings(['banned_emails' => 'banned@clientxcms.com']);
+        Setting::updateSettings(['banned_emails' => 'banned@Hostclient.com']);
         $response = $this->post('/register', [
             'firstname' => 'Test User',
             'lastname' => 'Test User',
             'zipcode' => '59100',
             'region' => 'Test User',
             'country' => 'FR',
-            'email' => 'banned@clientxcms.com',
+            'email' => 'banned@Hostclient.com',
             'address' => 'test',
             'city' => 'test',
             'phone' => '0176010380',
@@ -157,14 +157,14 @@ class RegistrationTest extends TestCase
     public function test_register_with_banned_email_and_banned_domains()
     {
 
-        Setting::updateSettings(['banned_emails' => 'banned@clientxcms.com,clientxcms.com']);
+        Setting::updateSettings(['banned_emails' => 'banned@Hostclient.com,Hostclient.com']);
         $response = $this->post('/register', [
             'firstname' => 'Test User',
             'lastname' => 'Test User',
             'zipcode' => '59100',
             'region' => 'Test User',
             'country' => 'FR',
-            'email' => 'banned@clientxcms.com',
+            'email' => 'banned@Hostclient.com',
             'address' => 'test',
             'city' => 'test',
             'phone' => '0176010380',
@@ -204,7 +204,7 @@ class RegistrationTest extends TestCase
             'zipcode' => '59100',
             'region' => 'Test User',
             'country' => 'FR',
-            'email' => 'test+1@clientxcms.com',
+            'email' => 'test+1@Hostclient.com',
             'address' => 'test',
             'city' => 'test',
             'phone' => '0176010380',
@@ -224,7 +224,7 @@ class RegistrationTest extends TestCase
             'zipcode' => '59100',
             'region' => 'Test User',
             'country' => 'FR',
-            'email' => 'test+1@clientxcms.com',
+            'email' => 'test+1@Hostclient.com',
             'address' => 'test',
             'city' => 'test',
             'phone' => '0176010380',

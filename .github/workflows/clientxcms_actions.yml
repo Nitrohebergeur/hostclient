@@ -29,9 +29,9 @@ jobs:
       mysql:
         image: mysql:8.0
         env:
-          MYSQL_DATABASE: clientxcms_release
-          MYSQL_USER: clientxcms
-          MYSQL_PASSWORD: clientxcms
+          MYSQL_DATABASE: Hostclient_release
+          MYSQL_USER: Hostclient
+          MYSQL_PASSWORD: Hostclient
           MYSQL_ROOT_PASSWORD: root
         ports:
           - 3306:3306
@@ -93,9 +93,9 @@ jobs:
           DB_CONNECTION: mysql
           DB_HOST: 127.0.0.1
           DB_PORT: 3306
-          DB_DATABASE: clientxcms_release
-          DB_USERNAME: clientxcms
-          DB_PASSWORD: clientxcms
+          DB_DATABASE: Hostclient_release
+          DB_USERNAME: Hostclient
+          DB_PASSWORD: Hostclient
         run: |
           php artisan migrate:fresh --force --no-interaction --no-ansi
           mysqldump \
@@ -110,18 +110,18 @@ jobs:
             --skip-add-locks \
             --skip-disable-keys \
             --compact \
-            "${DB_DATABASE}" > database/clientxcms.sql
+            "${DB_DATABASE}" > database/Hostclient.sql
 
       - name: Prepare release archive
         run: |
           RELEASE_TAG="${{ github.event.release.tag_name }}"
-          ARTIFACT_NAME="clientxcms-${RELEASE_TAG//\//-}.zip"
-          SQL_ARTIFACT_NAME="clientxcms-${RELEASE_TAG//\//-}.sql"
+          ARTIFACT_NAME="Hostclient-${RELEASE_TAG//\//-}.zip"
+          SQL_ARTIFACT_NAME="Hostclient-${RELEASE_TAG//\//-}.sql"
           echo "ARTIFACT_NAME=${ARTIFACT_NAME}" >> "${GITHUB_ENV}"
           echo "SQL_ARTIFACT_NAME=${SQL_ARTIFACT_NAME}" >> "${GITHUB_ENV}"
-          cp database/clientxcms.sql "${SQL_ARTIFACT_NAME}"
-          mkdir -p release/clientxcms
-          rsync -a ./ release/clientxcms/ \
+          cp database/Hostclient.sql "${SQL_ARTIFACT_NAME}"
+          mkdir -p release/Hostclient
+          rsync -a ./ release/Hostclient/ \
             --exclude='.agents' \
             --exclude='.codex' \
             --exclude='.editorconfig' \
@@ -138,7 +138,7 @@ jobs:
             --exclude='README.md' \
             --exclude='SECURITY.md' \
             --exclude='_ide_helper.php' \
-            --exclude='clientxcms-worker.log' \
+            --exclude='Hostclient-worker.log' \
             --exclude='composer.phar' \
             --exclude='docker-compose.yml' \
             --exclude='docker-compose.example.yml' \
@@ -160,12 +160,12 @@ jobs:
             --exclude='storage/framework/sessions/*' \
             --exclude='storage/framework/views/*'
           cd release
-          zip -r "../${ARTIFACT_NAME}" clientxcms
+          zip -r "../${ARTIFACT_NAME}" Hostclient
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: clientxcms-release-assets
+          name: Hostclient-release-assets
           if-no-files-found: error
           retention-days: 30
           path: |
@@ -274,7 +274,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: clientxcms/panel
+          images: Hostclient/panel
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v5

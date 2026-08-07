@@ -1,18 +1,18 @@
 <?php
 
 /*
- * This file is part of the CLIENTXCMS project.
- * It is the property of the CLIENTXCMS association.
+ * This file is part of the Hostclient project.
+ * It is the property of the Hostclient association.
  *
  * Personal and non-commercial use of this source code is permitted.
  * However, any use in a project that generates profit (directly or indirectly),
- * or any reuse for commercial purposes, requires prior authorization from CLIENTXCMS.
+ * or any reuse for commercial purposes, requires prior authorization from Hostclient.
  *
  * To request permission or for more information, please contact our support:
- * https://clientxcms.com/client/support
+ * https://Hostclient.com/client/support
  *
- * Learn more about CLIENTXCMS License at:
- * https://clientxcms.com/eula
+ * Learn more about Hostclient License at:
+ * https://Hostclient.com/eula
  *
  * Year: 2025
  */
@@ -56,19 +56,19 @@ class LicenseGateway
      * canonical production URL.
      */
     private const ALLOWED_LICENSE_HOSTS = [
-        'clientxcms.com',
-        'www.clientxcms.com',
-        'staging.clientxcms.com',
-        'api.clientxcms.com',
+        'Hostclient.com',
+        'www.Hostclient.com',
+        'staging.Hostclient.com',
+        'api.Hostclient.com',
     ];
 
     public static function getDomain()
     {
-        $candidate = env('CTX_DOMAIN') ?: 'https://clientxcms.com';
+        $candidate = env('CTX_DOMAIN') ?: 'https://Hostclient.com';
         $host = parse_url($candidate, PHP_URL_HOST);
         $scheme = parse_url($candidate, PHP_URL_SCHEME);
         if ($scheme !== 'https' || ! in_array(strtolower((string) $host), self::ALLOWED_LICENSE_HOSTS, true)) {
-            return 'https://clientxcms.com';
+            return 'https://Hostclient.com';
         }
 
         return rtrim($candidate, '/');

@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="noindex,nofollow">
-    <title>@yield('title') · {{ config('app.name', 'ClientXCMS') }}</title>
+    <title>@yield('title') · {{ config('app.name', 'Hostclient') }}</title>
     @vite('resources/themes/default/css/app.scss')
 </head>
 <body class="min-h-full bg-gray-50 dark:bg-gray-900">

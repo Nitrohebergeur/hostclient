@@ -1,17 +1,17 @@
 <?php
 /*
- * This file is part of the CLIENTXCMS project.
- * It is the property of the CLIENTXCMS association.
+ * This file is part of the Hostclient project.
+ * It is the property of the Hostclient association.
  *
  * Personal and non-commercial use of this source code is permitted.
  * However, any use in a project that generates profit (directly or indirectly),
- * or any reuse for commercial purposes, requires prior authorization from CLIENTXCMS.
+ * or any reuse for commercial purposes, requires prior authorization from Hostclient.
  *
  * To request permission or for more information, please contact our support:
- * https://clientxcms.com/client/support
+ * https://Hostclient.com/client/support
  *
- * Learn more about CLIENTXCMS License at:
- * https://clientxcms.com/eula
+ * Learn more about Hostclient License at:
+ * https://Hostclient.com/eula
  *
  * Year: 2025
  */
@@ -46,7 +46,7 @@
                     @include('admin/shared/input', ['name' => 'theme_home_title', 'label' => __('personalization.home.fields.theme_home_title'), 'value' => setting('theme_home_title', setting('app.name')), 'translatable' => setting_is_saved('theme_home_title')])
                 </div>
                 <div>
-                    @include('admin/shared/input', ['name' => 'theme_home_subtitle', 'label' => __('personalization.home.fields.theme_home_subtitle'), 'value' => setting('theme_home_subtitle', "Hébergeur français de qualité utilisant la nouvelle version Next Gen de CLIENTXCMS."), 'translatable' => setting_is_saved('theme_home_subtitle')])
+                    @include('admin/shared/input', ['name' => 'theme_home_subtitle', 'label' => __('personalization.home.fields.theme_home_subtitle'), 'value' => setting('theme_home_subtitle', "Hébergeur français de qualité utilisant la nouvelle version Next Gen de Hostclient."), 'translatable' => setting_is_saved('theme_home_subtitle')])
                 </div>
                 <div>
                     @include('admin/shared/file', ['name' => 'theme_home_image', 'label' => __('personalization.home.fields.theme_home_image'), 'canRemove' => true])

@@ -1,18 +1,18 @@
 <?php
 
 /*
- * This file is part of the CLIENTXCMS project.
- * It is the property of the CLIENTXCMS association.
+ * This file is part of the Hostclient project.
+ * It is the property of the Hostclient association.
  *
  * Personal and non-commercial use of this source code is permitted.
  * However, any use in a project that generates profit (directly or indirectly),
- * or any reuse for commercial purposes, requires prior authorization from CLIENTXCMS.
+ * or any reuse for commercial purposes, requires prior authorization from Hostclient.
  *
  * To request permission or for more information, please contact our support:
- * https://clientxcms.com/client/support
+ * https://Hostclient.com/client/support
  *
- * Learn more about CLIENTXCMS License at:
- * https://clientxcms.com/eula
+ * Learn more about Hostclient License at:
+ * https://Hostclient.com/eula
  *
  * Year: 2025
  */
@@ -97,7 +97,7 @@ class SettingServiceProvider extends ServiceProvider
             $service->setDefaultValue('mail_smtp_encryption', env('MAIL_ENCRYPTION'));
             $service->setDefaultValue('mail_smtp_enable', env('MAIL_MAILER') == 'smtp');
             $service->setDefaultValue('mail_domain', config('app.url'));
-            $service->setDefaultValue('theme_footer_description', config('app.name').' You can modify this text in the settings. Powered By CLIENTXCMS');
+            $service->setDefaultValue('theme_footer_description', config('app.name').' You can modify this text in the settings. Powered By Hostclient');
             $service->setDefaultValue('theme_home_enabled', true);
             $service->setDefaultValue('theme_switch_mode', 'both');
             $service->setDefaultValue('seo_site_title', ' - '.setting('app_name'));
@@ -108,7 +108,7 @@ class SettingServiceProvider extends ServiceProvider
             $service->setDefaultValue('helpdesk_attachments_allowed_types', 'jpg,jpeg,png,pdf,doc,docx,xls,xlsx');
             $service->setDefaultValue('helpdesk_reopen_days', 7);
             $service->setDefaultValue('helpdesk_reply_mailbox', 'support-reply');
-            $service->setDefaultValue('helpdesk_inbound_webhook_token', substr(hash('sha256', (string) env('APP_KEY', 'clientxcms')), 0, 32));
+            $service->setDefaultValue('helpdesk_inbound_webhook_token', substr(hash('sha256', (string) env('APP_KEY', 'Hostclient')), 0, 32));
             $service->setDefaultValue('billing_mode', InvoiceService::INVOICE);
             $service->setDefaultValue('allow_registration', true);
             $service->setDefaultValue('auto_confirm_registration', false);
@@ -124,12 +124,12 @@ class SettingServiceProvider extends ServiceProvider
             $service->setDefaultValue('maintenance_button_link', null);
             $service->setDefaultValue('maintenance_button_text', null);
             $service->setDefaultValue('maintenance_button_icon', 'bi bi-box-arrow-up-right');
-            $service->setDefaultValue('email_template_image', 'https://clientxcms.com/Themes/CLIENTXCMS/images/emails/support3.png');
-            $service->setDefaultValue('email_template_title', 'CLIENTXCMS');
+            $service->setDefaultValue('email_template_image', 'https://Hostclient.com/Themes/Hostclient/images/emails/support3.png');
+            $service->setDefaultValue('email_template_title', 'Hostclient');
             $service->setDefaultValue('email_template_description', 'You can edit this in email template settings.');
 
-            $this->initImage($service, 'app_logo', 'app_logo', 'resources/global/clientxcms_blue.png');
-            $this->initImage($service, 'app_logo_text', 'app_logo_text', 'resources/global/clientxcms_text.png');
+            $this->initImage($service, 'app_logo', 'app_logo', 'resources/global/Hostclient_blue.png');
+            $this->initImage($service, 'app_logo_text', 'app_logo_text', 'resources/global/Hostclient_text.png');
             $this->initImage($service, 'app_favicon', 'app_favicon', 'resources/global/favicon.png');
             $this->initImage($service, 'theme_home_image', 'theme_home_image', 'resources/global/home.png');
             $this->initSettings($service);

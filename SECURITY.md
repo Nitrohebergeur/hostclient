@@ -1,6 +1,6 @@
 # Security Policy
 
-Security is a top priority for ClientXCMS. We take all security vulnerabilities seriously and appreciate your efforts to responsibly disclose your findings.
+Security is a top priority for Hostclient. We take all security vulnerabilities seriously and appreciate your efforts to responsibly disclose your findings.
 
 ## Supported Versions
 
@@ -13,11 +13,11 @@ We provide security updates for the following versions:
 
 ## Reporting a Vulnerability
 
-If you discover a security vulnerability within ClientXCMS, please follow these guidelines:
+If you discover a security vulnerability within Hostclient, please follow these guidelines:
 
 ### How to Report
 
-1. **Email**: Send a detailed report to [martin@clientxcms.com](mailto:martin@clientxcms.com)
+1. **Email**: Send a detailed report to [martin@Hostclient.com](mailto:martin@Hostclient.com)
 2. **GitHub**: Use the "Report a vulnerability" button in the Security tab
 
 ### What to Include
@@ -52,7 +52,7 @@ We value the security research community. Depending on the severity and impact o
 
 # Politique de Sécurité
 
-La sécurité est une priorité absolue pour ClientXCMS. Nous prenons toutes les vulnérabilités de sécurité au sérieux et apprécions vos efforts pour divulguer vos découvertes de manière responsable.
+La sécurité est une priorité absolue pour Hostclient. Nous prenons toutes les vulnérabilités de sécurité au sérieux et apprécions vos efforts pour divulguer vos découvertes de manière responsable.
 
 ## Versions Supportées
 
@@ -65,11 +65,11 @@ Nous fournissons des mises à jour de sécurité pour les versions suivantes :
 
 ## Signalement d'une Vulnérabilité
 
-Si vous découvrez une vulnérabilité de sécurité dans ClientXCMS, veuillez suivre ces directives :
+Si vous découvrez une vulnérabilité de sécurité dans Hostclient, veuillez suivre ces directives :
 
 ### Comment Signaler
 
-1. **Email** : Envoyez un rapport détaillé à [martin@clientxcms.com](mailto:martin@clientxcms.com)
+1. **Email** : Envoyez un rapport détaillé à [martin@Hostclient.com](mailto:martin@Hostclient.com)
 2. **GitHub** : Utilisez le bouton "Report a vulnerability" dans l'onglet Security
 
 ### Informations à Fournir

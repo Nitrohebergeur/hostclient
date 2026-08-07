@@ -1,18 +1,18 @@
 <?php
 
 /*
- * This file is part of the CLIENTXCMS project.
- * It is the property of the CLIENTXCMS association.
+ * This file is part of the Hostclient project.
+ * It is the property of the Hostclient association.
  *
  * Personal and non-commercial use of this source code is permitted.
  * However, any use in a project that generates profit (directly or indirectly),
- * or any reuse for commercial purposes, requires prior authorization from CLIENTXCMS.
+ * or any reuse for commercial purposes, requires prior authorization from Hostclient.
  *
  * To request permission or for more information, please contact our support:
- * https://clientxcms.com/client/support
+ * https://Hostclient.com/client/support
  *
- * Learn more about CLIENTXCMS License at:
- * https://clientxcms.com/eula
+ * Learn more about Hostclient License at:
+ * https://Hostclient.com/eula
  *
  * Year: 2025
  */
@@ -50,14 +50,14 @@ class MigrateCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'clientxcms:v1-migrate {--skip-pending=true} {--dbname=clientxcms} {--host=localhost} {--username=root} {--password=root} {--port=3306} {--force}  {--all=false} {--products} {--support} {--groups} {--servers} {--services} {--socialauth} {--wisp} {--invoices} {--clients} {--pterodactyl} {--proxmox} {--oses} {--templates} {--plesk} {--proxmox_ipam}';
+    protected $signature = 'Hostclient:v1-migrate {--skip-pending=true} {--dbname=Hostclient} {--host=localhost} {--username=root} {--password=root} {--port=3306} {--force}  {--all=false} {--products} {--support} {--groups} {--servers} {--services} {--socialauth} {--wisp} {--invoices} {--clients} {--pterodactyl} {--proxmox} {--oses} {--templates} {--plesk} {--proxmox_ipam}';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Migrate data from clientxcmsv1 to NEXT GEN (warning: this will delete all data in the tables)';
+    protected $description = 'Migrate data from Hostclientv1 to NEXT GEN (warning: this will delete all data in the tables)';
 
     /**
      * Execute the console command.
@@ -601,7 +601,7 @@ class MigrateCommand extends Command
                     'tax' => $tax,
                     'setupfees' => $setup,
                     'discount' => '[]',
-                    'notes' => 'Imported from clientxcms v1 on '.date('Y-m-d H:i:s'),
+                    'notes' => 'Imported from Hostclient v1 on '.date('Y-m-d H:i:s'),
                     'due_date' => Carbon::createFromFormat('Y-m-d H:i:s', $result->created_at)->addDays(7),
                     'external_id' => empty($result->transaction_id) ? null : $result->transaction_id,
                     'created_at' => $result->created_at,

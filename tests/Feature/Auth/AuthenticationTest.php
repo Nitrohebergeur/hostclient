@@ -67,7 +67,7 @@ class AuthenticationTest extends TestCase
     {
         $user = Customer::factory()->create();
         $response = $this->post('/forgot-password', [
-            'email' => 'fake@clientxcms.com',
+            'email' => 'fake@Hostclient.com',
         ]);
         $response->assertSessionHas('success');
     }

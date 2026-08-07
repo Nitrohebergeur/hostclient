@@ -46,7 +46,7 @@ class EmailControllerTest extends TestCase
             'recipient_id' => Customer::first()->id,
             'subject' => 'test',
             'content' => 'test',
-            'recipient' => 'test@clientxcms.com',
+            'recipient' => 'test@Hostclient.com',
             'template' => EmailTemplate::first()->id,
         ]);
         /** @var Customer $user */
@@ -62,7 +62,7 @@ class EmailControllerTest extends TestCase
             'recipient_id' => Customer::first()->id,
             'subject' => 'test',
             'content' => 'test',
-            'recipient' => 'test@clientxcms.com',
+            'recipient' => 'test@Hostclient.com',
             'template' => EmailTemplate::first()->id,
         ]);
         $user = Customer::where('id', '!=', $email->recipient_id)->first();

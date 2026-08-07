@@ -1,18 +1,18 @@
 <?php
 
 /*
- * This file is part of the CLIENTXCMS project.
- * It is the property of the CLIENTXCMS association.
+ * This file is part of the Hostclient project.
+ * It is the property of the Hostclient association.
  *
  * Personal and non-commercial use of this source code is permitted.
  * However, any use in a project that generates profit (directly or indirectly),
- * or any reuse for commercial purposes, requires prior authorization from CLIENTXCMS.
+ * or any reuse for commercial purposes, requires prior authorization from Hostclient.
  *
  * To request permission or for more information, please contact our support:
- * https://clientxcms.com/client/support
+ * https://Hostclient.com/client/support
  *
- * Learn more about CLIENTXCMS License at:
- * https://clientxcms.com/eula
+ * Learn more about Hostclient License at:
+ * https://Hostclient.com/eula
  *
  * Year: 2025
  */
@@ -35,13 +35,13 @@ class ApiController extends Controller
      *
      * @OA\Info(
      *      version="1.0.2",
-     *      title="CLIENTXCMS New Gen API",
-     *      description="This is the API documentation for the CLIENTXCMS New Gen API. ",
+     *      title="Hostclient New Gen API",
+     *      description="This is the API documentation for the Hostclient New Gen API. ",
      *
      *      @OA\Contact(
-     *          email="contact@clientxcms.com",
-     *         name="CLIENTXCMS Support",
-     *         url="https://clientxcms.com/client/support"
+     *          email="contact@Hostclient.com",
+     *         name="Hostclient Support",
+     *         url="https://Hostclient.com/client/support"
      *      ),
      * )
      *

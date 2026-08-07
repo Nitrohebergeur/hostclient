@@ -19,7 +19,7 @@ return [
         env('APP_URL') ? ','.parse_url(env('APP_URL'), PHP_URL_HOST) : '',
         env('FRONTEND_URL') ? ','.parse_url(env('FRONTEND_URL'), PHP_URL_HOST) : ''
     ))),
-    'token_prefix' => 'CLIENTXCMS',
+    'token_prefix' => 'Hostclient',
 
     /*
     |--------------------------------------------------------------------------

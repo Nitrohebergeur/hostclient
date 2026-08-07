@@ -28,7 +28,7 @@ class AdminAutologinTest extends TestCase
     {
         $admin = $this->createAdmin();
 
-        Artisan::call('clientxcms:admin-autologin', ['--email' => $admin->email, '--expire' => 5]);
+        Artisan::call('Hostclient:admin-autologin', ['--email' => $admin->email, '--expire' => 5]);
         $output = Artisan::output();
 
         $this->assertMatchesRegularExpression('#Autologin link: https?://[^/]+/admin/autologin/\d+/[a-f0-9-]{36}\?signature=[a-f0-9]+#', $output);
@@ -48,7 +48,7 @@ class AdminAutologinTest extends TestCase
     public function test_autologin_link_with_correct_token_authenticates_admin(): void
     {
         $admin = $this->createAdmin();
-        Artisan::call('clientxcms:admin-autologin', ['--email' => $admin->email, '--expire' => 5]);
+        Artisan::call('Hostclient:admin-autologin', ['--email' => $admin->email, '--expire' => 5]);
         $output = Artisan::output();
         preg_match('#(/admin/autologin/\d+/[a-f0-9-]{36}\?signature=[a-f0-9]+)#', $output, $matches);
         $relativePath = $matches[1] ?? null;
@@ -63,7 +63,7 @@ class AdminAutologinTest extends TestCase
     public function test_autologin_link_with_tampered_token_is_rejected(): void
     {
         $admin = $this->createAdmin();
-        Artisan::call('clientxcms:admin-autologin', ['--email' => $admin->email, '--expire' => 5]);
+        Artisan::call('Hostclient:admin-autologin', ['--email' => $admin->email, '--expire' => 5]);
         $output = Artisan::output();
         preg_match('#(/admin/autologin/\d+/)([a-f0-9-]{36})(\?signature=[a-f0-9]+)#', $output, $matches);
         $tamperedPath = $matches[1].'00000000-0000-0000-0000-000000000000'.$matches[3];
@@ -76,7 +76,7 @@ class AdminAutologinTest extends TestCase
     public function test_autologin_link_with_db_leaked_hash_in_url_is_rejected(): void
     {
         $admin = $this->createAdmin();
-        Artisan::call('clientxcms:admin-autologin', ['--email' => $admin->email, '--expire' => 5]);
+        Artisan::call('Hostclient:admin-autologin', ['--email' => $admin->email, '--expire' => 5]);
         $admin->refresh();
         $stolenHashFromDb = $admin->getMetadata('autologin_key');
 

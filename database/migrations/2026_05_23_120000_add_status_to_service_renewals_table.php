@@ -1,7 +1,7 @@
 <?php
 
 /*
- * This file is part of the CLIENTXCMS project.
+ * This file is part of the Hostclient project.
  *
  * Adds a deterministic status column to `service_renewals` and a partial
  * uniqueness guarantee: a given service can have AT MOST ONE pending renewal
