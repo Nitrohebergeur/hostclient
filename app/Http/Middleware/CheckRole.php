@@ -19,9 +19,14 @@ class CheckRole
             return redirect()->route('login');
         }
 
-        // Vérification avec Spatie Permission
+        // L'admin a accès à tout (routes client incluses)
+        if ($request->user()->hasRole('admin')) {
+            return $next($request);
+        }
+
+        // Vérification du rôle demandé
         if (!$request->user()->hasRole($role)) {
-            abort(403, 'Unauthorized action.');
+            abort(403, 'Accès non autorisé.');
         }
 
         return $next($request);
