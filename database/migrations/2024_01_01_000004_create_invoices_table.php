@@ -80,6 +80,9 @@ return new class extends Migration
 
     public function down(): void
     {
+        Schema::table('services', function (Blueprint $table) {
+            $table->dropForeign(['invoice_id']);
+        });
         Schema::dropIfExists('payments');
         Schema::dropIfExists('invoice_items');
         Schema::dropIfExists('invoices');
