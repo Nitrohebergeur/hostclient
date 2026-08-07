@@ -431,6 +431,10 @@ install_node_deps() {
         log_err "Echec de npm install"
         exit 1
     }
+
+    # Corriger les permissions des binaires node_modules/.bin/ apres installation
+    chmod -R 755 "$INSTALL_DIR/node_modules/.bin/" 2>/dev/null || true
+
     log_ok "Dependances npm installees"
 
     log_info "Compilation des assets (npm run build)..."
