@@ -349,3 +349,199 @@ FLUSH PRIVILEGES;
 SQL
     log_ok "Base de donnees '$DB_NAME' creee"
 }
+
+install_php_deps() {
+    log_step "Installation des dependances PHP (Composer)"
+    cd "$INSTALL_DIR"
+    if [ "$APP_ENV" = "production" ]; then
+        composer install --no-dev --optimize-autoloader --no-interaction --quiet
+    else
+        composer install --optimize-autoloader --no-interaction --quiet
+    fi
+    log_ok "Dependances PHP installees"
+}
+
+install_node_deps() {
+    log_step "Installation des dependances Node.js et compilation des assets"
+    cd "$INSTALL_DIR"
+    npm install --silent
+    npm run build
+    log_ok "Assets compiles avec succes"
+}
+
+run_migrations() {
+    log_step "Migrations et donnees initiales"
+    cd "$INSTALL_DIR"
+
+    php artisan key:generate --no-interaction --force
+    log_ok "Cle d'application generee"
+
+    php artisan migrate --force --no-interaction
+    log_ok "Migrations executees"
+
+    php artisan db:seed --force --no-interaction
+    log_ok "Donnees initiales inserees"
+
+    php artisan tinker --no-interaction <<PHP 2>/dev/null || true
+\$user = \App\Models\User::updateOrCreate(
+    ['email' => '${ADMIN_EMAIL}'],
+    [
+        'name'             => '${ADMIN_NAME}',
+        'password'         => \Illuminate\Support\Facades\Hash::make('${ADMIN_PASS}'),
+        'status'           => 'active',
+        'email_verified_at'=> now(),
+    ]
+);
+\$user->assignRole('admin');
+exit;
+PHP
+    log_ok "Compte administrateur cree"
+}
+
+setup_storage() {
+    log_step "Configuration du stockage et des permissions"
+    cd "$INSTALL_DIR"
+
+    php artisan storage:link --no-interaction 2>/dev/null || true
+
+    chown -R www-data:www-data "$INSTALL_DIR" 2>/dev/null || \
+    chown -R nginx:nginx "$INSTALL_DIR" 2>/dev/null || \
+    log_warn "Impossible de changer le proprietaire — ajustez manuellement."
+
+    chmod -R 755 "$INSTALL_DIR"
+    chmod -R 775 "$INSTALL_DIR/storage"
+    chmod -R 775 "$INSTALL_DIR/bootstrap/cache"
+
+    log_ok "Permissions configurees"
+}
+
+optimize_app() {
+    log_step "Optimisation de l'application"
+    cd "$INSTALL_DIR"
+
+    if [ "$APP_ENV" = "production" ]; then
+        php artisan config:cache --no-interaction
+        php artisan route:cache  --no-interaction
+        php artisan view:cache   --no-interaction
+        php artisan event:cache  --no-interaction
+        log_ok "Cache production active"
+    fi
+
+    php artisan queue:restart --no-interaction 2>/dev/null || true
+    log_ok "Application optimisee"
+}
+
+setup_nginx() {
+    log_step "Configuration de Nginx"
+
+    # Installer Nginx si absent
+    if ! command -v nginx &>/dev/null; then
+        log_info "Installation de Nginx..."
+        $PKG_INSTALL nginx
+        systemctl enable nginx
+        systemctl start nginx
+        log_ok "Nginx installe et demarre"
+    fi
+
+    local DOMAIN
+    DOMAIN=$(echo "$APP_URL" | sed 's|https\?://||' | sed 's|/.*||')
+
+    # Detecter le socket PHP-FPM
+    local PHP_SOCKET="/var/run/php/php8.4-fpm.sock"
+    if [ -S "/run/php-fpm/www.sock" ]; then
+        PHP_SOCKET="/run/php-fpm/www.sock"
+    elif [ -S "/var/run/php-fpm/php-fpm.sock" ]; then
+        PHP_SOCKET="/var/run/php-fpm/php-fpm.sock"
+    fi
+
+    local NGINX_CONF="/etc/nginx/sites-available/hostclient"
+
+    # Creer sites-available/sites-enabled si necessaire (CentOS/RHEL)
+    if [ ! -d /etc/nginx/sites-available ]; then
+        mkdir -p /etc/nginx/sites-available /etc/nginx/sites-enabled
+        if ! grep -q "sites-enabled" /etc/nginx/nginx.conf; then
+            sed -i '/http {/a\    include /etc/nginx/sites-enabled/*;' /etc/nginx/nginx.conf
+        fi
+    fi
+
+    log_info "Creation de la configuration Nginx pour ${DOMAIN}..."
+
+    # Ecriture du bloc server sans heredoc pour eviter les problemes de parsing
+    {
+        echo "server {"
+        echo "    listen 80;"
+        echo "    listen [::]:80;"
+        echo "    server_name ${DOMAIN} www.${DOMAIN};"
+        echo "    root ${INSTALL_DIR}/public;"
+        echo ""
+        echo "    add_header X-Frame-Options \"SAMEORIGIN\" always;"
+        echo "    add_header X-Content-Type-Options \"nosniff\" always;"
+        echo "    add_header X-XSS-Protection \"1; mode=block\" always;"
+        echo "    add_header Referrer-Policy \"no-referrer-when-downgrade\" always;"
+        echo ""
+        echo "    index index.php index.html;"
+        echo "    charset utf-8;"
+        echo "    client_max_body_size 100M;"
+        echo ""
+        echo "    access_log /var/log/nginx/hostclient-access.log;"
+        echo "    error_log  /var/log/nginx/hostclient-error.log;"
+        echo ""
+        echo "    location / {"
+        echo '        try_files $uri $uri/ /index.php?$query_string;'
+        echo "    }"
+        echo ""
+        echo "    location = /favicon.ico { access_log off; log_not_found off; }"
+        echo "    location = /robots.txt  { access_log off; log_not_found off; }"
+        echo ""
+        echo "    error_page 404 /index.php;"
+        echo ""
+        echo "    location ~ \\.php\$ {"
+        echo '        try_files $uri =404;'
+        echo '        fastcgi_split_path_info ^(.+\.php)(/.+)$;'
+        echo "        fastcgi_pass unix:${PHP_SOCKET};"
+        echo "        fastcgi_index index.php;"
+        echo '        fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;'
+        echo "        include fastcgi_params;"
+        echo "        fastcgi_read_timeout 300;"
+        echo "        fastcgi_buffers 16 16k;"
+        echo "        fastcgi_buffer_size 32k;"
+        echo "    }"
+        echo ""
+        echo "    location ~ /\\.(?!well-known).* { deny all; }"
+        echo ""
+        echo "    gzip on;"
+        echo "    gzip_vary on;"
+        echo "    gzip_proxied any;"
+        echo "    gzip_comp_level 6;"
+        echo "    gzip_types text/plain text/css text/xml text/javascript application/json application/javascript application/xml+rss font/truetype font/opentype image/svg+xml;"
+        echo ""
+        echo "    location ~* \\.(jpg|jpeg|png|gif|ico|css|js|svg|woff|woff2|ttf|eot)\$ {"
+        echo '        expires 1y;'
+        echo '        add_header Cache-Control "public, immutable";'
+        echo "    }"
+        echo "}"
+    } > "$NGINX_CONF"
+
+    ln -sf "$NGINX_CONF" /etc/nginx/sites-enabled/hostclient
+
+    # Desactiver le site par defaut
+    rm -f /etc/nginx/sites-enabled/default 2>/dev/null || true
+
+    # Tester et recharger
+    if nginx -t 2>/dev/null; then
+        systemctl reload nginx
+        log_ok "Nginx configure pour ${DOMAIN}"
+    else
+        log_err "Erreur de configuration Nginx"
+        nginx -t
+        return 1
+    fi
+
+    # Redemarrer PHP-FPM
+    if systemctl is-active --quiet php8.4-fpm 2>/dev/null; then
+        systemctl restart php8.4-fpm
+    elif systemctl is-active --quiet php-fpm 2>/dev/null; then
+        systemctl restart php-fpm
+    fi
+    log_ok "PHP-FPM redemarre"
+}
