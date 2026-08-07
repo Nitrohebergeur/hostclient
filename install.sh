@@ -366,45 +366,31 @@ SQL
 install_php_deps() {
     log_step "Installation des dependances PHP (Composer)"
 
-    # Autoriser root et desactiver les advisories
     export COMPOSER_ALLOW_SUPERUSER=1
     composer config --global --no-interaction policy.advisories.block false 2>/dev/null || true
 
-    # IMPORTANT : se placer dans le repertoire avant composer
     cd "$INSTALL_DIR"
-    log_info "Resolution des dependances depuis $(pwd)..."
+    log_info "Repertoire : $(pwd)"
 
-    local OPTS="--no-interaction --optimize-autoloader"
+    local OPTS="--no-interaction --optimize-autoloader --no-scripts"
 
     if [ "$APP_ENV" = "production" ]; then
-        COMPOSER_ALLOW_SUPERUSER=1 composer install --no-dev $OPTS && {
-            log_ok "Dependances PHP installees"
-            return
+        COMPOSER_ALLOW_SUPERUSER=1 composer install --no-dev $OPTS 2>&1 || {
+            log_err "Echec de l'installation des dependances PHP."
+            exit 1
         }
     else
-        COMPOSER_ALLOW_SUPERUSER=1 composer install $OPTS && {
-            log_ok "Dependances PHP installees"
-            return
+        COMPOSER_ALLOW_SUPERUSER=1 composer install $OPTS 2>&1 || {
+            log_err "Echec de l'installation des dependances PHP."
+            exit 1
         }
     fi
 
-    # Fallback : ignorer les erreurs de script post-install
-    log_warn "Echec, tentative sans scripts post-install..."
-    if [ "$APP_ENV" = "production" ]; then
-        COMPOSER_ALLOW_SUPERUSER=1 composer install --no-dev $OPTS --no-scripts 2>&1
-    else
-        COMPOSER_ALLOW_SUPERUSER=1 composer install $OPTS --no-scripts 2>&1
-    fi
+    # Lancer manuellement le discover (evite le probleme de repertoire)
+    COMPOSER_ALLOW_SUPERUSER=1 composer dump-autoload --optimize --no-scripts 2>/dev/null || true
+    php "$INSTALL_DIR/artisan" package:discover --ansi 2>/dev/null || true
 
-    # Lancer manuellement le discover apres installation
-    if [ -f "$INSTALL_DIR/artisan" ]; then
-        COMPOSER_ALLOW_SUPERUSER=1 composer dump-autoload --optimize 2>/dev/null || true
-        php artisan package:discover --ansi 2>/dev/null || true
-        log_ok "Dependances PHP installees"
-    else
-        log_err "Le fichier artisan est introuvable dans $INSTALL_DIR"
-        exit 1
-    fi
+    log_ok "Dependances PHP installees"
 }
 
 install_node_deps() {
