@@ -1,60 +1,48 @@
 <?php
 
-/*
- * This file is part of the Hostclient project.
- * It is the property of the Hostclient association.
- *
- * Personal and non-commercial use of this source code is permitted.
- * However, any use in a project that generates profit (directly or indirectly),
- * or any reuse for commercial purposes, requires prior authorization from Hostclient.
- *
- * To request permission or for more information, please contact our support:
- * https://Hostclient.com/client/support
- *
- * Learn more about Hostclient License at:
- * https://Hostclient.com/eula
- *
- * Year: 2025
- */
-
 namespace App\Http\Controllers\Auth;
 
-use App\Helpers\Countries;
 use App\Http\Controllers\Controller;
+use App\Models\Role;
+use App\Models\User;
+use App\Support\AuditLogger;
 use Illuminate\Http\Request;
-use libphonenumber\PhoneNumberUtil;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 
 class RegisterController extends Controller
 {
-    public function showForm(Request $request)
+    public function showRegisterForm()
     {
-        if (setting('allow_registration', true) === false) {
-            return back()->with('error', __('auth.register.error_registration_disabled'));
-        }
-        if (app('extension')->extensionIsEnabled('socialauth')) {
-            $providers = \App\Addons\SocialAuth\Models\ProviderEntity::where('enabled', true)->get();
-        } else {
-            $providers = collect([]);
-        }
+        return view('auth.register');
+    }
 
-        $countryPhoneMeta = collect(Countries::names())->mapWithKeys(function ($name, $iso2) {
-            $code = PhoneNumberUtil::getInstance()->getCountryCodeForRegion($iso2);
-            $flag = mb_chr(127397 + ord($iso2[0])).mb_chr(127397 + ord($iso2[1]));
-
-            return [$iso2 => [
-                'name' => $name,
-                'dial_code' => $code ? '+'.$code : null,
-                'flag' => $flag,
-                'language' => app()->getLocale(),
-            ]];
-        })->toArray();
-
-        return view('front.auth.register', [
-            'countries' => Countries::names(),
-            'providers' => $providers,
-            'countryPhoneMeta' => $countryPhoneMeta,
-            'redirect' => $request->query('redirect'),
-            'email' => $request->query('email'),
+    public function register(Request $request)
+    {
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'company' => ['nullable', 'string', 'max:255'],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
+            'password' => ['required', 'string', 'min:12', 'confirmed'],
+            'terms' => ['accepted'],
         ]);
+
+        $user = User::create([
+            'name' => $validated['name'],
+            'company' => $validated['company'] ?? null,
+            'email' => $validated['email'],
+            'password' => Hash::make($validated['password']),
+            'locale' => app()->getLocale(),
+        ]);
+
+        // Assign the client role.
+        $role = Role::firstOrCreate(['name' => 'client'], ['label' => 'Client']);
+        $user->roles()->attach($role);
+
+        AuditLogger::record('auth.register', $user);
+
+        Auth::login($user);
+
+        return redirect()->route('dashboard');
     }
 }

@@ -1,41 +1,72 @@
 <?php
 
-/*
- * This file is part of the Hostclient project.
- * It is the property of the Hostclient association.
- *
- * Personal and non-commercial use of this source code is permitted.
- * However, any use in a project that generates profit (directly or indirectly),
- * or any reuse for commercial purposes, requires prior authorization from Hostclient.
- *
- * To request permission or for more information, please contact our support:
- * https://Hostclient.com/client/support
- *
- * Learn more about Hostclient License at:
- * https://Hostclient.com/eula
- *
- * Year: 2025
- */
-
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
+use App\Support\AuditLogger;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\RateLimiter;
 
 class LoginController extends Controller
 {
-    public function showForm(Request $request)
+    public function showLoginForm()
     {
-        if (app('extension')->extensionIsEnabled('socialauth')) {
-            $providers = \App\Addons\SocialAuth\Models\ProviderEntity::where('enabled', true)->get();
-        } else {
-            $providers = collect([]);
+        return view('auth.login');
+    }
+
+    public function login(Request $request)
+    {
+        $credentials = $request->validate([
+            'email' => ['required', 'email'],
+            'password' => ['required', 'string'],
+        ]);
+
+        if (RateLimiter::tooManyAttempts('login:'.$request->input('email').'|'.$request->ip(), 5)) {
+            $seconds = RateLimiter::availableIn('login:'.$request->input('email').'|'.$request->ip());
+
+            return back()->withErrors(['email' => "Too many attempts. Try again in {$seconds} seconds."]);
         }
 
-        return view('front.auth.login', [
-            'providers' => $providers,
-            'redirect' => $request->query('redirect'),
-            'email' => $request->query('email'),
+        $user = User::where('email', $credentials['email'])->first();
+
+        if (! $user || ! $user->is_active || ! Auth::attempt($credentials, $request->boolean('remember'))) {
+            RateLimiter::hit('login:'.$request->input('email').'|'.$request->ip());
+
+            return back()->withErrors(['email' => 'These credentials do not match our records.']);
+        }
+
+        RateLimiter::clear('login:'.$request->input('email').'|'.$request->ip());
+
+        $user->update([
+            'last_login_at' => now(),
+            'last_login_ip' => $request->ip(),
         ]);
+
+        AuditLogger::record('auth.login', $user);
+
+        if ($user->hasEnabledTwoFactorAuth()) {
+            $request->session()->put('2fa_pending_user', $user->id);
+            Auth::logout();
+
+            return redirect()->route('2fa.challenge');
+        }
+
+        $request->session()->regenerate();
+        $request->session()->put('2fa_verified', true);
+
+        return redirect()->intended(route('dashboard'));
+    }
+
+    public function logout(Request $request)
+    {
+        AuditLogger::record('auth.logout', $request->user());
+
+        Auth::logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return redirect()->route('landing');
     }
 }
