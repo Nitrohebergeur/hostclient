@@ -38,9 +38,9 @@ For detailed installation instructions and usage guides, visit the official docu
 
 ## Need a VPS or hosting?
 
-If you require VPS hosting, check out **CTXHosting**, our VPS website:  
-![CTXHosting](https://ctxhosting.fr/assets/images/ctxhosting/ctxhosting-blue.png)  
-[🌐 Visit CTXHosting](https://ctxhosting.fr/)
+If you require VPS hosting, check out **Nitrohebergeur**, our VPS website:  
+![Nitrohebergeur](https://Nitrohebergeur.fr/assets/images/Nitrohebergeur/Nitrohebergeur-blue.png)  
+[🌐 Visit Nitrohebergeur](https://Nitrohebergeur.fr/)
 
 All our Premium and enterprise plans include free cloud hosting to install Hostclient with a single click.
 
@@ -72,7 +72,3 @@ Invest in a Premium plan to maximize the potential of Hostclient and streamline 
 Explore our marketplace for a variety of extensions and themes to enhance your Hostclient experience:  
 [🌐 Visit the Marketplace](https://Hostclient.com/resources)
 ## Example Screenshot
-
-![Invoice Example](https://Hostclient.com/Themes/Hostclient/images/Hostclient/home/nextgen/Facture.png)
-![Earn page](https://Hostclient.com/Themes/Hostclient/images/Hostclient/home/nextgen/earn.png)
-![Proxmox Example](https://Hostclient.com/Themes/Hostclient/images/Hostclient/home/nextgen/proxmox.png)
