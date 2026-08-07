@@ -427,6 +427,8 @@ install_node_deps() {
     log_info "Version npm     : $(npm -v)"
 
     log_info "Installation des dependances npm..."
+    # Supprimer node_modules s'il existe (permissions potentiellement incorrectes)
+    rm -rf "$INSTALL_DIR/node_modules"
     npm install --no-audit --no-fund 2>&1 || {
         log_err "Echec de npm install"
         exit 1
