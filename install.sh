@@ -530,67 +530,139 @@ optimize_app() {
 }
 
 setup_nginx() {
-    log_step "Configuration Nginx (optionnelle)"
+    log_step "Configuration de Nginx"
 
+    # Installer Nginx si absent
     if ! command -v nginx &>/dev/null; then
-        log_info "Nginx non trouvé — configuration ignorée."
-        return
+        log_info "Installation de Nginx…"
+        $PKG_INSTALL nginx
+        systemctl enable nginx
+        systemctl start nginx
+        log_ok "Nginx installé et démarré"
     fi
 
     local DOMAIN
     DOMAIN=$(echo "$APP_URL" | sed 's|https\?://||' | sed 's|/.*||')
 
+    # Détecter le chemin du socket PHP-FPM
+    local PHP_SOCKET="/var/run/php/php8.4-fpm.sock"
+    if [ -S "/run/php-fpm/www.sock" ]; then
+        PHP_SOCKET="/run/php-fpm/www.sock"
+    elif [ -S "/var/run/php-fpm/php-fpm.sock" ]; then
+        PHP_SOCKET="/var/run/php-fpm/php-fpm.sock"
+    fi
+
     local NGINX_CONF="/etc/nginx/sites-available/hostclient"
+    local NGINX_ENABLED="/etc/nginx/sites-enabled/hostclient"
+
+    # Créer le répertoire sites-available/sites-enabled si nécessaire (CentOS/RHEL)
+    if [ ! -d /etc/nginx/sites-available ]; then
+        mkdir -p /etc/nginx/sites-available
+        mkdir -p /etc/nginx/sites-enabled
+        
+        # Ajouter l'inclusion dans nginx.conf si absent
+        if ! grep -q "sites-enabled" /etc/nginx/nginx.conf; then
+            sed -i '/http {/a \    include /etc/nginx/sites-enabled/*;' /etc/nginx/nginx.conf
+        fi
+    fi
+
+    log_info "Création de la configuration Nginx pour ${DOMAIN}…"
 
     cat > "$NGINX_CONF" <<NGINX
 server {
     listen 80;
     listen [::]:80;
-    server_name ${DOMAIN};
+    server_name ${DOMAIN} www.${DOMAIN};
     root ${INSTALL_DIR}/public;
 
-    add_header X-Frame-Options "SAMEORIGIN";
-    add_header X-Content-Type-Options "nosniff";
-    add_header X-XSS-Protection "1; mode=block";
+    # Security Headers
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-XSS-Protection "1; mode=block" always;
+    add_header Referrer-Policy "no-referrer-when-downgrade" always;
 
-    index index.php;
+    index index.php index.html;
     charset utf-8;
 
+    # Logs
+    access_log /var/log/nginx/hostclient-access.log;
+    error_log /var/log/nginx/hostclient-error.log;
+
+    # Main location
     location / {
         try_files \$uri \$uri/ /index.php?\$query_string;
     }
 
+    # Static files
     location = /favicon.ico { access_log off; log_not_found off; }
     location = /robots.txt  { access_log off; log_not_found off; }
 
+    # Error pages
     error_page 404 /index.php;
 
+    # PHP-FPM
     location ~ \.php$ {
-        fastcgi_pass unix:/var/run/php/php8.4-fpm.sock;
+        try_files \$uri =404;
+        fastcgi_split_path_info ^(.+\.php)(/.+)$;
+        fastcgi_pass unix:${PHP_SOCKET};
+        fastcgi_index index.php;
         fastcgi_param SCRIPT_FILENAME \$realpath_root\$fastcgi_script_name;
         include fastcgi_params;
         fastcgi_read_timeout 300;
+        fastcgi_buffers 16 16k;
+        fastcgi_buffer_size 32k;
     }
 
+    # Deny access to hidden files
     location ~ /\.(?!well-known).* {
         deny all;
     }
 
-    # Gzip
+    # Client upload size
+    client_max_body_size 100M;
+
+    # Gzip compression
     gzip on;
-    gzip_types text/plain text/css application/json application/javascript text/xml application/xml application/xml+rss text/javascript;
     gzip_vary on;
+    gzip_proxied any;
+    gzip_comp_level 6;
+    gzip_types text/plain text/css text/xml text/javascript application/json application/javascript application/xml+rss application/rss+xml font/truetype font/opentype application/vnd.ms-fontobject image/svg+xml;
+
+    # Cache static assets
+    location ~* \.(jpg|jpeg|png|gif|ico|css|js|svg|woff|woff2|ttf|eot)$ {
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+    }
 }
 NGINX
 
-    if [ -d /etc/nginx/sites-enabled ]; then
-        ln -sf "$NGINX_CONF" /etc/nginx/sites-enabled/hostclient
-        # Désactiver le site par défaut si présent
-        rm -f /etc/nginx/sites-enabled/default 2>/dev/null || true
+    # Activer le site
+    ln -sf "$NGINX_CONF" "$NGINX_ENABLED"
+    
+    # Désactiver le site par défaut
+    if [ -f /etc/nginx/sites-enabled/default ]; then
+        rm -f /etc/nginx/sites-enabled/default
+        log_info "Site Nginx par défaut désactivé"
     fi
 
-    nginx -t && systemctl reload nginx
-    log_ok "Nginx configuré pour ${DOMAIN}"
+    # Tester et recharger Nginx
+    if nginx -t 2>/dev/null; then
+        systemctl reload nginx
+        log_ok "Nginx configuré avec succès pour ${DOMAIN}"
+        log_info "Accédez à votre site via : ${CYAN}http://${DOMAIN}${NC}"
+    else
+        log_err "Erreur de configuration Nginx — vérifiez manuellement"
+        nginx -t
+        return 1
+    fi
+
+    # S'assurer que PHP-FPM est démarré
+    if systemctl is-active --quiet php8.4-fpm 2>/dev/null; then
+        systemctl restart php8.4-fpm
+    elif systemctl is-active --quiet php-fpm 2>/dev/null; then
+        systemctl restart php-fpm
+    fi
+    log_ok "PHP-FPM redémarré"
 }
 
 setup_supervisor() {
@@ -650,6 +722,9 @@ setup_cron() {
 }
 
 print_success() {
+    local DOMAIN
+    DOMAIN=$(echo "$APP_URL" | sed 's|https\?://||' | sed 's|/.*||')
+    
     echo ""
     echo -e "${GREEN}${BOLD}"
     echo "  ╔══════════════════════════════════════════════════════════╗"
@@ -669,13 +744,27 @@ print_success() {
     echo -e "  📄 Configuration  : ${CYAN}${INSTALL_DIR}/.env${NC}"
     echo -e "  📝 Logs           : ${CYAN}${INSTALL_DIR}/storage/logs${NC}"
     echo -e "  🌐 Nginx config   : ${CYAN}/etc/nginx/sites-available/hostclient${NC}"
+    echo -e "  🔄 Supervisor     : ${CYAN}/etc/supervisor/conf.d/hostclient.conf${NC}"
+    echo ""
+    echo -e "  ${BOLD}Services actifs :${NC}"
+    echo -e "  ✓ Nginx          : ${GREEN}Démarré${NC}"
+    echo -e "  ✓ PHP-FPM        : ${GREEN}Démarré${NC}"
+    echo -e "  ✓ Queue Workers  : ${GREEN}2 workers actifs${NC}"
+    echo -e "  ✓ Scheduler      : ${GREEN}Cron configuré${NC}"
     echo ""
     echo -e "  ${BOLD}Commandes utiles :${NC}"
     echo -e "  ${CYAN}cd ${INSTALL_DIR}${NC}"
-    echo -e "  ${CYAN}php artisan queue:work${NC}          # Démarrer les workers"
+    echo -e "  ${CYAN}php artisan queue:work${NC}          # Démarrer un worker manuellement"
     echo -e "  ${CYAN}php artisan schedule:run${NC}        # Lancer les tâches planifiées"
-    echo -e "  ${CYAN}php artisan horizon${NC}             # Monitorer les queues (Laravel Horizon)"
     echo -e "  ${CYAN}php artisan cache:clear${NC}         # Vider le cache"
+    echo -e "  ${CYAN}supervisorctl status${NC}            # Voir l'état des workers"
+    echo -e "  ${CYAN}nginx -t${NC}                        # Tester la config Nginx"
+    echo -e "  ${CYAN}systemctl status nginx${NC}          # État de Nginx"
+    echo ""
+    echo -e "  ${BOLD}Prochaines étapes :${NC}"
+    echo -e "  1. Configurez votre DNS pour pointer vers ce serveur"
+    echo -e "  2. Installez un certificat SSL avec : ${CYAN}certbot --nginx -d ${DOMAIN}${NC}"
+    echo -e "  3. Configurez vos passerelles de paiement dans le panel admin"
     echo ""
     echo -e "  ${YELLOW}Documentation : https://docs.hostclient.io${NC}"
     echo -e "  ${YELLOW}Support       : https://github.com/hostclient/hostclient/issues${NC}"
