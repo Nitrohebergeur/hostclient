@@ -121,10 +121,32 @@ body {
 }
 
 .hc-card-header {
-  padding: var(--hc-space-5) var(--hc-space-6);
+  padding: var(--hc-space-4) var(--hc-space-5);
   border-bottom: 1px solid var(--hc-border);
   font-weight: 600;
   font-size: var(--hc-text-lg);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--hc-space-3);
+}
+.hc-card-header h3 {
+  margin: 0;
+  font-size: var(--hc-text-base);
+  font-weight: 600;
+  color: var(--hc-text);
+}
+.hc-card-header p {
+  margin: 2px 0 0;
+  font-size: var(--hc-text-xs);
+  color: var(--hc-text-muted);
+  font-weight: 400;
+}
+.hc-card-header-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--hc-space-2);
+  flex-shrink: 0;
 }
 
 .hc-card-body {

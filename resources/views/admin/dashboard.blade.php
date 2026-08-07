@@ -21,7 +21,8 @@
 
         <div class="hc-info-grid" style="margin-bottom: var(--hc-space-8);">
             {{-- Chart revenus --}}
-            <x-card header="Revenus (30 derniers jours)" :actions="'<i data-lucide=\'bar-chart-2\' style=\'width: 16px; height: 16px; color: var(--hc-text-muted);\'></i>'">
+            <x-card>
+                <x-slot:header>Revenus (30 derniers jours)</x-slot:header>
                 <div style="height: 280px;">
                     <canvas id="revenueChart"></canvas>
                 </div>
