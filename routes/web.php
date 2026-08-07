@@ -5,7 +5,12 @@ use App\Http\Controllers\Client\DashboardController as ClientDashboard;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    return view('welcome');
+    $featured = \App\Models\Product::active()->inStock()->featured()->with('category')->take(6)->get();
+    $categories = \App\Models\ProductCategory::active()
+        ->with(['products' => fn($q) => $q->active()->inStock()->orderBy('sort_order')->take(3)])
+        ->orderBy('sort_order')
+        ->get();
+    return view('welcome', compact('featured', 'categories'));
 })->name('home');
 
 // Authentication routes
