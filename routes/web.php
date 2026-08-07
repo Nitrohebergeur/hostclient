@@ -129,3 +129,10 @@ Route::prefix('store')->name('store.')->group(function () {
 Route::post('/webhooks/stripe', [\App\Http\Controllers\WebhookController::class, 'stripe'])->name('webhooks.stripe');
 Route::post('/webhooks/paypal', [\App\Http\Controllers\WebhookController::class, 'paypal'])->name('webhooks.paypal');
 Route::post('/webhooks/mollie', [\App\Http\Controllers\WebhookController::class, 'mollie'])->name('webhooks.mollie');
+
+// Checkout return URLs (PayPal redirects here after user approves)
+Route::middleware(['auth'])->group(function () {
+    Route::get('/checkout/success/{order}', [\App\Http\Controllers\CheckoutController::class, 'success'])->name('checkout.success');
+    Route::get('/checkout/cancel/{order}', [\App\Http\Controllers\CheckoutController::class, 'cancel'])->name('checkout.cancel');
+    Route::get('/checkout/confirmation/{order}', [\App\Http\Controllers\CheckoutController::class, 'successPage'])->name('checkout.success.page');
+});
