@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Setting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
 
@@ -33,7 +34,6 @@ class ModuleController extends Controller
         $enabled = config('hostclient.modules.enabled', []);
         if (!in_array($module, $enabled)) {
             $enabled[] = $module;
-            // In a real app, persist this to settings table
             Setting::set('modules_enabled', $enabled, 'json', 'modules');
         }
 
@@ -51,7 +51,7 @@ class ModuleController extends Controller
         $enabled = config('hostclient.modules.enabled', []);
         $enabled = array_filter($enabled, fn($m) => $m !== $module);
 
-        \App\Models\Setting::set('modules_enabled', array_values($enabled), 'json', 'modules');
+        Setting::set('modules_enabled', array_values($enabled), 'json', 'modules');
 
         return back()->with('success', "Module {$module} désinstallé.");
     }
@@ -68,7 +68,7 @@ class ModuleController extends Controller
             $message = "Module {$module} activé.";
         }
 
-        \App\Models\Setting::set('modules_enabled', array_values($enabled), 'json', 'modules');
+        Setting::set('modules_enabled', array_values($enabled), 'json', 'modules');
 
         return back()->with('success', $message);
     }
