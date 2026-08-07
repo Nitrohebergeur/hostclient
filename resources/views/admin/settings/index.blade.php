@@ -364,3 +364,160 @@
                 </div>
             </div>
         </div>
+
+        {{-- ═══════════════════════════════════════════════════════════ --}}
+        {{-- ONGLET SÉCURITÉ --}}
+        {{-- ═══════════════════════════════════════════════════════════ --}}
+        <div x-show="tab === 'security'" class="mt-6">
+            <form method="POST" action="{{ route('admin.settings.update') }}" class="space-y-6">
+                @csrf @method('PUT')
+                <input type="hidden" name="group" value="security">
+
+                <div class="card">
+                    <div class="card-header"><h3 class="font-bold text-gray-900 dark:text-white">Options de Sécurité</h3></div>
+                    <div class="card-body space-y-4">
+                        @foreach([
+                            ['security_force_2fa_admin',     'Forcer 2FA pour les admins',       "Tous les administrateurs doivent activer l'authentification à deux facteurs", false],
+                            ['security_recaptcha_register',  'reCAPTCHA sur inscription',         "Protéger le formulaire d'inscription avec reCAPTCHA", true],
+                            ['security_recaptcha_login',     'reCAPTCHA sur connexion',           "Activer reCAPTCHA après 3 tentatives de connexion échouées", true],
+                            ['security_audit_log',           "Journaux d'audit",                  "Enregistrer toutes les actions des administrateurs", true],
+                            ['security_rate_limit_api',      'Rate limiting API',                 "Limiter le nombre de requêtes API par IP", true],
+                            ['security_ip_whitelist_admin',  'Restreindre accès admin par IP',    "Autoriser uniquement certaines IP pour le panel admin", false],
+                        ] as [$key, $label, $desc, $default])
+                        @php $val = isset($settings[$key]) ? (bool)$settings[$key] : $default; @endphp
+                        <div class="flex items-center justify-between py-3 border-b border-gray-100 dark:border-gray-700 last:border-0">
+                            <div>
+                                <p class="font-medium text-gray-900 dark:text-white text-sm">{{ $label }}</p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400">{{ $desc }}</p>
+                            </div>
+                            <div x-data="{ on: {{ $val ? 'true' : 'false' }} }">
+                                <input type="hidden" name="{{ $key }}" :value="on ? '1' : '0'">
+                                <div @click="on = !on" class="relative cursor-pointer">
+                                    <div :class="on ? 'bg-primary-600' : 'bg-gray-300 dark:bg-gray-600'" class="w-11 h-6 rounded-full transition-colors"></div>
+                                    <div :class="on ? 'translate-x-5' : 'translate-x-1'" class="absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform"></div>
+                                </div>
+                            </div>
+                        </div>
+                        @endforeach
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header"><h3 class="font-bold text-gray-900 dark:text-white">reCAPTCHA (Google)</h3></div>
+                    <div class="card-body">
+                        <div class="grid sm:grid-cols-2 gap-5">
+                            <div>
+                                <label class="form-label">Clé Site (Site Key)</label>
+                                <input type="text" name="recaptcha_site_key" value="{{ $settings['recaptcha_site_key'] ?? '' }}" class="form-input" placeholder="6Le...">
+                            </div>
+                            <div>
+                                <label class="form-label">Clé Secrète (Secret Key)</label>
+                                <input type="password" name="recaptcha_secret_key" value="{{ $settings['recaptcha_secret_key'] ?? '' }}" class="form-input" placeholder="6Le...">
+                            </div>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-3">Obtenez vos clés sur <a href="https://www.google.com/recaptcha" target="_blank" class="text-primary-600 hover:underline">google.com/recaptcha</a></p>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header"><h3 class="font-bold text-gray-900 dark:text-white">Paramètres Session & API</h3></div>
+                    <div class="card-body">
+                        <div class="grid sm:grid-cols-2 gap-5">
+                            <div>
+                                <label class="form-label">Durée de session (minutes)</label>
+                                <input type="number" name="session_lifetime" value="{{ $settings['session_lifetime'] ?? '120' }}" class="form-input" min="5">
+                            </div>
+                            <div>
+                                <label class="form-label">Rate limit API (requêtes/minute)</label>
+                                <input type="number" name="api_rate_limit" value="{{ $settings['api_rate_limit'] ?? '60' }}" class="form-input" min="1">
+                            </div>
+                            <div>
+                                <label class="form-label">IP autorisées panel admin</label>
+                                <textarea name="admin_ip_whitelist" rows="3" class="form-input font-mono text-sm" placeholder="1.2.3.4&#10;5.6.7.8">{{ $settings['admin_ip_whitelist'] ?? '' }}</textarea>
+                                <p class="text-xs text-gray-500 mt-1">Une IP par ligne. Vide = toutes les IP autorisées.</p>
+                            </div>
+                            <div>
+                                <label class="form-label">Tentatives max avant blocage</label>
+                                <input type="number" name="login_max_attempts" value="{{ $settings['login_max_attempts'] ?? '5' }}" class="form-input" min="1">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary">Enregistrer</button>
+            </form>
+        </div>
+
+        {{-- ═══════════════════════════════════════════════════════════ --}}
+        {{-- ONGLET PAIEMENTS --}}
+        {{-- ═══════════════════════════════════════════════════════════ --}}
+        <div x-show="tab === 'payment'" class="mt-6 space-y-4">
+            @php
+            $gateways = [
+                ['stripe',        'Stripe',            'Carte bancaire, Apple Pay, Google Pay',    ['stripe_public_key' => 'Clé Publique (pk_live_...)', 'stripe_secret_key' => 'Clé Secrète (sk_live_...)', 'stripe_webhook_secret' => 'Webhook Secret (whsec_...)']],
+                ['paypal',        'PayPal',             'Paiement PayPal et carte via PayPal',      ['paypal_client_id' => 'Client ID', 'paypal_client_secret' => 'Client Secret']],
+                ['mollie',        'Mollie',             'iDEAL, Bancontact, SEPA et plus',          ['mollie_api_key' => 'Clé API (live_...)']],
+                ['coinbase',      'Coinbase Commerce',  'Paiement en cryptomonnaie',                ['coinbase_api_key' => 'Clé API', 'coinbase_webhook_secret' => 'Webhook Secret']],
+                ['bank_transfer', 'Virement Bancaire',  'Virement SEPA manuel',                     ['bank_iban' => 'IBAN', 'bank_bic' => 'BIC / SWIFT', 'bank_holder' => 'Titulaire du compte']],
+            ];
+            @endphp
+
+            @foreach($gateways as [$key, $name, $desc, $fields])
+            @php $enabled = (bool)($settings[$key . '_enabled'] ?? false); @endphp
+            <div class="card" x-data="{ open: {{ $enabled ? 'true' : 'false' }}, enabled: {{ $enabled ? 'true' : 'false' }} }">
+                <form method="POST" action="{{ route('admin.settings.update') }}">
+                    @csrf @method('PUT')
+                    <input type="hidden" name="group" value="payment_{{ $key }}">
+                    <input type="hidden" name="{{ $key }}_enabled" :value="enabled ? '1' : '0'">
+
+                    <div class="card-body">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-4">
+                                <div class="w-12 h-12 bg-gray-100 dark:bg-gray-700 rounded-xl flex items-center justify-center font-bold text-gray-700 dark:text-gray-300 text-sm">
+                                    {{ strtoupper(substr($key, 0, 2)) }}
+                                </div>
+                                <div>
+                                    <p class="font-bold text-gray-900 dark:text-white">{{ $name }}</p>
+                                    <p class="text-sm text-gray-500 dark:text-gray-400">{{ $desc }}</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-4">
+                                <span x-show="enabled" class="text-xs text-green-600 dark:text-green-400 font-medium bg-green-50 dark:bg-green-900/20 px-2 py-1 rounded-full">Actif</span>
+                                <span x-show="!enabled" class="text-xs text-gray-500 font-medium bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded-full">Inactif</span>
+                                <div @click="enabled = !enabled; open = enabled" class="relative cursor-pointer">
+                                    <div :class="enabled ? 'bg-primary-600' : 'bg-gray-300 dark:bg-gray-600'" class="w-11 h-6 rounded-full transition-colors"></div>
+                                    <div :class="enabled ? 'translate-x-5' : 'translate-x-1'" class="absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform"></div>
+                                </div>
+                                <button type="button" @click="open = !open" class="btn btn-secondary btn-sm">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                    Configurer
+                                </button>
+                            </div>
+                        </div>
+
+                        <div x-show="open" x-transition class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                            <div class="grid sm:grid-cols-2 gap-4">
+                                @foreach($fields as $fieldKey => $fieldLabel)
+                                <div @if(str_contains($fieldKey, 'webhook') || str_contains($fieldKey, 'iban')) class="sm:col-span-2" @endif>
+                                    <label class="form-label text-xs">{{ $fieldLabel }}</label>
+                                    @if(str_contains(strtolower($fieldKey), 'secret') || str_contains(strtolower($fieldKey), 'key'))
+                                        <input type="password" name="{{ $fieldKey }}" value="{{ $settings[$fieldKey] ?? '' }}" class="form-input text-sm font-mono">
+                                    @else
+                                        <input type="text" name="{{ $fieldKey }}" value="{{ $settings[$fieldKey] ?? '' }}" class="form-input text-sm">
+                                    @endif
+                                </div>
+                                @endforeach
+                            </div>
+                            <div class="flex gap-2 mt-4">
+                                <button type="submit" class="btn btn-primary btn-sm">Enregistrer</button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            @endforeach
+        </div>
+
+    </div>{{-- end x-data tab --}}
+</div>
+@endsection
