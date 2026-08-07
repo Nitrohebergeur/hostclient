@@ -162,12 +162,8 @@ check_dependencies() {
     if [ ${#missing[@]} -gt 0 ]; then
         echo ""
         log_warn "Dependances manquantes : ${missing[*]}"
-        if confirm "Installer automatiquement les dependances manquantes ?"; then
-            install_dependencies "${missing[@]}"
-        else
-            log_err "Installation annulee."
-            exit 1
-        fi
+        log_info "Installation automatique des dependances manquantes..."
+        install_dependencies "${missing[@]}"
     fi
 }
 
