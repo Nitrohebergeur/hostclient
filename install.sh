@@ -255,8 +255,23 @@ ADMIN_FIRST=$(echo "$ADMIN_NAME" | awk '{print $1}')
 ADMIN_LAST=$(echo "$ADMIN_NAME" | awk '{print $2}')
 ADMIN_LAST=${ADMIN_LAST:-$ADMIN_FIRST}
 ADMIN_HASH=$(php -r "echo password_hash('${ADMIN_PASSWORD}', PASSWORD_BCRYPT);")
-mysql -u root "$DB_NAME" -e "INSERT INTO users (first_name, last_name, email, password, email_verified_at, email_verified, is_active, created_at, updated_at) VALUES ('${ADMIN_FIRST}', '${ADMIN_LAST}', '${ADMIN_EMAIL}', '${ADMIN_HASH}', NOW(), 1, 1, NOW(), NOW()) ON DUPLICATE KEY UPDATE password='${ADMIN_HASH}', is_active=1, email_verified=1;" 2>/dev/null
-print_success "Admin créé : ${ADMIN_EMAIL}"
+mysql -u root "$DB_NAME" <<EOSQL 2>/dev/null
+-- Créer / mettre à jour le compte admin
+INSERT INTO users (first_name, last_name, email, password, email_verified_at, email_verified, is_active, created_at, updated_at)
+VALUES ('${ADMIN_FIRST}', '${ADMIN_LAST}', '${ADMIN_EMAIL}', '${ADMIN_HASH}', NOW(), 1, 1, NOW(), NOW())
+ON DUPLICATE KEY UPDATE password='${ADMIN_HASH}', is_active=1, email_verified=1;
+
+-- Créer le rôle 'admin' s'il n'existe pas (Spatie)
+INSERT IGNORE INTO roles (name, guard_name, created_at, updated_at)
+VALUES ('admin', 'web', NOW(), NOW());
+
+-- Assigner le rôle 'admin' à l'utilisateur (Spatie: model_has_roles)
+INSERT IGNORE INTO model_has_roles (role_id, model_type, model_id)
+SELECT id, 'App\\\\Models\\\\User', u.id
+FROM roles r, users u
+WHERE r.name = 'admin' AND r.guard_name = 'web' AND u.email = '${ADMIN_EMAIL}';
+EOSQL
+print_success "Admin créé et rôle 'admin' assigné : ${ADMIN_EMAIL}"
 
 # Storage link
 php artisan storage:link
