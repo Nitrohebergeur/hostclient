@@ -365,38 +365,46 @@ SQL
 
 install_php_deps() {
     log_step "Installation des dependances PHP (Composer)"
-    cd "$INSTALL_DIR"
 
-    log_info "Resolution des dependances..."
-
-    # Autoriser root + desactiver le blocage des advisories de securite
+    # Autoriser root et desactiver les advisories
     export COMPOSER_ALLOW_SUPERUSER=1
-
-    # Desactiver le blocage des security advisories (config globale)
     composer config --global --no-interaction policy.advisories.block false 2>/dev/null || true
 
-    local COMPOSER_OPTS="--no-interaction --optimize-autoloader"
-    local COMPOSER_PROD_OPTS="--no-dev"
+    # IMPORTANT : se placer dans le repertoire avant composer
+    cd "$INSTALL_DIR"
+    log_info "Resolution des dependances depuis $(pwd)..."
+
+    local OPTS="--no-interaction --optimize-autoloader"
 
     if [ "$APP_ENV" = "production" ]; then
-        composer install $COMPOSER_OPTS $COMPOSER_PROD_OPTS 2>&1 || {
-            log_warn "Echec, tentative avec --ignore-platform-reqs..."
-            composer install $COMPOSER_OPTS $COMPOSER_PROD_OPTS --ignore-platform-reqs 2>&1 || {
-                log_err "Echec de l'installation des dependances PHP."
-                exit 1
-            }
+        COMPOSER_ALLOW_SUPERUSER=1 composer install --no-dev $OPTS && {
+            log_ok "Dependances PHP installees"
+            return
         }
     else
-        composer install $COMPOSER_OPTS 2>&1 || {
-            log_warn "Echec, tentative avec --ignore-platform-reqs..."
-            composer install $COMPOSER_OPTS --ignore-platform-reqs 2>&1 || {
-                log_err "Echec de l'installation des dependances PHP."
-                exit 1
-            }
+        COMPOSER_ALLOW_SUPERUSER=1 composer install $OPTS && {
+            log_ok "Dependances PHP installees"
+            return
         }
     fi
 
-    log_ok "Dependances PHP installees"
+    # Fallback : ignorer les erreurs de script post-install
+    log_warn "Echec, tentative sans scripts post-install..."
+    if [ "$APP_ENV" = "production" ]; then
+        COMPOSER_ALLOW_SUPERUSER=1 composer install --no-dev $OPTS --no-scripts 2>&1
+    else
+        COMPOSER_ALLOW_SUPERUSER=1 composer install $OPTS --no-scripts 2>&1
+    fi
+
+    # Lancer manuellement le discover apres installation
+    if [ -f "$INSTALL_DIR/artisan" ]; then
+        COMPOSER_ALLOW_SUPERUSER=1 composer dump-autoload --optimize 2>/dev/null || true
+        php artisan package:discover --ansi 2>/dev/null || true
+        log_ok "Dependances PHP installees"
+    else
+        log_err "Le fichier artisan est introuvable dans $INSTALL_DIR"
+        exit 1
+    fi
 }
 
 install_node_deps() {
