@@ -545,3 +545,56 @@ setup_nginx() {
     fi
     log_ok "PHP-FPM redemarre"
 }
+
+setup_supervisor() {
+    log_step "Configuration Supervisor (Queue Workers)"
+
+    if ! command -v supervisorctl &>/dev/null; then
+        log_info "Installation de Supervisor..."
+        $PKG_INSTALL supervisor 2>/dev/null || {
+            log_warn "Supervisor non installe — les queues ne tourneront pas automatiquement."
+            return
+        }
+    fi
+
+    cat > /etc/supervisor/conf.d/hostclient.conf <<SUPERVISOR
+[program:hostclient-queue]
+process_name=%(program_name)s_%(process_num)02d
+command=php ${INSTALL_DIR}/artisan queue:work redis --sleep=3 --tries=3 --max-time=3600
+autostart=true
+autorestart=true
+stopasgroup=true
+killasgroup=true
+user=www-data
+numprocs=2
+redirect_stderr=true
+stdout_logfile=${INSTALL_DIR}/storage/logs/queue.log
+stopwaitsecs=3600
+
+[program:hostclient-scheduler]
+process_name=%(program_name)s
+command=/bin/bash -c "while true; do php ${INSTALL_DIR}/artisan schedule:run --no-interaction; sleep 60; done"
+autostart=true
+autorestart=true
+user=www-data
+redirect_stderr=true
+stdout_logfile=${INSTALL_DIR}/storage/logs/scheduler.log
+SUPERVISOR
+
+    supervisorctl reread
+    supervisorctl update
+    supervisorctl start hostclient-queue:* 2>/dev/null || true
+    supervisorctl start hostclient-scheduler 2>/dev/null || true
+
+    log_ok "Supervisor configure (2 queue workers + scheduler)"
+}
+
+setup_cron() {
+    if ! command -v supervisorctl &>/dev/null; then
+        log_step "Configuration du Cron"
+        local CRON_FILE="/etc/cron.d/hostclient"
+        echo "* * * * * www-data php ${INSTALL_DIR}/artisan schedule:run >> /dev/null 2>&1" > "$CRON_FILE"
+        chmod 644 "$CRON_FILE"
+        log_ok "Cron configure dans $CRON_FILE"
+    fi
+}
