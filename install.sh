@@ -233,10 +233,10 @@ collect_config() {
 
     echo ""
     echo -e "  ── Base de donnees ──"
-    DB_HOST=$(ask     "Hote MySQL"              "127.0.0.1")
-    DB_PORT=$(ask     "Port MySQL"              "3306")
-    DB_NAME=$(ask     "Nom de la base"          "hostclient")
-    DB_USER=$(ask     "Utilisateur MySQL"       "hostclient")
+    DB_HOST=$(ask        "Hote MySQL"                          "127.0.0.1")
+    DB_PORT=$(ask        "Port MySQL"                          "3306")
+    DB_NAME=$(ask        "Nom de la base"                      "hostclient")
+    DB_USER=$(ask        "Utilisateur MySQL"                   "hostclient")
     DB_PASS=$(ask_secret "Mot de passe MySQL")
     DB_ROOT_PASS=$(ask_secret "Mot de passe root MySQL (pour creer la BDD)")
 
@@ -258,13 +258,8 @@ collect_config() {
     REDIS_PASS=$(ask_secret "Mot de passe Redis (vide = aucun)")
 
     echo ""
-    echo -e "  ── Email (SMTP) ──"
-    MAIL_HOST=$(ask   "Hote SMTP"          "smtp.mailtrap.io")
-    MAIL_PORT=$(ask   "Port SMTP"          "587")
-    MAIL_USER=$(ask   "Utilisateur SMTP"   "")
-    MAIL_PASS=$(ask_secret "Mot de passe SMTP")
-    MAIL_FROM=$(ask   "Email expediteur"   "noreply@example.com")
-    MAIL_NAME=$(ask   "Nom expediteur"     "HostClient")
+    echo -e "  ${CYAN}i${NC}  La configuration email (SMTP) se fait depuis le panel admin."
+    echo -e "  ${CYAN}i${NC}  Rendez-vous sur : ${APP_URL}/admin/settings apres l'installation."
 
     echo ""
     echo -e "  ${YELLOW}── Resume de la configuration ──${NC}"
@@ -304,32 +299,50 @@ setup_env() {
     cd "$INSTALL_DIR"
     cp .env.example .env
 
-    sed_env() { sed -i "s|^${1}=.*|${1}=${2}|g" .env; }
+    # Fonction de remplacement robuste via python3
+    # Gere tous les caracteres speciaux (/, @, &, etc.) sans conflit sed
+    set_env() {
+        local key="$1"
+        local val="$2"
+        python3 -c "
+import re, sys
+key = sys.argv[1]
+val = sys.argv[2]
+with open('.env', 'r') as f:
+    content = f.read()
+content = re.sub(r'^' + re.escape(key) + r'=.*', key + '=' + val, content, flags=re.MULTILINE)
+with open('.env', 'w') as f:
+    f.write(content)
+" "$key" "$val"
+    }
 
-    sed_env "APP_NAME"          "HostClient"
-    sed_env "APP_ENV"           "$APP_ENV"
-    sed_env "APP_DEBUG"         "$([ "$APP_ENV" = 'production' ] && echo 'false' || echo 'true')"
-    sed_env "APP_URL"           "$APP_URL"
-    sed_env "DB_CONNECTION"     "mysql"
-    sed_env "DB_HOST"           "$DB_HOST"
-    sed_env "DB_PORT"           "$DB_PORT"
-    sed_env "DB_DATABASE"       "$DB_NAME"
-    sed_env "DB_USERNAME"       "$DB_USER"
-    sed_env "DB_PASSWORD"       "$DB_PASS"
-    sed_env "REDIS_HOST"        "$REDIS_HOST"
-    sed_env "REDIS_PORT"        "$REDIS_PORT"
-    sed_env "REDIS_PASSWORD"    "${REDIS_PASS:-null}"
-    sed_env "CACHE_DRIVER"      "redis"
-    sed_env "SESSION_DRIVER"    "redis"
-    sed_env "QUEUE_CONNECTION"  "redis"
-    sed_env "MAIL_HOST"         "$MAIL_HOST"
-    sed_env "MAIL_PORT"         "$MAIL_PORT"
-    sed_env "MAIL_USERNAME"     "$MAIL_USER"
-    sed_env "MAIL_PASSWORD"     "$MAIL_PASS"
-    sed_env "MAIL_FROM_ADDRESS" "$MAIL_FROM"
-    sed_env "MAIL_FROM_NAME"    "$MAIL_NAME"
+    set_env "APP_NAME"         "HostClient"
+    set_env "APP_ENV"          "$APP_ENV"
+    set_env "APP_DEBUG"        "$([ "$APP_ENV" = 'production' ] && echo 'false' || echo 'true')"
+    set_env "APP_URL"          "$APP_URL"
+    set_env "DB_CONNECTION"    "mysql"
+    set_env "DB_HOST"          "$DB_HOST"
+    set_env "DB_PORT"          "$DB_PORT"
+    set_env "DB_DATABASE"      "$DB_NAME"
+    set_env "DB_USERNAME"      "$DB_USER"
+    set_env "DB_PASSWORD"      "$DB_PASS"
+    set_env "REDIS_HOST"       "$REDIS_HOST"
+    set_env "REDIS_PORT"       "$REDIS_PORT"
+    set_env "REDIS_PASSWORD"   "${REDIS_PASS:-null}"
+    set_env "CACHE_DRIVER"     "redis"
+    set_env "SESSION_DRIVER"   "redis"
+    set_env "QUEUE_CONNECTION" "redis"
+    # SMTP laisse vide — configurable depuis le panel admin (/admin/settings)
+    set_env "MAIL_MAILER"      "smtp"
+    set_env "MAIL_HOST"        ""
+    set_env "MAIL_PORT"        "587"
+    set_env "MAIL_USERNAME"    ""
+    set_env "MAIL_PASSWORD"    ""
+    set_env "MAIL_FROM_ADDRESS" ""
+    set_env "MAIL_FROM_NAME"   "HostClient"
 
     log_ok "Fichier .env configure"
+    log_info "Email SMTP : a configurer dans le panel admin > Parametres"
 }
 
 setup_database() {
