@@ -645,6 +645,7 @@ print_success() {
     echo -e "  ${BOLD}Prochaines etapes :${NC}"
     echo -e "  1. Pointez votre DNS vers ce serveur"
     echo -e "  2. SSL : ${CYAN}certbot --nginx -d ${DOMAIN}${NC}"
+    echo -e "  3. Configurez le SMTP : ${CYAN}${APP_URL}/admin/settings${NC}"
     echo ""
     echo -e "  ${YELLOW}Support : https://github.com/Nitrohebergeur/hostclient/issues${NC}"
     echo ""
