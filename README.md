@@ -4,6 +4,9 @@
 
 HostClient est une solution moderne et complète pour gérer votre activité d'hébergement web, VPS, serveurs dédiés et noms de domaine.
 
+[![GitHub](https://img.shields.io/badge/GitHub-Nitrohebergeur%2Fhostclient-blue?logo=github)](https://github.com/Nitrohebergeur/hostclient)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+
 ## 🚀 Fonctionnalités
 
 ### Espace Client
@@ -57,7 +60,7 @@ Support des principales plateformes :
 ### ⚡ Installation automatique en une commande (Recommandé)
 
 ```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/hostclient/hostclient/main/install.sh)
+bash <(curl -fsSL https://raw.githubusercontent.com/Nitrohebergeur/hostclient/main/install.sh)
 ```
 
 **Ce que fait le script :**
@@ -82,7 +85,7 @@ Si vous préférez tout configurer manuellement :
 
 ```bash
 # 1. Cloner le dépôt
-git clone https://github.com/hostclient/hostclient.git
+git clone https://github.com/Nitrohebergeur/hostclient.git
 cd hostclient
 
 # 2. Installer les dépendances PHP
@@ -112,7 +115,7 @@ sudo chmod -R 775 storage bootstrap/cache
 ### 🐳 Avec Docker (Développement)
 
 ```bash
-git clone https://github.com/hostclient/hostclient.git
+git clone https://github.com/Nitrohebergeur/hostclient.git
 cd hostclient
 cp .env.example .env
 docker-compose up -d
@@ -210,7 +213,13 @@ La documentation complète est disponible sur [docs.hostclient.io](https://docs.
 
 ## 🤝 Contribution
 
-Les contributions sont les bienvenues ! Consultez [CONTRIBUTING.md](CONTRIBUTING.md)
+Les contributions sont les bienvenues ! 
+
+1. Fork le projet
+2. Créez votre branche (`git checkout -b feature/AmazingFeature`)
+3. Committez vos changements (`git commit -m 'Add some AmazingFeature'`)
+4. Pushez vers la branche (`git push origin feature/AmazingFeature`)
+5. Ouvrez une Pull Request
 
 ## 📄 Licence
 
@@ -218,7 +227,7 @@ HostClient est un logiciel open-source sous licence [MIT](LICENSE)
 
 ## 🔒 Sécurité
 
-Si vous découvrez une vulnérabilité, envoyez un email à security@hostclient.io
+Si vous découvrez une vulnérabilité, ouvrez une issue sur GitHub : https://github.com/Nitrohebergeur/hostclient/issues
 
 ## 🔧 Dépannage
 
@@ -264,10 +273,9 @@ cat /var/www/hostclient/.env | grep DB_
 
 ## 💬 Support
 
-- 📖 Documentation: https://docs.hostclient.io
-- 💬 Forum: https://community.hostclient.io
-- 💬 Discord: https://discord.gg/hostclient
-- 🐛 Issues: https://github.com/hostclient/hostclient/issues
+- 📖 Documentation: https://docs.nitrohebergeur.com
+- 🐛 Issues: https://github.com/Nitrohebergeur/hostclient/issues
+- 💬 Discussions: https://github.com/Nitrohebergeur/hostclient/discussions
 
 ## 🙏 Remerciements
 

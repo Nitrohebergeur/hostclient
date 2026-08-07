@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # =============================================================================
 #  HostClient — Installateur automatique
-#  https://github.com/hostclient/hostclient
+#  https://github.com/Nitrohebergeur/hostclient
 # =============================================================================
 set -euo pipefail
 
@@ -15,7 +15,7 @@ BOLD='\033[1m'
 NC='\033[0m' # No Color
 
 # ── Configuration par défaut ──────────────────────────────────────────────────
-REPO="https://github.com/hostclient/hostclient.git"
+REPO="https://github.com/Nitrohebergeur/hostclient.git"
 INSTALL_DIR="/var/www/hostclient"
 PHP_MIN="8.4"
 NODE_MIN="20"
@@ -32,7 +32,7 @@ print_banner() {
     echo "  ╚═╝  ╚═╝ ╚═════╝ ╚══════╝   ╚═╝    ╚═════╝╚══════╝╚═╝╚══════╝╚═╝  ╚═══╝   ╚═╝   "
     echo -e "${NC}"
     echo -e "  ${BOLD}Plateforme SaaS d'hébergement web — Installateur v1.0.0${NC}"
-    echo -e "  ${BLUE}https://github.com/hostclient/hostclient${NC}"
+    echo -e "  ${BLUE}https://github.com/Nitrohebergeur/hostclient${NC}"
     echo ""
     echo -e "  ${YELLOW}⚠️  Ce script doit être exécuté en tant que root ou avec sudo${NC}"
     echo ""
@@ -766,8 +766,8 @@ print_success() {
     echo -e "  2. Installez un certificat SSL avec : ${CYAN}certbot --nginx -d ${DOMAIN}${NC}"
     echo -e "  3. Configurez vos passerelles de paiement dans le panel admin"
     echo ""
-    echo -e "  ${YELLOW}Documentation : https://docs.hostclient.io${NC}"
-    echo -e "  ${YELLOW}Support       : https://github.com/hostclient/hostclient/issues${NC}"
+    echo -e "  ${YELLOW}Documentation : https://docs.nitrohebergeur.com${NC}"
+    echo -e "  ${YELLOW}Support       : https://github.com/Nitrohebergeur/hostclient/issues${NC}"
     echo ""
 }
 
