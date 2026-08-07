@@ -277,12 +277,8 @@ clone_repository() {
     log_step "Telechargement de HostClient depuis GitHub"
 
     if [ -d "$INSTALL_DIR" ]; then
-        if confirm "Le repertoire $INSTALL_DIR existe deja. Ecraser ?"; then
-            rm -rf "$INSTALL_DIR"
-        else
-            log_err "Installation annulee."
-            exit 1
-        fi
+        log_info "Le repertoire $INSTALL_DIR existe, suppression..."
+        rm -rf "$INSTALL_DIR"
     fi
 
     log_info "Clonage depuis $REPO (branche: $BRANCH)..."
