@@ -1,0 +1,293 @@
+<?php
+
+/*
+ * This file is part of the CLIENTXCMS project.
+ * It is the property of the CLIENTXCMS association.
+ *
+ * Personal and non-commercial use of this source code is permitted.
+ * However, any use in a project that generates profit (directly or indirectly),
+ * or any reuse for commercial purposes, requires prior authorization from CLIENTXCMS.
+ *
+ * To request permission or for more information, please contact our support:
+ * https://clientxcms.com/client/support
+ *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
+ * Year: 2025
+ */
+
+namespace App\Core\License;
+
+use App\Exceptions\LicenseInvalidException;
+use App\Providers\AppServiceProvider;
+use GuzzleHttp\Client;
+use GuzzleHttp\Exception\ClientException;
+use GuzzleHttp\Exception\ConnectException;
+use GuzzleHttp\Exception\RequestException;
+use GuzzleHttp\Exception\ServerException;
+
+class LicenseGateway
+{
+    private string $authorizationUrl;
+
+    private string $accessTokenUrl;
+
+    private string $apiBaseUrl;
+
+    private string $refreshTokenUrl;
+
+    private Client $httpClient;
+
+    public function __construct()
+    {
+        $this->authorizationUrl = self::getDomain().'/oauth2/authorize';
+        $this->accessTokenUrl = self::getDomain().'/oauth2/access_token';
+        $this->apiBaseUrl = self::getDomain().'/oauth2/v2';
+        $this->refreshTokenUrl = self::getDomain().'/oauth2/access_token';
+        $this->httpClient = new Client(['timeout' => 10, 'headers' => ['Accept' => 'application/json']]);
+    }
+
+    /**
+     * Allowed hostnames for the license / update server. CTX_DOMAIN can
+     * still be set via env to point at staging or a CI mirror, but it
+     * MUST resolve to one of these hosts. Anything else (typo, .env
+     * tampering, attacker-controlled domain) falls back to the
+     * canonical production URL.
+     */
+    private const ALLOWED_LICENSE_HOSTS = [
+        'clientxcms.com',
+        'www.clientxcms.com',
+        'staging.clientxcms.com',
+        'api.clientxcms.com',
+    ];
+
+    public static function getDomain()
+    {
+        $candidate = env('CTX_DOMAIN') ?: 'https://clientxcms.com';
+        $host = parse_url($candidate, PHP_URL_HOST);
+        $scheme = parse_url($candidate, PHP_URL_SCHEME);
+        if ($scheme !== 'https' || ! in_array(strtolower((string) $host), self::ALLOWED_LICENSE_HOSTS, true)) {
+            return 'https://clientxcms.com';
+        }
+
+        return rtrim($candidate, '/');
+    }
+
+    public function getAuthorizationUrl()
+    {
+        $params = [
+            'client_id' => env('OAUTH_CLIENT_ID'),
+            'redirect_uri' => route('licensing.return'),
+            'response_type' => 'code',
+            'scope' => '',
+        ];
+
+        return $this->authorizationUrl.'?'.http_build_query($params);
+    }
+
+    public function getAccessToken(string $code)
+    {
+        try {
+
+            $params = [
+                'client_id' => env('OAUTH_CLIENT_ID'),
+                'client_secret' => env('OAUTH_CLIENT_SECRET'),
+                'redirect_uri' => route('licensing.return'),
+                'code' => $code,
+                'grant_type' => 'authorization_code',
+            ];
+
+            $response = $this->httpClient->post($this->accessTokenUrl, [
+                'form_params' => $params,
+            ]);
+        } catch (ServerException|RequestException|ClientException|ConnectException $e) {
+            if (method_exists($e, 'getResponse') && $e->getResponse() != null) {
+                $response = json_decode($e->getResponse()->getBody(), true);
+            } else {
+                $response = null;
+            }
+            if ($response == null) {
+                throw new LicenseInvalidException('Internal error please contact support');
+            }
+
+            return json_decode($e->getResponse()->getBody(), true);
+        }
+
+        return json_decode($response->getBody(), true);
+    }
+
+    public function callAPI($accessToken, $endpoint, $params = [])
+    {
+        try {
+
+            $url = $this->apiBaseUrl.$endpoint;
+
+            $headers = [
+                'Authorization' => 'Bearer '.$accessToken,
+                'Accept' => 'application/json',
+            ];
+
+            $options = [
+                'headers' => $headers,
+                'form_params' => $params,
+            ];
+
+            $response = $this->httpClient->request('POST', $url, $options);
+
+            return json_decode($response->getBody(), true);
+        } catch (ClientException $e) {
+            return json_decode($e->getResponse()->getBody(), true);
+        }
+    }
+
+    public function download(string $uuid, $resource)
+    {
+        $license = $this->getLicense(setting('app.license.access_token'), true);
+        $token = $this->refreshAccessToken(setting('app.license.refresh_token'), $license);
+        $url = $this->apiBaseUrl.'/update';
+
+        $headers = [
+            'Authorization' => 'Bearer '.$token,
+            'ctx-uuid' => $uuid,
+            'ctx-version' => AppServiceProvider::VERSION,
+            'ctx-php-version' => PHP_VERSION,
+        ];
+
+        $options = [
+            'headers' => $headers,
+            'sink' => $resource,
+        ];
+
+        return $this->httpClient->request('POST', $url, $options);
+    }
+
+    public function refreshAccessToken(string $refreshToken, ?License $license = null)
+    {
+        try {
+            $params = [
+
+                'client_id' => env('OAUTH_CLIENT_ID'),
+                'client_secret' => env('OAUTH_CLIENT_SECRET'),
+                'refresh_token' => $refreshToken,
+                'grant_type' => 'refresh_token',
+            ];
+
+            $response = $this->httpClient->post($this->refreshTokenUrl, [
+                'form_params' => $params,
+            ]);
+
+        } catch (ServerException|RequestException|ClientException|ConnectException $e) {
+            if (method_exists($e, 'getResponse') && $e->getResponse() != null) {
+                $response = json_decode($e->getResponse()->getBody(), true);
+            } else {
+                $response = null;
+            }
+            if ($response == null) {
+                throw new LicenseInvalidException('Internal error please contact support');
+            }
+            throw new LicenseInvalidException(array_key_exists('hint', $response) ? $response['hint'] : $response['message']);
+        }
+        $json = json_decode($response->getBody(), true);
+        if ($json == null) {
+            throw new LicenseInvalidException('Internal error please contact support');
+        }
+        if ($license != null) {
+            $license->save($json['refresh_token']);
+        }
+
+        return $json['access_token'];
+    }
+
+    public function restartNPM()
+    {
+        $license = $this->getLicense(setting('app.license.access_token'), true);
+        $token = $this->refreshAccessToken(setting('app.license.refresh_token'), $license);
+        $this->callAPI($token, '/restartnpm');
+    }
+
+    public function getLicense(?string $token = null, bool $force = false): License
+    {
+        if (app()->runningUnitTests()) {
+            return new License(
+                '31-12-2024',
+                '31-12-2024',
+                time(),
+                now()->addDays()->format('u'),
+                null,
+                [],
+                'community',
+                'self_hosted',
+                [],
+            );
+        }
+        $cache = new LicenseCache;
+        $license = $cache->getLicense();
+        if (! $cache->isHit() || $force) {
+            if ($token == null && setting('app.license.refresh_token') != null) {
+                $token = $this->refreshAccessToken(setting('app.license.refresh_token'), $license);
+            }
+            if (setting('app.license.refresh_token') == null && $token == null) {
+                throw new LicenseInvalidException('No refresh token found');
+            }
+            $response = $this->callAPI($token, '/checker');
+            if ($response == null) {
+                throw new LicenseInvalidException('Internal error please contact support');
+            }
+            $license = $response['license'] ?? null;
+            if (array_key_exists('message', $response)) {
+                throw new LicenseInvalidException($response['message']);
+            }
+            if ($license == null) {
+                throw new LicenseInvalidException('Internal error please contact support. Licence undefined');
+            }
+            $license = new License(
+                $license['expire_at'],
+                $license['support_expires_at'] ?? null,
+                time(),
+                $cache->getNextCheck(),
+                $license['server'] ?? null,
+                $response['extensions'] ?? [],
+                $license['type'],
+                $license['version_type'],
+                $response['downloads']['data'] ?? [],
+            );
+            $cache->persist($license);
+            if (! $license->isValid()) {
+                throw new LicenseInvalidException('License is invalid. Please renew your license.');
+            }
+
+            return $license;
+        }
+
+        return $cache->getLicense();
+    }
+
+    public function getLicenseFile()
+    {
+        return base_path('bootstrap/cache/license.php');
+    }
+
+    public function isExpired(): bool
+    {
+        $cache = new LicenseCache;
+        $license = $cache->getLicense();
+        if ($license == null) {
+            return true;
+        }
+        if ($license->isValid()) {
+            return false;
+        }
+
+        return false;
+    }
+
+    public function hasExpiredFile(): bool
+    {
+        if ($this->isExpired()) {
+            return true;
+        }
+
+        return file_exists(storage_path('suspended'));
+    }
+}

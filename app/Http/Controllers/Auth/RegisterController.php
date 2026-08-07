@@ -1,43 +1,60 @@
 <?php
 
+/*
+ * This file is part of the CLIENTXCMS project.
+ * It is the property of the CLIENTXCMS association.
+ *
+ * Personal and non-commercial use of this source code is permitted.
+ * However, any use in a project that generates profit (directly or indirectly),
+ * or any reuse for commercial purposes, requires prior authorization from CLIENTXCMS.
+ *
+ * To request permission or for more information, please contact our support:
+ * https://clientxcms.com/client/support
+ *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
+ * Year: 2025
+ */
+
 namespace App\Http\Controllers\Auth;
 
+use App\Helpers\Countries;
 use App\Http\Controllers\Controller;
-use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
+use libphonenumber\PhoneNumberUtil;
 
 class RegisterController extends Controller
 {
-    public function showRegistrationForm()
+    public function showForm(Request $request)
     {
-        return view('auth.register');
-    }
+        if (setting('allow_registration', true) === false) {
+            return back()->with('error', __('auth.register.error_registration_disabled'));
+        }
+        if (app('extension')->extensionIsEnabled('socialauth')) {
+            $providers = \App\Addons\SocialAuth\Models\ProviderEntity::where('enabled', true)->get();
+        } else {
+            $providers = collect([]);
+        }
 
-    public function register(Request $request)
-    {
-        $request->validate([
-            'first_name' => ['required', 'string', 'max:255'],
-            'last_name'  => ['required', 'string', 'max:255'],
-            'email'      => ['required', 'string', 'email', 'max:255', 'unique:users'],
-            'password'   => ['required', 'string', 'min:8', 'confirmed'],
+        $countryPhoneMeta = collect(Countries::names())->mapWithKeys(function ($name, $iso2) {
+            $code = PhoneNumberUtil::getInstance()->getCountryCodeForRegion($iso2);
+            $flag = mb_chr(127397 + ord($iso2[0])).mb_chr(127397 + ord($iso2[1]));
+
+            return [$iso2 => [
+                'name' => $name,
+                'dial_code' => $code ? '+'.$code : null,
+                'flag' => $flag,
+                'language' => app()->getLocale(),
+            ]];
+        })->toArray();
+
+        return view('front.auth.register', [
+            'countries' => Countries::names(),
+            'providers' => $providers,
+            'countryPhoneMeta' => $countryPhoneMeta,
+            'redirect' => $request->query('redirect'),
+            'email' => $request->query('email'),
         ]);
-
-        $user = User::create([
-            'first_name'        => $request->first_name,
-            'last_name'         => $request->last_name,
-            'email'             => $request->email,
-            'password'          => Hash::make($request->password),
-            'email_verified_at' => now(),
-            'email_verified'    => true,
-            'is_active'         => true,
-        ]);
-
-        $user->assignRole('client');
-
-        Auth::login($user);
-
-        return redirect()->route('client.dashboard');
     }
 }

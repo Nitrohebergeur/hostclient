@@ -1,50 +1,60 @@
-FROM php:8.4-fpm
+# Stage 0: Build Frontend
+FROM --platform=$TARGETOS/$TARGETARCH node:22-alpine AS build
+WORKDIR /app
 
-# Arguments
-ARG user=hostclient
-ARG uid=1000
+# Copy only package.json and package-lock.json first to cache npm install
+COPY package*.json ./
+RUN npm ci
+
+# Copy the rest of the frontend source code and build
+COPY . ./
+RUN npm run build
+
+# Stage 1: Build Application
+FROM --platform=$TARGETOS/$TARGETARCH php:8.3-fpm-alpine
+WORKDIR /app
 
 # Install system dependencies
-RUN apt-get update && apt-get install -y \
-    git \
-    curl \
-    libpng-dev \
-    libonig-dev \
-    libxml2-dev \
-    zip \
-    unzip \
-    libzip-dev \
-    libfreetype6-dev \
-    libjpeg62-turbo-dev \
-    libwebp-dev \
-    libxpm-dev
+RUN apk add --no-cache --update \
+    ca-certificates dcron curl git supervisor tar unzip nginx \
+    libpng-dev libxml2-dev libzip-dev icu-dev \
+    oniguruma-dev libjpeg-turbo-dev freetype-dev \
+    certbot certbot-nginx \
+ && docker-php-ext-configure zip \
+ && docker-php-ext-configure gd --with-freetype --with-jpeg \
+ && docker-php-ext-install bcmath gd intl pdo_mysql zip \
+    && curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
-# Clear cache
-RUN apt-get clean && rm -rf /var/lib/apt/lists/*
+# Copy composer files first to cache dependencies
+COPY composer.json composer.lock ./
+RUN composer install --no-scripts --no-autoloader --prefer-dist \
+    && rm -rf /root/.composer
 
-# Install PHP extensions
-RUN docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp --with-xpm
-RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip
+# Copy the rest of the application
+COPY . ./
+COPY --from=build /app/public/build /app/public/build
 
-# Install Redis extension
-RUN pecl install redis && docker-php-ext-enable redis
+# Complete setup
+RUN cp .env.example .env \
+    && mkdir -p bootstrap/cache/ storage/logs storage/framework/sessions storage/framework/views storage/framework/cache boostrap/cache \
+    && chmod 777 -R bootstrap storage \
+    && chmod 777 -R ./bootstrap/cache \
+    && composer dump-autoload --optimize \
+    && rm -rf .env bootstrap/cache/*.php \
+    && mkdir -p /app/storage/logs/ \
+    && chown -R nginx:nginx .
 
-# Get latest Composer
-COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+RUN rm /usr/local/etc/php-fpm.conf \
+    && echo "* * * * * /usr/local/bin/php /app/artisan schedule:run >> /dev/null 2>&1" >> /var/spool/cron/crontabs/root \
+    && echo "0 23 * * * certbot renew --nginx --quiet" >> /var/spool/cron/crontabs/root \
+    && sed -i s/ssl_session_cache/#ssl_session_cache/g /etc/nginx/nginx.conf \
+    && mkdir -p /var/run/php /var/run/nginx
 
-# Create system user
-RUN useradd -G www-data,root -u $uid -d /home/$user $user
-RUN mkdir -p /home/$user/.composer && \
-    chown -R $user:$user /home/$user
+RUN touch /app/storage/installed
+COPY .github/docker/default.conf /etc/nginx/http.d/default.conf
+COPY .github/docker/www.conf /usr/local/etc/php-fpm.conf
+COPY .github/docker/supervisord.conf /etc/supervisord.conf
 
-# Set working directory
-WORKDIR /var/www
-
-# Copy application files
-COPY --chown=$user:$user . /var/www
-
-USER $user
-
-EXPOSE 9000
-
-CMD ["php-fpm"]
+EXPOSE 80 443
+ENTRYPOINT [ "/bin/ash", ".github/docker/entrypoint.sh" ]
+CMD [ "supervisord", "-n", "-c", "/etc/supervisord.conf" ]

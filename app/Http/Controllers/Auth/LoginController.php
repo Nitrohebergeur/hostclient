@@ -1,45 +1,41 @@
 <?php
 
+/*
+ * This file is part of the CLIENTXCMS project.
+ * It is the property of the CLIENTXCMS association.
+ *
+ * Personal and non-commercial use of this source code is permitted.
+ * However, any use in a project that generates profit (directly or indirectly),
+ * or any reuse for commercial purposes, requires prior authorization from CLIENTXCMS.
+ *
+ * To request permission or for more information, please contact our support:
+ * https://clientxcms.com/client/support
+ *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
+ * Year: 2025
+ */
+
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 
 class LoginController extends Controller
 {
-    public function showLoginForm()
+    public function showForm(Request $request)
     {
-        return view('auth.login');
-    }
-
-    public function login(Request $request)
-    {
-        $credentials = $request->validate([
-            'email'    => ['required', 'email'],
-            'password' => ['required'],
-        ]);
-
-        if (Auth::attempt($credentials, $request->boolean('remember'))) {
-            $request->session()->regenerate();
-
-            if (Auth::user()->hasRole('admin')) {
-                return redirect()->route('admin.dashboard');
-            }
-
-            return redirect()->route('client.dashboard');
+        if (app('extension')->extensionIsEnabled('socialauth')) {
+            $providers = \App\Addons\SocialAuth\Models\ProviderEntity::where('enabled', true)->get();
+        } else {
+            $providers = collect([]);
         }
 
-        return back()->withErrors([
-            'email' => 'Ces identifiants ne correspondent pas à nos enregistrements.',
-        ])->onlyInput('email');
-    }
-
-    public function logout(Request $request)
-    {
-        Auth::logout();
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
-        return redirect('/');
+        return view('front.auth.login', [
+            'providers' => $providers,
+            'redirect' => $request->query('redirect'),
+            'email' => $request->query('email'),
+        ]);
     }
 }

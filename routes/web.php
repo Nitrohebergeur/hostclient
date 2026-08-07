@@ -1,152 +1,75 @@
 <?php
 
-use App\Http\Controllers\Admin\DashboardController as AdminDashboard;
-use App\Http\Controllers\Client\DashboardController as ClientDashboard;
+/*
+ * This file is part of the CLIENTXCMS project.
+ * It is the property of the CLIENTXCMS association.
+ *
+ * Personal and non-commercial use of this source code is permitted.
+ * However, any use in a project that generates profit (directly or indirectly),
+ * or any reuse for commercial purposes, requires prior authorization from CLIENTXCMS.
+ *
+ * To request permission or for more information, please contact our support:
+ * https://clientxcms.com/client/support
+ *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
+ * Year: 2025
+ */
+
+use App\Http\Controllers\Admin\Security\LicenseController;
+use App\Http\Controllers\DarkModeController;
+use App\Http\Controllers\Front\Billing\PaymentGatewayController;
+use App\Http\Controllers\GDPRController;
+use App\Http\Controllers\LocaleController;
 use Illuminate\Support\Facades\Route;
 
+/*
+|--------------------------------------------------------------------------
+| Web Routes
+|--------------------------------------------------------------------------
+|
+| Here is where you can register web routes for your application. These
+| routes are loaded by the RouteServiceProvider within a group which
+| contains the "web" middleware group. Now create something great!
+|gateways
+*/
+
 Route::get('/', function () {
-    $featured = \App\Models\Product::active()->inStock()->featured()->with('category')->take(6)->get();
-    $categories = \App\Models\ProductCategory::active()
-        ->with(['products' => fn($q) => $q->active()->inStock()->orderBy('sort_order')->take(3)])
-        ->orderBy('sort_order')
-        ->get();
-    return view('welcome', compact('featured', 'categories'));
+    if (! setting('theme_home_enabled')) {
+        return redirect()->to(setting('theme_home_redirect_route', '/store'));
+    }
+
+    return view('home');
 })->name('home');
 
-// Authentication routes
-Route::middleware('guest')->group(function () {
-    Route::get('/login', [\App\Http\Controllers\Auth\LoginController::class, 'showLoginForm'])->name('login');
-    Route::post('/login', [\App\Http\Controllers\Auth\LoginController::class, 'login']);
-    Route::get('/register', [\App\Http\Controllers\Auth\RegisterController::class, 'showRegistrationForm'])->name('register');
-    Route::post('/register', [\App\Http\Controllers\Auth\RegisterController::class, 'register']);
+Route::get('/robots.txt', function () {
+    $content = "User-agent: *\n";
+    if (setting('seo_disablereferencement')) {
+        $content .= "Disallow: /\n";
+    } else {
+        $content .= "Disallow:\n";
+    }
+
+    return response($content, 200, ['Content-Type' => 'text/plain']);
+})->name('robots.txt');
+
+Route::fallback(function () {
+    abort(404);
 });
-
-Route::post('/logout', [\App\Http\Controllers\Auth\LoginController::class, 'logout'])->name('logout');
-Route::middleware(['auth'])->group(function () {
-    Route::get('/dashboard', function () {
-        if (auth()->user()->hasRole('admin')) {
-            return redirect()->route('admin.dashboard');
-        }
-        return redirect()->route('client.dashboard');
-    })->name('dashboard');
-});
-
-// Client routes
-Route::prefix('client')->name('client.')->middleware(['auth', 'role:client'])->group(function () {
-    Route::get('/dashboard', [ClientDashboard::class, 'index'])->name('dashboard');
-    
-    // Services
-    Route::resource('services', \App\Http\Controllers\Client\ServiceController::class);
-    
-    // Orders
-    Route::resource('orders', \App\Http\Controllers\Client\OrderController::class);
-    
-    // Invoices
-    Route::get('invoices', [\App\Http\Controllers\Client\InvoiceController::class, 'index'])->name('invoices.index');
-    Route::get('invoices/{invoice}', [\App\Http\Controllers\Client\InvoiceController::class, 'show'])->name('invoices.show');
-    Route::get('invoices/{invoice}/download', [\App\Http\Controllers\Client\InvoiceController::class, 'download'])->name('invoices.download');
-    Route::post('invoices/{invoice}/pay', [\App\Http\Controllers\Client\InvoiceController::class, 'pay'])->name('invoices.pay');
-    
-    // Tickets
-    Route::resource('tickets', \App\Http\Controllers\Client\TicketController::class);
-    Route::post('tickets/{ticket}/reply', [\App\Http\Controllers\Client\TicketController::class, 'reply'])->name('tickets.reply');
-    Route::post('tickets/{ticket}/close', [\App\Http\Controllers\Client\TicketController::class, 'close'])->name('tickets.close');
-    
-    // Profile
-    Route::get('profile', [\App\Http\Controllers\Client\ProfileController::class, 'edit'])->name('profile.edit');
-    Route::put('profile', [\App\Http\Controllers\Client\ProfileController::class, 'update'])->name('profile.update');
-    Route::put('profile/password', [\App\Http\Controllers\Client\ProfileController::class, 'updatePassword'])->name('profile.password');
-    Route::delete('profile', [\App\Http\Controllers\Client\ProfileController::class, 'destroy'])->name('profile.destroy');
-
-    // API Keys
-    Route::resource('api-keys', \App\Http\Controllers\Client\ApiKeyController::class);
-});
-
-// Admin routes
-Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->group(function () {
-    Route::get('/dashboard', [AdminDashboard::class, 'index'])->name('dashboard');
-    
-    // Clients (redirigé vers Users)
-    Route::get('clients', fn() => redirect()->route('admin.users.index'))->name('clients.index');
-    Route::get('clients/{client}', fn($client) => redirect()->route('admin.users.show', $client))->name('clients.show');
-    Route::get('clients/{client}/edit', fn($client) => redirect()->route('admin.users.edit', $client))->name('clients.edit');
-    Route::get('clients/create', fn() => redirect()->route('admin.users.create'))->name('clients.create');
-    
-    // Users (gestion unifiée clients + admins + support)
-    Route::resource('users', \App\Http\Controllers\Admin\UserController::class);
-    
-    // Products
-    Route::resource('products', \App\Http\Controllers\Admin\ProductController::class);
-    Route::resource('categories', \App\Http\Controllers\Admin\CategoryController::class);
-    
-    // Services
-    Route::resource('services', \App\Http\Controllers\Admin\ServiceController::class);
-    Route::post('services/{service}/activate', [\App\Http\Controllers\Admin\ServiceController::class, 'activate'])->name('services.activate');
-    Route::post('services/{service}/suspend', [\App\Http\Controllers\Admin\ServiceController::class, 'suspend'])->name('services.suspend');
-    Route::post('services/{service}/terminate', [\App\Http\Controllers\Admin\ServiceController::class, 'terminate'])->name('services.terminate');
-    
-    // Orders
-    Route::resource('orders', \App\Http\Controllers\Admin\OrderController::class);
-    
-    // Invoices
-    Route::resource('invoices', \App\Http\Controllers\Admin\InvoiceController::class);
-    
-    // Tickets
-    Route::resource('tickets', \App\Http\Controllers\Admin\TicketController::class);
-    Route::post('tickets/{ticket}/assign', [\App\Http\Controllers\Admin\TicketController::class, 'assign'])->name('tickets.assign');
-    
-    // Transactions
-    Route::resource('transactions', \App\Http\Controllers\Admin\TransactionController::class);
-    
-    // Payment Gateways
-    Route::resource('payment-gateways', \App\Http\Controllers\Admin\PaymentGatewayController::class);
-    
-    // Coupons
-    Route::resource('coupons', \App\Http\Controllers\Admin\CouponController::class);
-    
-    // Settings
-    Route::get('settings', [\App\Http\Controllers\Admin\SettingController::class, 'index'])->name('settings.index');
-    Route::put('settings', [\App\Http\Controllers\Admin\SettingController::class, 'update'])->name('settings.update');
-    
-    // Homepage Customization
-    Route::get('homepage/edit', [\App\Http\Controllers\Admin\HomePageController::class, 'edit'])->name('homepage.edit');
-    Route::put('homepage/update', [\App\Http\Controllers\Admin\HomePageController::class, 'update'])->name('homepage.update');
-    Route::get('homepage/preview', [\App\Http\Controllers\Admin\HomePageController::class, 'preview'])->name('homepage.preview');
-    
-    // Modules
-    Route::get('modules', [\App\Http\Controllers\Admin\ModuleController::class, 'index'])->name('modules.index');
-    Route::post('modules/{module}/install', [\App\Http\Controllers\Admin\ModuleController::class, 'install'])->name('modules.install');
-    Route::post('modules/{module}/uninstall', [\App\Http\Controllers\Admin\ModuleController::class, 'uninstall'])->name('modules.uninstall');
-    Route::post('modules/{module}/toggle', [\App\Http\Controllers\Admin\ModuleController::class, 'toggle'])->name('modules.toggle');
-    
-    // Users & Permissions (déjà déclaré plus haut avec clients)
-    Route::resource('roles', \App\Http\Controllers\Admin\RoleController::class);
-    
-    // Activity Log
-    Route::get('activity', [\App\Http\Controllers\Admin\ActivityController::class, 'index'])->name('activity.index');
-});
-
-// Store routes (public)
-Route::prefix('store')->name('store.')->group(function () {
-    Route::get('/', [\App\Http\Controllers\StoreController::class, 'index'])->name('index');
-    Route::get('/{category}', [\App\Http\Controllers\StoreController::class, 'category'])->name('category');
-    Route::get('/{category}/{product}', [\App\Http\Controllers\StoreController::class, 'product'])->name('product');
-    Route::post('/cart/add', [\App\Http\Controllers\StoreController::class, 'addToCart'])->name('cart.add');
-    Route::get('/cart', [\App\Http\Controllers\StoreController::class, 'cart'])->name('cart');
-    Route::post('/checkout', [\App\Http\Controllers\StoreController::class, 'checkout'])->name('checkout');
-});
-
-// Page /offres : liste publique des produits créés par l'admin
-Route::get('/offres', [\App\Http\Controllers\PublicOfferController::class, 'index'])->name('offers');
-
-// Payment webhook routes
-Route::post('/webhooks/stripe', [\App\Http\Controllers\WebhookController::class, 'stripe'])->name('webhooks.stripe');
-Route::post('/webhooks/paypal', [\App\Http\Controllers\WebhookController::class, 'paypal'])->name('webhooks.paypal');
-Route::post('/webhooks/mollie', [\App\Http\Controllers\WebhookController::class, 'mollie'])->name('webhooks.mollie');
-
-// Checkout return URLs (PayPal redirects here after user approves)
-Route::middleware(['auth'])->group(function () {
-    Route::get('/checkout/success/{order}', [\App\Http\Controllers\CheckoutController::class, 'success'])->name('checkout.success');
-    Route::get('/checkout/cancel/{order}', [\App\Http\Controllers\CheckoutController::class, 'cancel'])->name('checkout.cancel');
-    Route::get('/checkout/confirmation/{order}', [\App\Http\Controllers\CheckoutController::class, 'successPage'])->name('checkout.success.page');
-});
+Route::get('/licensing/return', [LicenseController::class, 'return'])->name('licensing.return');
+Route::get('/locale/{locale}', [LocaleController::class, 'setLocale'])->name('locale');
+Route::get('/darkmode', [DarkModeController::class, 'darkmode'])->name('darkmode.switch');
+Route::get('/gdpr', [GDPRController::class, 'gdpr'])->name('gdpr');
+Route::get('/gateways/{invoice:uuid}/{gateway}/return', [PaymentGatewayController::class, 'return'])->middleware(['auth'])->name('gateways.return');
+Route::get('/gateways/{invoice:uuid}/{gateway}/cancel', [PaymentGatewayController::class, 'cancel'])->middleware(['auth'])->name('gateways.cancel');
+Route::get('/source/gateway/{gateway}/return', [PaymentGatewayController::class, 'sourceReturn'])->middleware(['auth'])->name('gateways.source.return');
+Route::post('/gateways/{gateway}/notification', [PaymentGatewayController::class, 'notification'])->withoutMiddleware('csrf')->name('gateways.notification');
+Route::get('/docs/api-docs.json', [\App\Http\Controllers\ApiController::class, 'apiDocs'])->name('l5-swagger.application.docs');
+Route::get('/docs/asset/{asset}', [\App\Http\Controllers\ApiController::class, 'apiAsset'])->name('l5-swagger.application.asset');
+require __DIR__.'/client/invoices.php';
+require __DIR__.'/client/helpdesk.php';
+require __DIR__.'/client/services.php';
+require __DIR__.'/client/client.php';
+require __DIR__.'/store.php';
+require __DIR__.'/auth.php';

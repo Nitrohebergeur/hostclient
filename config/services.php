@@ -8,45 +8,27 @@ return [
     |--------------------------------------------------------------------------
     |
     | This file is for storing the credentials for third party services such
-    | as Mailgun, Postmark, AWS and more. This file provides a sensible
-    | default structure for services used by HostClient.
+    | as Mailgun, Postmark, AWS and more. This file provides the de facto
+    | location for this type of information, allowing packages to have
+    | a conventional file to locate the various service credentials.
     |
     */
 
-    'stripe' => [
-        'key'           => env('STRIPE_KEY'),
-        'secret'        => env('STRIPE_SECRET'),
-        'webhook_secret' => env('STRIPE_WEBHOOK_SECRET'),
+    'mailgun' => [
+        'domain' => env('MAILGUN_DOMAIN'),
+        'secret' => env('MAILGUN_SECRET'),
+        'endpoint' => env('MAILGUN_ENDPOINT', 'api.mailgun.net'),
+        'scheme' => 'https',
     ],
 
-    'paypal' => [
-        'client_id' => env('PAYPAL_CLIENT_ID'),
-        'secret'    => env('PAYPAL_SECRET'),
-        'mode'      => env('PAYPAL_MODE', 'sandbox'), // sandbox | live
+    'postmark' => [
+        'token' => env('POSTMARK_TOKEN'),
     ],
 
-    'mollie' => [
-        'key' => env('MOLLIE_KEY'),
-    ],
-
-    'mail' => [
-        'mailers' => [
-            'smtp' => [
-                'transport' => 'smtp',
-                'host'      => env('MAIL_HOST', 'smtp.mailgun.org'),
-                'port'      => env('MAIL_PORT', 587),
-                'encryption'=> env('MAIL_ENCRYPTION', 'tls'),
-                'username'  => env('MAIL_USERNAME'),
-                'password'  => env('MAIL_PASSWORD'),
-                'timeout'   => null,
-                'local_domain' => env('MAIL_EHLO_DOMAIN'),
-            ],
-        ],
-
-        'from' => [
-            'address' => env('MAIL_FROM_ADDRESS', 'hello@example.com'),
-            'name'    => env('MAIL_FROM_NAME', 'Example'),
-        ],
+    'ses' => [
+        'key' => env('AWS_ACCESS_KEY_ID'),
+        'secret' => env('AWS_SECRET_ACCESS_KEY'),
+        'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
 ];

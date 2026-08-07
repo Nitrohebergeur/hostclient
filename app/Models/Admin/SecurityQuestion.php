@@ -1,0 +1,130 @@
+<?php
+
+/*
+ * This file is part of the CLIENTXCMS project.
+ * It is the property of the CLIENTXCMS association.
+ *
+ * Personal and non-commercial use of this source code is permitted.
+ * However, any use in a project that generates profit (directly or indirectly),
+ * or any reuse for commercial purposes, requires prior authorization from CLIENTXCMS.
+ *
+ * To request permission or for more information, please contact our support:
+ * https://clientxcms.com/client/support
+ *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
+ * Year: 2025
+ */
+
+namespace App\Models\Admin;
+
+use App\Models\Account\Customer;
+use App\Models\Traits\Translatable;
+use Illuminate\Database\Eloquent\Model;
+
+/**
+ * @property int $id
+ * @property string $question
+ * @property bool $is_active
+ * @property int $sort_order
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ */
+class SecurityQuestion extends Model
+{
+    use Translatable;
+
+    protected array $translatableKeys = [
+        'question' => 'text',
+    ];
+
+    protected $fillable = [
+        'question',
+        'is_active',
+        'sort_order',
+    ];
+
+    protected $casts = [
+        'is_active' => 'boolean',
+        'sort_order' => 'integer',
+    ];
+
+    /**
+     * Scope to get only active questions.
+     */
+    public function scopeActive($query)
+    {
+        return $query->where('is_active', true);
+    }
+
+    /**
+     * Scope to order by sort order.
+     */
+    public function scopeOrdered($query)
+    {
+        return $query->orderBy('sort_order')->orderBy('id');
+    }
+
+    public function canDelete(): bool
+    {
+        return $this->customers()->count() == 0 && $this->admins()->count() == 0;
+    }
+
+    public function customers()
+    {
+        return $this->hasMany(Customer::class);
+    }
+
+    public function admins()
+    {
+        return $this->hasMany(Admin::class);
+    }
+
+    /**
+     * Get all active questions as array for select dropdown.
+     */
+    public static function getActiveQuestionsForSelect(): array
+    {
+        return self::active()
+            ->ordered()
+            ->get()
+            ->mapWithKeys(fn (self $question) => [$question->id => $question->getTranslatedQuestion()])
+            ->toArray();
+    }
+
+    public function getTranslatedQuestion(): string
+    {
+        $translated = $this->getTranslation('question', '');
+        if ($translated !== '') {
+            return $translated;
+        }
+
+        if (is_string($this->question) && str_contains($this->question, '.')) {
+            $translated = __($this->question);
+            if ($translated !== $this->question) {
+                return $translated;
+            }
+        }
+
+        return $this->question;
+    }
+
+    /**
+     * Check if the security questions feature is enabled.
+     */
+    public static function isFeatureEnabled(): bool
+    {
+        return (bool) \Cache::remember('security_questions_enabled', 3600, function () {
+            return self::active()->exists();
+        });
+    }
+
+    /**
+     * Clear the feature enabled cache (call when questions are created/updated/deleted).
+     */
+    public static function clearFeatureCache(): void
+    {
+        \Cache::forget('security_questions_enabled');
+    }
+}

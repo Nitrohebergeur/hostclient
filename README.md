@@ -1,307 +1,78 @@
-# HostClient - Panel Client Moderne pour Hébergeurs Web
+![ClientXCMS Logo](https://clientxcms.com/Themes/CLIENTXCMS/images/CLIENTXCMS/LogoBlueText.png "ClientXCMS")
 
-[![Laravel](https://img.shields.io/badge/Laravel-11.x-FF2D20?logo=laravel)](https://laravel.com)
-[![PHP](https://img.shields.io/badge/PHP-8.2+-777BB4?logo=php)](https://php.net)
-[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+# ClientXCMS
 
-**HostClient** est une solution complète et moderne de gestion client pour les hébergeurs web. Conçu avec Laravel 11, il offre une interface intuitive pour la gestion des services, la facturation automatisée, le support client et bien plus encore.
+[![Chat](https://img.shields.io/discord/620000044191449108?color=7289da&label=Discord&logo=discord&logoColor=fff&style=flat-square)](https://clientxcms.com/ref/discord)
 
-## ✨ Fonctionnalités Principales
-
-### 🎯 Gestion des Services
-- Provisionnement automatique des services
-- Support de multiples types d'hébergement (VPS, Dédié, Minecraft, FiveM, etc.)
-- Cycles de facturation flexibles (mensuel, trimestriel, annuel, etc.)
-- Suspension et résiliation automatiques
-- Historique complet des actions
-
-### 💳 Facturation & Paiements
-- Génération automatique des factures
-- Support de multiples passerelles de paiement :
-  - Stripe
-  - PayPal
-  - Mollie
-  - Paiement par solde
-- Gestion des coupons de réduction
-- Rappels de paiement automatiques
-- Génération de PDF pour les factures
-
-### 🎫 Support Client
-- Système de tickets intégré
-- Catégories et priorités personnalisables
-- Réponses internes pour l'équipe
-- Pièces jointes
-- Notifications en temps réel
-
-### 👥 Gestion des Utilisateurs
-- Système de rôles et permissions (Spatie)
-- Authentification 2FA
-- API REST complète avec Sanctum
-- Gestion des clés API
-- Journal d'activité complet
-
-### 🔌 Système de Modules
-- Architecture modulaire extensible
-- Modules pré-configurés :
-  - Pterodactyl (Game Servers)
-  - Proxmox (VPS)
-  - cPanel / Plesk
-  - CloudFlare
-  - OVH
-
-### 🎨 Interface Moderne
-- Design responsive avec Tailwind CSS 4
-- Mode sombre
-- Alpine.js pour l'interactivité
-- Lucide Icons
-- Animations fluides
-
-## 📋 Prérequis
-
-- PHP >= 8.2
-- Composer
-- Node.js >= 18.x & NPM
-- MySQL >= 8.0 ou MariaDB >= 10.3
-- Extensions PHP requises :
-  - BCMath
-  - Ctype
-  - JSON
-  - Mbstring
-  - OpenSSL
-  - PDO
-  - Tokenizer
-  - XML
-
-## 🚀 Installation
-
-### ⚡ Installation Automatique (Recommandé)
-
-Installation complète en **une seule commande** (installe PHP, MySQL, Nginx, tout configuré automatiquement) :
-
-```bash
-bash <(curl -sSL https://raw.githubusercontent.com/Nitrohebergeur/hostclient/main/install.sh)
-```
-
-**Ce que fait le script :**
-- ✅ Installe toutes les dépendances (PHP 8.2, MySQL, Nginx, Node.js)
-- ✅ Configure automatiquement MySQL et la base de données
-- ✅ Clone et installe HostClient
-- ✅ Crée votre compte administrateur
-- ✅ Configure Nginx et PHP-FPM
-- ✅ Active les tâches cron
-
-**Prérequis :** Ubuntu 20.04+ / Debian 11+ avec accès root
-
-📖 [Guide d'installation détaillé](QUICK_INSTALL.md)
-
-### 📦 Installation Manuelle
-
-#### 1. Cloner le projet
-
-```bash
-git clone https://github.com/Nitrohebergeur/hostclient.git
-cd hostclient
-```
-
-#### 2. Installer les dépendances
-
-```bash
-composer install
-npm install
-```
-
-#### 3. Configuration
-
-```bash
-# Copier le fichier d'environnement
-copy .env.example .env
-
-# Générer la clé d'application
-php artisan key:generate
-
-# Configurer la base de données dans .env
-# DB_CONNECTION=mysql
-# DB_HOST=127.0.0.1
-# DB_PORT=3306
-# DB_DATABASE=hostclient
-# DB_USERNAME=root
-# DB_PASSWORD=
-```
-
-#### 4. Installation guidée
-
-```bash
-php artisan hostclient:install
-```
-
-Cette commande va :
-- Vérifier les prérequis système
-- Tester la connexion à la base de données
-- Exécuter les migrations
-- Créer votre compte administrateur
-- Configurer les paramètres de base
-
-#### 5. Compiler les assets
-
-```bash
-# Développement
-npm run dev
-
-# Production
-npm run build
-```
-
-#### 6. Lancer l'application
-
-```bash
-php artisan serve
-```
-
-Accédez à : `http://localhost:8000`
-
-## ⚙️ Configuration
-
-### Paramètres Principaux
-
-Modifiez `.env` pour configurer :
-
-```env
-# Informations Entreprise
-HOSTCLIENT_COMPANY_NAME="Votre Entreprise"
-HOSTCLIENT_COMPANY_EMAIL=contact@example.com
-
-# Devise & Localisation
-HOSTCLIENT_CURRENCY=EUR
-HOSTCLIENT_LOCALE=fr
-HOSTCLIENT_TIMEZONE=Europe/Paris
-
-# Facturation
-HOSTCLIENT_TAX_RATE=20.00
-HOSTCLIENT_INVOICE_PREFIX=INV-
-HOSTCLIENT_INVOICE_DUE_DAYS=14
-
-# Automatisation
-HOSTCLIENT_AUTO_SUSPEND_DAYS=7
-HOSTCLIENT_AUTO_TERMINATE_DAYS=14
-```
-
-### Passerelles de Paiement
-
-#### Stripe
-```env
-STRIPE_KEY=pk_test_xxxxx
-STRIPE_SECRET=sk_test_xxxxx
-STRIPE_WEBHOOK_SECRET=whsec_xxxxx
-```
-
-#### PayPal
-```env
-PAYPAL_MODE=sandbox
-PAYPAL_CLIENT_ID=xxxxx
-PAYPAL_SECRET=xxxxx
-```
-
-#### Mollie
-```env
-MOLLIE_KEY=test_xxxxx
-```
-
-### Modules
-
-Activez les modules dans `.env` :
-
-```env
-# Pterodactyl
-PTERODACTYL_URL=https://panel.example.com
-PTERODACTYL_API_KEY=xxxxx
-
-# Proxmox
-PROXMOX_URL=https://proxmox.example.com:8006
-PROXMOX_USERNAME=root@pam
-PROXMOX_PASSWORD=xxxxx
-
-# cPanel
-CPANEL_URL=https://cpanel.example.com:2087
-CPANEL_USERNAME=root
-CPANEL_API_TOKEN=xxxxx
-```
-
-## 📅 Tâches Planifiées
-
-Ajoutez au crontab :
-
-```bash
-* * * * * cd /chemin/vers/hostclient && php artisan schedule:run >> /dev/null 2>&1
-```
-
-Les tâches automatiques incluent :
-- Génération des factures de renouvellement (quotidien à 6h)
-- Suspension des services impayés (horaire)
-- Résiliation des services suspendus (quotidien à 7h)
-- Sauvegarde automatique (quotidien à 2h)
-
-## 🔐 Sécurité
-
-- Authentification 2FA disponible
-- Protection CSRF sur tous les formulaires
-- Rate limiting sur l'API
-- Logs d'activité complets
-- Chiffrement des données sensibles
-- Validation stricte des entrées
-
-## 📚 Documentation
-
-Documentation complète disponible dans `/docs` :
-- [Installation détaillée](docs/installation.md)
-- [Structure du projet](docs/STRUCTURE.md)
-- [Système de modules](docs/modules.md)
-
-## 🛠️ Développement
-
-### Tests
-
-```bash
-php artisan test
-```
-
-### Code Style
-
-```bash
-# Fixer le style
-./vendor/bin/pint
-
-# Analyser le code
-./vendor/bin/phpstan analyse
-```
-
-### Créer un Module
-
-```bash
-php artisan module:make NomDuModule
-```
-
-## 🤝 Contribution
-
-Les contributions sont les bienvenues ! Consultez [CONTRIBUTING.md](CONTRIBUTING.md) pour plus de détails.
-
-## 📝 Licence
-
-Ce projet est sous licence MIT. Voir [LICENSE](LICENSE) pour plus d'informations.
-
-## 🙏 Remerciements
-
-- [Laravel](https://laravel.com)
-- [Tailwind CSS](https://tailwindcss.com)
-- [Alpine.js](https://alpinejs.dev)
-- [Lucide Icons](https://lucide.dev)
-- Tous les contributeurs
-
-## 📞 Support
-
-- Documentation : [docs/](docs/)
-- Issues : [GitHub Issues](https://github.com/votre-repo/hostclient/issues)
-- Email : support@example.com
+**ClientXCMS** is a powerful and configurable CMS designed for hosting companies. It simplifies the management of your business by automating processes, securing client data, and providing a seamless experience for both administrators and clients.
 
 ---
 
-Développé avec ❤️ pour la communauté des hébergeurs web
+## Features
+
+### **Payment Management**
+Integrate various payment methods to instantly receive payments or subscriptions from your clients. Orders are automatically processed, saving you time and effort.
+
+### **Automation**
+CLIENTXCMS automates service delivery based on the ordered offer, including provisioning, suspension, and deletion of services, ensuring smooth operations.
+
+### **Security**
+The client area is secured with advanced authentication methods such as SSO and 2FA. Connection histories are logged, and all data is encrypted and regularly backed up.
+
+### **1-Click Installation**
+Install CLIENTXCMS in the cloud with a single DNS click or on your own server in just a few minutes. The infrastructure is hosted in France or Germany for optimal performance.
+
+### **Configurable**
+Customize CLIENTXCMS to match your brand with configurable products, servers, and options. A variety of themes and components are available to tailor the platform to your needs.
+
+### **Scheduled Tasks**
+Recurring tasks are automated to handle email reminders, service life cycles, and more, ensuring your business runs efficiently.
+
+
+---
+
+## Documentation
+
+For detailed installation instructions and usage guides, visit the official documentation:  
+[📖 CLIENTXCMS Documentation](https://docs.clientxcms.com/)
+
+## Need a VPS or hosting?
+
+If you require VPS hosting, check out **CTXHosting**, our VPS website:  
+![CTXHosting](https://ctxhosting.fr/assets/images/ctxhosting/ctxhosting-blue.png)  
+[🌐 Visit CTXHosting](https://ctxhosting.fr/)
+
+All our Premium and enterprise plans include free cloud hosting to install CLIENTXCMS with a single click.
+
+---
+
+## Support
+
+Community licenses include support via **GitHub** and **Discord** by default. For Premium and Enterprise plans, you gain access to **dedicated customer support** and a **private Discord channel** with a dedicated support room.
+
+- [GitHub Issues](https://github.com/ClientXCMS/ClientXCMS/issues)
+- [Discord Community](https://clientxcms.com/discord)
+
+For Premium and Enterprise users, enjoy priority assistance and a direct link to our expert team.
+
+---
+
+## Why Choose a Premium Plan?
+
+Upgrading to a Premium plan offers several advantages:
+
+- **Priority Support**: Get faster and more personalized assistance.
+- **Access to Extensions**: Unlock up to 3 premium extensions to enhance your CMS functionality. Learn more at [clientxcms.com/pricing](https://clientxcms.com/pricing).
+- **Dedicated Resources**: Enjoy exclusive access to advanced features and tools tailored for your business needs.
+- **Private Discord Channel**: Join a dedicated support room for Premium and Enterprise users.
+
+Invest in a Premium plan to maximize the potential of CLIENTXCMS and streamline your operations.
+
+## Resources
+Explore our marketplace for a variety of extensions and themes to enhance your CLIENTXCMS experience:  
+[🌐 Visit the Marketplace](https://clientxcms.com/resources)
+## Example Screenshot
+
+![Invoice Example](https://clientxcms.com/Themes/CLIENTXCMS/images/CLIENTXCMS/home/nextgen/Facture.png)
+![Earn page](https://clientxcms.com/Themes/CLIENTXCMS/images/CLIENTXCMS/home/nextgen/earn.png)
+![Proxmox Example](https://clientxcms.com/Themes/CLIENTXCMS/images/CLIENTXCMS/home/nextgen/proxmox.png)

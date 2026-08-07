@@ -1,47 +1,70 @@
 <?php
 
+/*
+ * This file is part of the CLIENTXCMS project.
+ * It is the property of the CLIENTXCMS association.
+ *
+ * Personal and non-commercial use of this source code is permitted.
+ * However, any use in a project that generates profit (directly or indirectly),
+ * or any reuse for commercial purposes, requires prior authorization from CLIENTXCMS.
+ *
+ * To request permission or for more information, please contact our support:
+ * https://clientxcms.com/client/support
+ *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
+ * Year: 2025
+ */
+
 namespace App\Providers;
 
-use App\Models\ApiKey;
-use App\Models\Invoice;
-use App\Models\Order;
-use App\Models\Service;
-use App\Models\Ticket;
-use App\Policies\ApiKeyPolicy;
-use App\Policies\InvoicePolicy;
-use App\Policies\OrderPolicy;
-use App\Policies\ServicePolicy;
-use App\Policies\TicketPolicy;
-use Illuminate\Support\Facades\Gate;
+use App\Core\License\LicenseGateway;
+use App\Services\Core\SeoService;
+use App\View\Components\BadgeStateComponant;
+use App\View\Components\Provisioning\ServiceDaysRemaining;
+use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Pagination\Paginator;
+use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
-    protected $policies = [
-        Service::class => ServicePolicy::class,
-        Invoice::class => InvoicePolicy::class,
-        Ticket::class  => TicketPolicy::class,
-        Order::class   => OrderPolicy::class,
-        ApiKey::class  => ApiKeyPolicy::class,
-    ];
+    const VERSION = '2.16';
 
+    /**
+     * Register any application services.
+     */
     public function register(): void
     {
-        //
+        $this->app->singleton('license', LicenseGateway::class);
+        $this->app->singleton('seo', SeoService::class);
     }
 
+    /**
+     * Bootstrap any application services.
+     */
     public function boot(): void
     {
-        // Register policies
-        foreach ($this->policies as $model => $policy) {
-            Gate::policy($model, $policy);
+        date_default_timezone_set('Europe/Paris');
+
+        if ($this->app->environment('production') && config('app.debug')) {
+            config(['app.debug' => false]);
+            logger()->warning('APP_DEBUG was true in production environment - forced to false at boot. Operator must set APP_DEBUG=false explicitly in .env to silence this.');
         }
 
-        // Admin can do everything
-        Gate::before(function ($user, $ability) {
-            if ($user->hasRole('admin')) {
-                return true;
-            }
+        if (env('APP_FORCE_HTTPS', $this->app->environment('production'))) {
+            \Illuminate\Support\Facades\URL::forceScheme('https');
+        }
+
+        Builder::macro('whereLike', function (string $attribute, string $searchTerm) {
+            return $this->orWhere($attribute, 'LIKE', "%{$searchTerm}%");
         });
+        Paginator::defaultView('shared.pagination.default');
+        Blade::component('badge-state', BadgeStateComponant::class);
+        Blade::component('service-days-remaining', ServiceDaysRemaining::class);
+        \View::share('clientxcms_version', self::VERSION);
+        Carbon::setLocale(setting('app.locale', 'fr_FR'));
     }
 }
