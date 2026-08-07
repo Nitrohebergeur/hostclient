@@ -36,7 +36,7 @@
                         ['route' => 'admin.dashboard', 'icon' => 'layout-dashboard', 'label' => 'Tableau de bord'],
                     ]],
                     ['label' => 'Clients & Ventes', 'items' => [
-                        ['route' => 'admin.clients.index', 'icon' => 'users', 'label' => 'Clients'],
+                        ['route' => 'admin.users.index', 'icon' => 'users', 'label' => 'Utilisateurs'],
                         ['route' => 'admin.orders.index', 'icon' => 'shopping-bag', 'label' => 'Commandes'],
                         ['route' => 'admin.invoices.index', 'icon' => 'file-text', 'label' => 'Factures'],
                         ['route' => 'admin.transactions.index', 'icon' => 'credit-card', 'label' => 'Transactions'],
@@ -54,7 +54,6 @@
                         ['route' => 'admin.payment-gateways.index', 'icon' => 'wallet', 'label' => 'Paiement'],
                         ['route' => 'admin.modules.index', 'icon' => 'puzzle', 'label' => 'Modules'],
                         ['route' => 'admin.settings.index', 'icon' => 'settings', 'label' => 'Paramètres'],
-                        ['route' => 'admin.users.index', 'icon' => 'user-cog', 'label' => 'Utilisateurs'],
                         ['route' => 'admin.roles.index', 'icon' => 'key', 'label' => 'Rôles & permissions'],
                         ['route' => 'admin.activity.index', 'icon' => 'activity', 'label' => 'Journal d\'activité'],
                         ['route' => 'admin.homepage.edit', 'icon' => 'layout', 'label' => 'Page d\'accueil'],
