@@ -408,9 +408,40 @@ install_php_deps() {
 install_node_deps() {
     log_step "Installation des dependances Node.js et compilation des assets"
     cd "$INSTALL_DIR"
-    npm install
-    npm run build
+
+    # Verifier que Node.js est disponible
+    if ! command -v node &>/dev/null; then
+        log_err "Node.js n'est pas installe. Installation..."
+        install_nodejs
+    fi
+
+    if ! command -v npm &>/dev/null; then
+        log_err "npm n'est pas disponible. Verifiez l'installation de Node.js."
+        exit 1
+    fi
+
+    log_info "Version Node.js : $(node -v)"
+    log_info "Version npm     : $(npm -v)"
+
+    log_info "Installation des dependances npm..."
+    npm install --no-audit --no-fund 2>&1 || {
+        log_err "Echec de npm install"
+        exit 1
+    }
+    log_ok "Dependances npm installees"
+
+    log_info "Compilation des assets (npm run build)..."
+    npm run build 2>&1 || {
+        log_err "Echec de la compilation des assets"
+        exit 1
+    }
     log_ok "Assets compiles avec succes"
+
+    # Corriger immediatement les permissions apres la compilation
+    log_info "Correction des permissions sur public/build/..."
+    chown -R www-data:www-data "$INSTALL_DIR/public/build/" 2>/dev/null || true
+    chmod -R 755 "$INSTALL_DIR/public/build/" 2>/dev/null || true
+    log_ok "Permissions de public/build/ corrigees"
 }
 
 run_migrations() {
