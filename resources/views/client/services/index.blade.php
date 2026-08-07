@@ -1,127 +1,91 @@
-@extends('layouts.app')
+@extends('layouts.client')
 
-@section('title', 'Mes Services')
+@section('title', 'Mes services')
+@section('subtitle', 'Gérez vos services actifs')
 
 @section('content')
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <!-- Header -->
-    <div class="flex justify-between items-center mb-8">
-        <div>
-            <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Mes Services</h1>
-            <p class="text-gray-600 dark:text-gray-400">Gérez vos services d'hébergement</p>
-        </div>
-        <a href="{{ route('store.index') }}" class="btn-primary">
-            <i data-lucide="plus" class="w-4 h-4 mr-2"></i>
-            Commander un service
-        </a>
-    </div>
+    <x-page-header title="Mes services">
+        <x-slot:actions>
+            <x-button :href="route('store.index')" variant="primary">
+                <i data-lucide="plus" style="width: 16px; height: 16px;"></i>
+                Commander
+            </x-button>
+        </x-slot:actions>
+    </x-page-header>
 
-    <!-- Filters -->
-    <div class="card mb-6">
-        <div class="p-4">
-            <form method="GET" class="flex flex-wrap gap-4">
-                <select name="status" class="input flex-1 min-w-[200px]" onchange="this.form.submit()">
+    {{-- Filtres --}}
+    <x-card padding="false" style="margin-bottom: var(--hc-space-6);">
+        <form method="GET" style="padding: var(--hc-space-4); display: flex; gap: var(--hc-space-3); flex-wrap: wrap;">
+            <div style="min-width: 200px;">
+                <label class="hc-label">Statut</label>
+                <select name="status" class="hc-select" onchange="this.form.submit()">
                     <option value="">Tous les statuts</option>
-                    <option value="active" {{ request('status') === 'active' ? 'selected' : '' }}>Actif</option>
-                    <option value="pending" {{ request('status') === 'pending' ? 'selected' : '' }}>En attente</option>
-                    <option value="suspended" {{ request('status') === 'suspended' ? 'selected' : '' }}>Suspendu</option>
-                    <option value="terminated" {{ request('status') === 'terminated' ? 'selected' : '' }}>Résilié</option>
+                    <option value="active" @selected(request('status') === 'active')>Actif</option>
+                    <option value="pending" @selected(request('status') === 'pending')>En attente</option>
+                    <option value="suspended" @selected(request('status') === 'suspended')>Suspendu</option>
+                    <option value="terminated" @selected(request('status') === 'terminated')>Résilié</option>
                 </select>
-            </form>
-        </div>
-    </div>
+            </div>
+        </form>
+    </x-card>
 
-    <!-- Services Grid -->
     @if($services->count())
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div class="hc-grid hc-grid-3">
             @foreach($services as $service)
-                <div class="card hover:shadow-lg transition-shadow duration-200">
-                    <div class="p-6">
-                        <!-- Status Badge -->
-                        <div class="flex items-center justify-between mb-4">
-                            <span class="badge badge-{{ $service->status === 'active' ? 'success' : ($service->status === 'suspended' ? 'warning' : 'info') }}">
-                                {{ ucfirst($service->status) }}
-                            </span>
-                            <span class="text-sm text-gray-500 dark:text-gray-400">{{ $service->product->name }}</span>
+                <x-card padding="false">
+                    <div style="padding: var(--hc-space-5);">
+                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--hc-space-3);">
+                            <x-badge :variant="match($service->status) {
+                                'active' => 'success',
+                                'pending' => 'warning',
+                                'suspended' => 'danger',
+                                'terminated' => 'neutral',
+                                default => 'neutral'
+                            }">{{ ucfirst($service->status) }}</x-badge>
+                            <span style="font-size: var(--hc-text-xs); color: var(--hc-text-muted);">{{ $service->product?->name ?? '—' }}</span>
                         </div>
 
-                        <!-- Service Info -->
-                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">{{ $service->name }}</h3>
-                        
+                        <h3 style="font-size: var(--hc-text-lg); font-weight: 600; margin-bottom: var(--hc-space-2);">{{ $service->name }}</h3>
+
                         @if($service->identifier)
-                            <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                                <i data-lucide="hash" class="w-4 h-4 inline mr-1"></i>
+                            <p style="font-size: var(--hc-text-sm); color: var(--hc-text-muted); margin-bottom: var(--hc-space-4);">
+                                <i data-lucide="hash" style="width: 14px; height: 14px; display: inline; vertical-align: middle;"></i>
                                 {{ $service->identifier }}
                             </p>
                         @endif
 
-                        <!-- Pricing -->
-                        <div class="flex items-center justify-between mb-4 pb-4 border-b border-gray-200 dark:border-gray-700">
-                            <div>
-                                <span class="text-2xl font-bold text-gray-900 dark:text-white">{{ $service->price }}€</span>
-                                <span class="text-gray-500 dark:text-gray-400 text-sm">/{{ $service->billing_cycle }}</span>
-                            </div>
+                        <div style="padding: var(--hc-space-3) 0; border-top: 1px solid var(--hc-border); border-bottom: 1px solid var(--hc-border); margin-bottom: var(--hc-space-4);">
+                            <span style="font-size: var(--hc-text-2xl); font-weight: 700;">{{ number_format($service->price, 2) }} €</span>
+                            <span style="font-size: var(--hc-text-sm); color: var(--hc-text-muted);">/ {{ $service->billing_cycle }}</span>
                         </div>
 
-                        <!-- Dates -->
                         @if($service->next_due_date)
-                            <div class="mb-4">
-                                <div class="flex items-center text-sm text-gray-600 dark:text-gray-400">
-                                    <i data-lucide="calendar" class="w-4 h-4 mr-2"></i>
-                                    <span>Expire le {{ $service->next_due_date->format('d/m/Y') }}</span>
-                                </div>
-                                @if($service->next_due_date->isPast())
-                                    <div class="text-sm text-red-600 dark:text-red-400 mt-1">
-                                        <i data-lucide="alert-circle" class="w-4 h-4 inline mr-1"></i>
-                                        Service expiré
-                                    </div>
-                                @elseif($service->next_due_date->diffInDays() <= 7)
-                                    <div class="text-sm text-orange-600 dark:text-orange-400 mt-1">
-                                        <i data-lucide="alert-triangle" class="w-4 h-4 inline mr-1"></i>
-                                        Expire bientôt
-                                    </div>
-                                @endif
+                            <div style="font-size: var(--hc-text-sm); color: var(--hc-text-muted); margin-bottom: var(--hc-space-4);">
+                                <i data-lucide="calendar" style="width: 14px; height: 14px; display: inline; vertical-align: middle;"></i>
+                                Expire le {{ $service->next_due_date->format('d/m/Y') }}
                             </div>
                         @endif
 
-                        <!-- Auto Renew -->
-                        <div class="mb-4">
-                            <label class="flex items-center">
-                                <input type="checkbox" 
-                                       {{ $service->auto_renew ? 'checked' : '' }}
-                                       class="rounded text-primary-600 focus:ring-primary-500"
-                                       disabled>
-                                <span class="ml-2 text-sm text-gray-600 dark:text-gray-400">Renouvellement automatique</span>
-                            </label>
-                        </div>
-
-                        <!-- Actions -->
-                        <div class="flex space-x-2">
-                            <a href="{{ route('client.services.show', $service) }}" class="btn-primary flex-1 text-center text-sm">
-                                <i data-lucide="eye" class="w-4 h-4 inline mr-1"></i>
-                                Gérer
-                            </a>
-                        </div>
+                        <x-button :href="route('client.services.show', $service)" variant="secondary" style="width: 100%;">
+                            Gérer
+                        </x-button>
                     </div>
-                </div>
+                </x-card>
             @endforeach
         </div>
 
-        <!-- Pagination -->
-        <div class="mt-8">
+        <div style="margin-top: var(--hc-space-6);">
             {{ $services->links() }}
         </div>
     @else
-        <!-- Empty State -->
-        <div class="text-center py-12">
-            <i data-lucide="server" class="w-16 h-16 text-gray-400 dark:text-gray-600 mx-auto mb-4"></i>
-            <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">Aucun service</h3>
-            <p class="text-gray-600 dark:text-gray-400 mb-6">Vous n'avez pas encore de services actifs.</p>
-            <a href="{{ route('store.index') }}" class="btn-primary">
-                <i data-lucide="plus" class="w-4 h-4 mr-2"></i>
-                Commander votre premier service
-            </a>
-        </div>
+        <x-card>
+            <x-empty-state
+                title="Aucun service"
+                description="Vous n'avez pas encore de services actifs."
+                icon="🖥️"
+            >
+                <x-button :href="route('store.index')" variant="primary">Commander un service</x-button>
+            </x-empty-state>
+        </x-card>
     @endif
-</div>
 @endsection
