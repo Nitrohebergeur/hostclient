@@ -432,8 +432,9 @@ install_node_deps() {
         exit 1
     }
 
-    # Corriger les permissions des binaires node_modules/.bin/ apres installation
-    chmod -R 755 "$INSTALL_DIR/node_modules/.bin/" 2>/dev/null || true
+    # Corriger les permissions de tous les binaires node_modules apres installation
+    log_info "Correction des permissions node_modules..."
+    chmod -R 755 "$INSTALL_DIR/node_modules/" 2>/dev/null || true
 
     log_ok "Dependances npm installees"
 
