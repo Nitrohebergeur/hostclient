@@ -2,14 +2,15 @@
 
 @section('title', 'Commande ' . $order->order_number)
 @section('content')
-    <div style="margin-bottom: var(--hc-space-4);">
-        <a href="{{ route('admin.orders.index') }}" style="color: var(--hc-text-muted); text-decoration: none; font-size: var(--hc-text-sm); display: inline-flex; align-items: center; gap: var(--hc-space-2);">
-            <i data-lucide="arrow-left" style="width: 14px; height: 14px;"></i>
-            Retour aux commandes
-        </a>
+    <div class="hc-breadcrumb">
+        <a href="{{ route('admin.dashboard') }}">Tableau de bord</a>
+        <i data-lucide="chevron-right" class="hc-breadcrumb-sep" style="width: 14px; height: 14px;"></i>
+        <a href="{{ route('admin.orders.index') }}">Commandes</a>
+        <i data-lucide="chevron-right" class="hc-breadcrumb-sep" style="width: 14px; height: 14px;"></i>
+        <span class="hc-breadcrumb-current">{{ $order->order_number }}</span>
     </div>
 
-    <x-page-header title="Commande {{ $order->order_number }}">
+    <x-page-header :title="'Commande ' . $order->order_number" :subtitle="'Passée le ' . $order->created_at->format('d/m/Y à H:i')">
         <x-slot:actions>
             <x-badge :variant="match($order->status) {
                 'completed' => 'success',
@@ -22,10 +23,10 @@
         </x-slot:actions>
     </x-page-header>
 
-    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: var(--hc-space-6);" class="hc-detail-grid">
+    <div class="hc-info-grid">
         <div style="display: flex; flex-direction: column; gap: var(--hc-space-6);">
 
-            <x-card header="Articles" padding="false">
+            <x-card header="Articles commandés" :padding="false">
                 <table class="hc-table">
                     <thead>
                         <tr>
@@ -38,10 +39,17 @@
                     <tbody>
                         @foreach($order->items as $item)
                             <tr>
-                                <td><strong>{{ $item->name }}</strong></td>
-                                <td>{{ $item->quantity }}</td>
+                                <td>
+                                    <div style="display: flex; align-items: center; gap: var(--hc-space-3);">
+                                        <div style="width: 32px; height: 32px; background: var(--hc-primary-50); color: var(--hc-primary); border-radius: var(--hc-radius); display: flex; align-items: center; justify-content: center;">
+                                            <i data-lucide="package" style="width: 16px; height: 16px;"></i>
+                                        </div>
+                                        <div style="font-weight: 600;">{{ $item->name }}</div>
+                                    </div>
+                                </td>
+                                <td><x-badge variant="neutral">{{ $item->quantity }}</x-badge></td>
                                 <td>{{ number_format($item->unit_price, 2) }} €</td>
-                                <td style="text-align: right; font-weight: 500;">{{ number_format($item->total, 2) }} €</td>
+                                <td style="text-align: right; font-weight: 700;">{{ number_format($item->total, 2) }} €</td>
                             </tr>
                         @endforeach
                     </tbody>
@@ -53,9 +61,9 @@
                     @csrf
                     @method('PUT')
 
-                    <div style="display: grid; grid-template-columns: 1fr; gap: var(--hc-space-4); margin-bottom: var(--hc-space-4);">
+                    <div style="display: grid; grid-template-columns: 1fr; gap: var(--hc-space-4); margin-bottom: var(--hc-space-5);">
                         <div>
-                            <label class="hc-label">Statut</label>
+                            <label class="hc-label">Statut de la commande</label>
                             <select name="status" class="hc-select">
                                 @foreach(['pending', 'processing', 'completed', 'cancelled', 'refunded'] as $status)
                                     <option value="{{ $status }}" @selected(old('status', $order->status) === $status)>{{ ucfirst($status) }}</option>
@@ -63,12 +71,15 @@
                             </select>
                         </div>
                         <div>
-                            <label class="hc-label">Notes</label>
+                            <label class="hc-label">Notes internes</label>
                             <textarea name="notes" class="hc-textarea" rows="3">{{ old('notes', $order->notes) }}</textarea>
                         </div>
                     </div>
 
-                    <x-button type="submit" variant="primary">Mettre à jour</x-button>
+                    <x-button type="submit" variant="primary">
+                        <i data-lucide="save" style="width: 14px; height: 14px;"></i>
+                        Mettre à jour
+                    </x-button>
                 </form>
             </x-card>
         </div>
@@ -76,84 +87,89 @@
         <div style="display: flex; flex-direction: column; gap: var(--hc-space-6);">
 
             <x-card header="Récapitulatif">
-                <dl style="margin: 0;">
-                    <div style="display: flex; justify-content: space-between; padding: var(--hc-space-2) 0;">
-                        <dt style="color: var(--hc-text-muted); font-size: var(--hc-text-sm);">Sous-total</dt>
-                        <dd style="margin: 0; font-weight: 500;">{{ number_format($order->subtotal, 2) }} €</dd>
+                <dl class="hc-dl">
+                    <div class="hc-dl-row">
+                        <dt class="hc-dl-label">Sous-total</dt>
+                        <dd class="hc-dl-value">{{ number_format($order->subtotal, 2) }} €</dd>
                     </div>
                     @if($order->discount > 0)
-                        <div style="display: flex; justify-content: space-between; padding: var(--hc-space-2) 0;">
-                            <dt style="color: var(--hc-text-muted); font-size: var(--hc-text-sm);">Remise</dt>
-                            <dd style="margin: 0; font-weight: 500; color: var(--hc-success);">-{{ number_format($order->discount, 2) }} €</dd>
+                        <div class="hc-dl-row">
+                            <dt class="hc-dl-label">Remise</dt>
+                            <dd class="hc-dl-value" style="color: var(--hc-success);">-{{ number_format($order->discount, 2) }} €</dd>
                         </div>
                     @endif
                     @if($order->tax > 0)
-                        <div style="display: flex; justify-content: space-between; padding: var(--hc-space-2) 0;">
-                            <dt style="color: var(--hc-text-muted); font-size: var(--hc-text-sm);">TVA</dt>
-                            <dd style="margin: 0; font-weight: 500;">{{ number_format($order->tax, 2) }} €</dd>
+                        <div class="hc-dl-row">
+                            <dt class="hc-dl-label">TVA</dt>
+                            <dd class="hc-dl-value">{{ number_format($order->tax, 2) }} €</dd>
                         </div>
                     @endif
-                    <div style="display: flex; justify-content: space-between; padding: var(--hc-space-3) 0; border-top: 1px solid var(--hc-border); margin-top: var(--hc-space-2);">
-                        <dt style="font-weight: 600;">Total</dt>
-                        <dd style="margin: 0; font-size: var(--hc-text-lg); font-weight: 700;">{{ number_format($order->total, 2) }} €</dd>
+                    <div class="hc-dl-row" style="border-top: 1px solid var(--hc-border); margin-top: var(--hc-space-2); padding-top: var(--hc-space-4);">
+                        <dt style="font-weight: 700; color: var(--hc-text);">Total</dt>
+                        <dd style="font-size: var(--hc-text-xl); font-weight: 700; color: var(--hc-primary);">{{ number_format($order->total, 2) }} €</dd>
                     </div>
                 </dl>
             </x-card>
 
-            <x-card header="Client">
-                @if($order->user)
-                    <div style="display: flex; align-items: center; gap: var(--hc-space-3); margin-bottom: var(--hc-space-3);">
-                        <div style="width: 40px; height: 40px; background: var(--hc-primary-50); color: var(--hc-primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600;">
+            @if($order->user)
+            <x-card>
+                <x-slot:header>
+                    <div style="display: flex; align-items: center; gap: var(--hc-space-3);">
+                        <div class="hc-avatar hc-avatar-primary">
                             {{ strtoupper(substr($order->user->first_name ?? 'U', 0, 1)) }}
                         </div>
                         <div>
-                            <div style="font-weight: 600; font-size: var(--hc-text-sm);">{{ $order->user->first_name }} {{ $order->user->last_name }}</div>
-                            <div style="font-size: var(--hc-text-xs); color: var(--hc-text-muted);">{{ $order->user->email }}</div>
+                            <h3 style="margin: 0; font-size: var(--hc-text-sm); font-weight: 600;">{{ $order->user->first_name }} {{ $order->user->last_name }}</h3>
+                            <p style="margin: 2px 0 0;">{{ $order->user->email }}</p>
                         </div>
                     </div>
-                    <x-button :href="route('admin.clients.show', $order->user)" variant="secondary" size="sm" style="width: 100%;">
-                        Voir le client
-                    </x-button>
-                @endif
+                </x-slot:header>
+                <x-button :href="route('admin.clients.show', $order->user)" variant="secondary" style="width: 100%;">
+                    <i data-lucide="user" style="width: 14px; height: 14px;"></i>
+                    Voir le client
+                </x-button>
             </x-card>
+            @endif
 
             <x-card header="Informations">
-                <dl style="margin: 0; font-size: var(--hc-text-sm);">
-                    <div style="padding: var(--hc-space-2) 0;">
-                        <dt style="color: var(--hc-text-muted);">Date de commande</dt>
-                        <dd style="margin: 0; font-weight: 500;">{{ $order->created_at->format('d/m/Y H:i') }}</dd>
+                <dl class="hc-dl">
+                    <div class="hc-dl-row">
+                        <dt class="hc-dl-label">Date</dt>
+                        <dd class="hc-dl-value">{{ $order->created_at->format('d/m/Y H:i') }}</dd>
                     </div>
                     @if($order->paid_at)
-                        <div style="padding: var(--hc-space-2) 0;">
-                            <dt style="color: var(--hc-text-muted);">Payée le</dt>
-                            <dd style="margin: 0; font-weight: 500;">{{ $order->paid_at->format('d/m/Y H:i') }}</dd>
+                        <div class="hc-dl-row">
+                            <dt class="hc-dl-label">Payée le</dt>
+                            <dd class="hc-dl-value">{{ $order->paid_at->format('d/m/Y H:i') }}</dd>
                         </div>
                     @endif
                     @if($order->payment_method)
-                        <div style="padding: var(--hc-space-2) 0;">
-                            <dt style="color: var(--hc-text-muted);">Paiement</dt>
-                            <dd style="margin: 0; font-weight: 500;">{{ ucfirst($order->payment_method) }}</dd>
+                        <div class="hc-dl-row">
+                            <dt class="hc-dl-label">Paiement</dt>
+                            <dd class="hc-dl-value">{{ ucfirst($order->payment_method) }}</dd>
+                        </div>
+                    @endif
+                    @if($order->invoice)
+                        <div class="hc-dl-row">
+                            <dt class="hc-dl-label">Facture</dt>
+                            <dd class="hc-dl-value">
+                                <a href="{{ route('admin.invoices.show', $order->invoice) }}" style="color: var(--hc-primary);">{{ $order->invoice->invoice_number }}</a>
+                            </dd>
                         </div>
                     @endif
                 </dl>
             </x-card>
 
-            <x-card>
-                <form method="POST" action="{{ route('admin.orders.destroy', $order) }}" onsubmit="return confirm('Supprimer cette commande ?')">
+            <x-card header="Actions">
+                <form method="POST" action="{{ route('admin.orders.destroy', $order) }}" onsubmit="return confirm('Supprimer définitivement cette commande ?')">
                     @csrf
                     @method('DELETE')
                     <x-button type="submit" variant="danger" style="width: 100%;">
                         <i data-lucide="trash-2" style="width: 16px; height: 16px;"></i>
-                        Supprimer
+                        Supprimer la commande
                     </x-button>
                 </form>
             </x-card>
         </div>
     </div>
-
-    <style>
-        @media (max-width: 900px) {
-            .hc-detail-grid { grid-template-columns: 1fr !important; }
-        }
-    </style>
 @endsection
