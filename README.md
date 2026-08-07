@@ -79,6 +79,24 @@ bash <(curl -fsSL https://raw.githubusercontent.com/Nitrohebergeur/hostclient/ma
 
 ---
 
+### 🔄 Mise à jour
+
+```bash
+bash <(curl -fsSL https://raw.githubusercontent.com/Nitrohebergeur/hostclient/main/update.sh)
+```
+
+Le script de mise à jour :
+- ✅ Sauvegarde votre `.env` avant toute modification
+- ✅ Active le mode maintenance automatiquement
+- ✅ Met à jour le code depuis GitHub
+- ✅ Met à jour les dépendances PHP et Node.js
+- ✅ Exécute les nouvelles migrations
+- ✅ Reconstruit le cache de production
+- ✅ Redémarre les workers
+- ✅ Désactive le mode maintenance à la fin
+
+---
+
 ### 🛠️ Installation manuelle
 
 Si vous préférez tout configurer manuellement :

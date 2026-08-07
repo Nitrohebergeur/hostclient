@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # =============================================================================
 #  HostClient — Script de mise à jour
+#  https://github.com/Nitrohebergeur/hostclient
 # =============================================================================
 set -euo pipefail
 
