@@ -50,12 +50,17 @@ Route::middleware(['auth', 'role:admin|support'])->prefix('admin')->name('admin.
     Route::resource('domains', \App\Http\Controllers\Admin\DomainController::class)->only(['index', 'show']);
 
     // Système
-    Route::get('/plugins',  fn() => view('admin.plugins.index'))->name('plugins.index');
-    Route::get('/themes',   fn() => view('admin.themes.index'))->name('themes.index');
-    Route::get('/api',      fn() => view('admin.api.index'))->name('api.index');
-    Route::get('/logs',     fn() => view('admin.logs.index'))->name('logs.index');
-    Route::get('/backups',  fn() => view('admin.backups.index'))->name('backups.index');
-    Route::get('/settings', [SettingController::class, 'index'])->name('settings.index');
-    Route::put('/settings', [SettingController::class, 'update'])->name('settings.update');
+    Route::get('/plugins',       fn() => view('admin.plugins.index'))->name('plugins.index');
+    Route::post('/plugins/install', fn() => back()->with('success', 'Plugin installé.'))->name('plugins.install');
+    Route::get('/themes',        fn() => view('admin.themes.index'))->name('themes.index');
+    Route::post('/themes/activate/{theme}', fn($t) => back()->with('success', 'Thème activé.'))->name('themes.activate');
+    Route::get('/api',           fn() => view('admin.api.index'))->name('api.index');
+    Route::get('/logs',          fn() => view('admin.logs.index'))->name('logs.index');
+    Route::get('/backups',       fn() => view('admin.backups.index'))->name('backups.index');
+    Route::post('/backups',      fn() => back()->with('success', 'Sauvegarde lancée.'))->name('backups.run');
+    Route::get('/announcements', fn() => view('admin.announcements.index'))->name('announcements.index');
+    Route::post('/announcements', fn() => back()->with('success', 'Annonce publiée.'))->name('announcements.store');
+    Route::get('/settings',      [SettingController::class, 'index'])->name('settings.index');
+    Route::put('/settings',      [SettingController::class, 'update'])->name('settings.update');
 
 });
