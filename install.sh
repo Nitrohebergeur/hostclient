@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# HostClient Auto-Installer v4.0
+# HostClient Auto-Installer v5.0
 # Usage: bash <(curl -sSL https://raw.githubusercontent.com/Nitrohebergeur/hostclient/main/install.sh)
 
 set -e
@@ -35,7 +35,7 @@ fi
 clear
 echo -e "${MAGENTA}"
 echo "╔════════════════════════════════════════════════════════╗"
-echo "║       HostClient Auto-Installer v4.0                   ║"
+echo "║       HostClient Auto-Installer v5.0                   ║"
 echo "║       https://github.com/Nitrohebergeur                ║"
 echo "╚════════════════════════════════════════════════════════╝"
 echo -e "${NC}"
@@ -228,6 +228,43 @@ sed -i "s|DB_DATABASE=.*|DB_DATABASE=${DB_NAME}|"       .env
 sed -i "s|DB_USERNAME=.*|DB_USERNAME=${DB_USER}|"       .env
 sed -i "s|DB_PASSWORD=.*|DB_PASSWORD=${DB_PASSWORD}|"   .env
 
+# Configuration HostClient
+echo "" >> .env
+echo "# HostClient" >> .env
+echo "HOSTCLIENT_COMPANY_NAME=\"${COMPANY_NAME}\"" >> .env
+echo "HOSTCLIENT_CURRENCY=EUR" >> .env
+echo "HOSTCLIENT_LOCALE=fr" >> .env
+echo "HOSTCLIENT_TIMEZONE=Europe/Paris" >> .env
+echo "HOSTCLIENT_TAX_RATE=20.00" >> .env
+echo "HOSTCLIENT_INVOICE_PREFIX=INV-" >> .env
+echo "HOSTCLIENT_ORDER_PREFIX=ORD-" >> .env
+echo "HOSTCLIENT_TICKET_PREFIX=TKT-" >> .env
+echo "HOSTCLIENT_AUTO_SUSPEND_DAYS=7" >> .env
+echo "HOSTCLIENT_AUTO_TERMINATE_DAYS=14" >> .env
+echo "" >> .env
+echo "# Mail (à configurer)" >> .env
+echo "MAIL_MAILER=log" >> .env
+echo "MAIL_HOST=127.0.0.1" >> .env
+echo "MAIL_PORT=2525" >> .env
+echo "MAIL_USERNAME=" >> .env
+echo "MAIL_PASSWORD=" >> .env
+echo "MAIL_ENCRYPTION=" >> .env
+echo "MAIL_FROM_ADDRESS=\"noreply@${DOMAIN}\"" >> .env
+echo "MAIL_FROM_NAME=\"${COMPANY_NAME}\"" >> .env
+echo "" >> .env
+echo "# Stripe (à configurer)" >> .env
+echo "STRIPE_KEY=" >> .env
+echo "STRIPE_SECRET=" >> .env
+echo "STRIPE_WEBHOOK_SECRET=" >> .env
+echo "" >> .env
+echo "# PayPal (à configurer)" >> .env
+echo "PAYPAL_CLIENT_ID=" >> .env
+echo "PAYPAL_SECRET=" >> .env
+echo "PAYPAL_MODE=sandbox" >> .env
+echo "" >> .env
+echo "# Mollie (à configurer)" >> .env
+echo "MOLLIE_KEY=" >> .env
+
 print_success ".env configuré"
 
 # Composer install
@@ -248,6 +285,11 @@ print_success "Clé générée"
 print_info "Exécution des migrations..."
 php artisan migrate --force
 print_success "Migrations terminées"
+
+# Seeders (rôles, permissions, paramètres, catégories, gateways, tickets)
+print_info "Exécution des seeders..."
+php artisan db:seed --force
+print_success "Seeders terminés"
 
 # Créer l'admin
 print_info "Création du compte administrateur..."
@@ -291,9 +333,12 @@ npm run build
 print_success "Assets compilés"
 
 # Optimisation
+print_info "Optimisation des caches..."
+php artisan optimize:clear 2>/dev/null || true
 php artisan config:cache
 php artisan route:cache
 php artisan view:cache
+print_success "Caches optimisés"
 
 # ============================================================
 # 7. Configuration Nginx
