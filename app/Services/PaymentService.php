@@ -67,9 +67,65 @@ class PaymentService
 
     protected function processPaypal(Order $order): string
     {
-        // PayPal redirect URL would be generated here
-        // For now return a placeholder
-        throw new \Exception('PayPal not configured.');
+        $clientId   = config('services.paypal.client_id');
+        $secret     = config('services.paypal.secret');
+        $isLive     = config('services.paypal.mode', 'sandbox') === 'live';
+        $baseUrl    = $isLive ? 'https://api-m.paypal.com' : 'https://api-m.sandbox.paypal.com';
+
+        if (!$clientId || !$secret) {
+            throw new \Exception('PayPal non configuré (client_id / secret manquants).');
+        }
+
+        // 1. Obtenir un access token (OAuth2 Client Credentials)
+        $tokenResponse = \Illuminate\Support\Facades\Http::asForm()
+            ->withBasicAuth($clientId, $secret)
+            ->post($baseUrl . '/v1/oauth2/token', [
+                'grant_type' => 'client_credentials',
+            ]);
+
+        if (!$tokenResponse->successful()) {
+            throw new \Exception('PayPal: impossible d\'obtenir le token (' . $tokenResponse->status() . ').');
+        }
+
+        $accessToken = $tokenResponse->json('access_token');
+
+        // 2. Créer la commande PayPal
+        $orderResponse = \Illuminate\Support\Facades\Http::withToken($accessToken)
+            ->post($baseUrl . '/v2/checkout/orders', [
+                'intent'              => 'CAPTURE',
+                'purchase_units'      => [[
+                    'reference_id' => $order->order_number,
+                    'custom_id'    => (string) $order->id,
+                    'description'  => "Commande #{$order->order_number}",
+                    'amount'       => [
+                        'currency_code' => $order->currency,
+                        'value'         => number_format($order->total, 2, '.', ''),
+                    ],
+                ]],
+                'application_context' => [
+                    'return_url' => route('checkout.success', ['order' => $order->id]),
+                    'cancel_url' => route('checkout.cancel', ['order' => $order->id]),
+                    'brand_name' => config('hostclient.company_name', 'HostClient'),
+                    'user_action' => 'PAY_NOW',
+                ],
+            ]);
+
+        if (!$orderResponse->successful()) {
+            Log::error('PayPal create order failed', [
+                'status' => $orderResponse->status(),
+                'body'   => $orderResponse->body(),
+            ]);
+            throw new \Exception('PayPal: création de commande échouée (' . $orderResponse->status() . ').');
+        }
+
+        $approvalLink = collect($orderResponse->json('links'))
+            ->firstWhere('rel', 'approve')['href'] ?? null;
+
+        if (!$approvalLink) {
+            throw new \Exception('PayPal: lien d\'approbation manquant.');
+        }
+
+        return $approvalLink;
     }
 
     protected function processMollie(Order $order): string
@@ -121,5 +177,35 @@ class PaymentService
             ],
             'quantity' => $item->quantity,
         ])->toArray();
+    }
+
+    /**
+     * Capture un paiement PayPal après approbation de l'utilisateur.
+     * Appelé par le contrôleur de retour (return URL).
+     */
+    public function capturePaypalOrder(string $paypalOrderId): bool
+    {
+        $clientId   = config('services.paypal.client_id');
+        $secret     = config('services.paypal.secret');
+        $isLive     = config('services.paypal.mode', 'sandbox') === 'live';
+        $baseUrl    = $isLive ? 'https://api-m.paypal.com' : 'https://api-m.sandbox.paypal.com';
+
+        if (!$clientId || !$secret) {
+            throw new \Exception('PayPal non configuré.');
+        }
+
+        $tokenResponse = \Illuminate\Support\Facades\Http::asForm()
+            ->withBasicAuth($clientId, $secret)
+            ->post($baseUrl . '/v1/oauth2/token', ['grant_type' => 'client_credentials']);
+
+        if (!$tokenResponse->successful()) {
+            throw new \Exception('PayPal: token impossible.');
+        }
+
+        $captureResponse = \Illuminate\Support\Facades\Http::withToken($tokenResponse->json('access_token'))
+            ->post($baseUrl . "/v2/checkout/orders/{$paypalOrderId}/capture");
+
+        return $captureResponse->successful()
+            && ($captureResponse->json('status') === 'COMPLETED');
     }
 }
