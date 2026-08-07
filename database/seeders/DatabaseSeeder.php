@@ -81,6 +81,7 @@ class DatabaseSeeder extends Seeder
             ProductSeeder::class,
             ServerSeeder::class,
             PaymentGatewaySeeder::class,
+            CurrencySeeder::class,
             SystemSettingSeeder::class,
         ]);
 

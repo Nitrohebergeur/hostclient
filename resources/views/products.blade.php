@@ -58,3 +58,93 @@
 
             <!-- Grid Produits -->
             <div class="lg:col-span-3">
+
+                <div class="mb-6 flex items-center justify-between">
+                    <div>
+                        <h1 class="text-3xl font-bold text-gray-900 dark:text-white">
+                            {{ $category ? $category->name : 'Tous nos produits' }}
+                        </h1>
+                        @if($category && $category->description)
+                            <p class="text-gray-600 dark:text-gray-400 mt-2">{{ $category->description }}</p>
+                        @endif
+                    </div>
+                </div>
+
+                <div class="grid md:grid-cols-2 xl:grid-cols-3 gap-6">
+                    @forelse($products as $product)
+                    <div class="card hover:shadow-xl transition-all group">
+                        <div class="card-body">
+                            <!-- Badge -->
+                            <div class="flex items-start justify-between mb-4">
+                                <span class="badge badge-secondary text-xs">{{ $product->category->name }}</span>
+                                @if($product->is_featured)
+                                    <span class="badge badge-warning text-xs">⭐ Populaire</span>
+                                @endif
+                            </div>
+
+                            <!-- Nom -->
+                            <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
+                                {{ $product->name }}
+                            </h3>
+
+                            <!-- Description -->
+                            @if($product->description)
+                                <p class="text-sm text-gray-600 dark:text-gray-400 mb-4 line-clamp-2">{{ $product->description }}</p>
+                            @endif
+
+                            <!-- Ressources -->
+                            @if($product->resources)
+                                <div class="space-y-1 mb-4 text-xs">
+                                    @foreach(array_slice($product->resources, 0, 3) as $key => $value)
+                                        <div class="flex items-center gap-2 text-gray-600 dark:text-gray-400">
+                                            <svg class="w-4 h-4 text-primary-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+                                            <span>{{ ucfirst(str_replace('_', ' ', $key)) }}: <strong>{{ $value }}</strong></span>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            @endif
+
+                            <!-- Prix -->
+                            <div class="border-t border-gray-200 dark:border-gray-700 pt-4 mt-4">
+                                <div class="flex items-end justify-between">
+                                    <div>
+                                        <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">À partir de</p>
+                                        @if($product->allow_hourly_billing && $product->price_hourly > 0)
+                                            <p class="text-2xl font-bold text-primary-600 dark:text-primary-400">
+                                                {{ $currency->format($product->price_hourly) }}<span class="text-sm font-normal text-gray-500">/h</span>
+                                            </p>
+                                        @elseif($product->price_monthly > 0)
+                                            <p class="text-2xl font-bold text-primary-600 dark:text-primary-400">
+                                                {{ $currency->format($product->price_monthly) }}<span class="text-sm font-normal text-gray-500">/mois</span>
+                                            </p>
+                                        @else
+                                            <p class="text-lg text-gray-500 dark:text-gray-400">Sur devis</p>
+                                        @endif
+                                    </div>
+                                    <a href="{{ route('product.detail', $product->slug) }}" class="btn btn-primary btn-sm">
+                                        Commander
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    @empty
+                    <div class="col-span-full text-center py-16">
+                        <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
+                        </svg>
+                        <p class="text-gray-500 dark:text-gray-400">Aucun produit disponible dans cette catégorie.</p>
+                    </div>
+                    @endforelse
+                </div>
+
+                @if($products->hasPages())
+                <div class="mt-8">
+                    {{ $products->links() }}
+                </div>
+                @endif
+            </div>
+        </div>
+    </div>
+</div>
+@endsection
