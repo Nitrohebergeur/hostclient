@@ -3,8 +3,6 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\Hash;
-use App\Models\User;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
 
@@ -50,32 +48,6 @@ class DatabaseSeeder extends Seeder
 
         Role::firstOrCreate(['name' => 'client', 'guard_name' => 'web']);
 
-        // ── Utilisateur Admin ────────────────────────────────────────
-        $adminUser = User::updateOrCreate(
-            ['email' => 'admin@hostclient.io'],
-            [
-                'name'     => 'Administrateur',
-                'password' => Hash::make('Admin@HostClient2024!'),
-                'status'   => 'active',
-                'email_verified_at' => now(),
-            ]
-        );
-        $adminUser->assignRole('admin');
-
-        // ── Utilisateur Demo Client ──────────────────────────────────
-        $demoClient = User::updateOrCreate(
-            ['email' => 'client@hostclient.io'],
-            [
-                'name'     => 'Client Demo',
-                'password' => Hash::make('Client@HostClient2024!'),
-                'status'   => 'active',
-                'country'  => 'FR',
-                'city'     => 'Paris',
-                'email_verified_at' => now(),
-            ]
-        );
-        $demoClient->assignRole('client');
-
         // ── Produits, Serveurs, Passerelles de paiement ─────────────
         $this->call([
             ProductSeeder::class,
@@ -85,13 +57,6 @@ class DatabaseSeeder extends Seeder
             SystemSettingSeeder::class,
         ]);
 
-        $this->command->info('✅ Seeder terminé !');
-        $this->command->table(
-            ['Rôle', 'Email', 'Mot de passe'],
-            [
-                ['admin',  'admin@hostclient.io',  'Admin@HostClient2024!'],
-                ['client', 'client@hostclient.io', 'Client@HostClient2024!'],
-            ]
-        );
+        $this->command->info('✅ Seeder termine !');
     }
 }
