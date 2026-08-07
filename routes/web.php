@@ -50,8 +50,9 @@ Route::prefix('client')->name('client.')->middleware(['auth', 'role:client'])->g
     // Profile
     Route::get('profile', [\App\Http\Controllers\Client\ProfileController::class, 'edit'])->name('profile.edit');
     Route::put('profile', [\App\Http\Controllers\Client\ProfileController::class, 'update'])->name('profile.update');
+    Route::put('profile/password', [\App\Http\Controllers\Client\ProfileController::class, 'updatePassword'])->name('profile.password');
     Route::delete('profile', [\App\Http\Controllers\Client\ProfileController::class, 'destroy'])->name('profile.destroy');
-    
+
     // API Keys
     Route::resource('api-keys', \App\Http\Controllers\Client\ApiKeyController::class);
 });
