@@ -333,6 +333,7 @@ with open('.env', 'w') as f:
     set_env "CACHE_DRIVER"     "redis"
     set_env "SESSION_DRIVER"   "redis"
     set_env "QUEUE_CONNECTION" "redis"
+    # DB_ROOT_PASS n'est PAS ecrit dans .env — usage interne uniquement
     # SMTP laisse vide — configurable depuis le panel admin (/admin/settings)
     set_env "MAIL_MAILER"      "smtp"
     set_env "MAIL_HOST"        ""
