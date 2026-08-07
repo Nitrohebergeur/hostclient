@@ -405,16 +405,16 @@ run_migrations() {
     log_step "Migrations et donnees initiales"
     cd "$INSTALL_DIR"
 
-    php artisan key:generate --no-interaction --force
+    php "$INSTALL_DIR/artisan" key:generate --no-interaction --force
     log_ok "Cle d'application generee"
 
-    php artisan migrate --force --no-interaction
+    php "$INSTALL_DIR/artisan" migrate --force --no-interaction
     log_ok "Migrations executees"
 
-    php artisan db:seed --force --no-interaction
+    php "$INSTALL_DIR/artisan" db:seed --force --no-interaction
     log_ok "Donnees initiales inserees"
 
-    php artisan tinker --no-interaction <<PHP 2>/dev/null || true
+    php "$INSTALL_DIR/artisan" tinker --no-interaction <<PHP 2>/dev/null || true
 \$user = \App\Models\User::updateOrCreate(
     ['email' => '${ADMIN_EMAIL}'],
     [
@@ -434,7 +434,7 @@ setup_storage() {
     log_step "Configuration du stockage et des permissions"
     cd "$INSTALL_DIR"
 
-    php artisan storage:link --no-interaction 2>/dev/null || true
+    php "$INSTALL_DIR/artisan" storage:link --no-interaction 2>/dev/null || true
 
     chown -R www-data:www-data "$INSTALL_DIR" 2>/dev/null || \
     chown -R nginx:nginx "$INSTALL_DIR" 2>/dev/null || \
@@ -452,14 +452,14 @@ optimize_app() {
     cd "$INSTALL_DIR"
 
     if [ "$APP_ENV" = "production" ]; then
-        php artisan config:cache --no-interaction
-        php artisan route:cache  --no-interaction
-        php artisan view:cache   --no-interaction
-        php artisan event:cache  --no-interaction
+        php "$INSTALL_DIR/artisan" config:cache --no-interaction
+        php "$INSTALL_DIR/artisan" route:cache  --no-interaction
+        php "$INSTALL_DIR/artisan" view:cache   --no-interaction
+        php "$INSTALL_DIR/artisan" event:cache  --no-interaction
         log_ok "Cache production active"
     fi
 
-    php artisan queue:restart --no-interaction 2>/dev/null || true
+    php "$INSTALL_DIR/artisan" queue:restart --no-interaction 2>/dev/null || true
     log_ok "Application optimisee"
 }
 
@@ -612,7 +612,6 @@ user=www-data
 redirect_stderr=true
 stdout_logfile=${INSTALL_DIR}/storage/logs/scheduler.log
 SUPERVISOR
-
     supervisorctl reread
     supervisorctl update
     supervisorctl start hostclient-queue:* 2>/dev/null || true
