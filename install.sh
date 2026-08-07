@@ -71,7 +71,10 @@ DB_NAME="hostclient"
 DB_USER="hostclient_user"
 DB_PASSWORD=$(generate_password)
 
-print_success "Configuration collectée"
+# Extraire le domaine depuis l'URL
+DOMAIN=$(echo "$APP_URL" | sed 's|https\?://||' | sed 's|/.*||')
+
+print_success "Configuration collectée pour ${DOMAIN}"
 
 # ============================================================
 # 3. Désinstallation complète
@@ -123,7 +126,7 @@ print_info "Mise à jour des paquets..."
 apt-get update -qq
 
 print_info "Outils de base..."
-apt-get install -y curl wget git unzip ca-certificates apt-transport-https lsb-release gnupg2
+apt-get install -y curl wget git unzip ca-certificates apt-transport-https lsb-release gnupg2 net-tools
 
 # PHP via Sury
 print_info "Ajout du repository PHP..."
@@ -153,10 +156,10 @@ print_info "Installation MariaDB..."
 apt-get install -y mariadb-server mariadb-client
 print_success "MariaDB installé"
 
-# Nginx
-print_info "Installation Nginx..."
-apt-get install -y nginx
-print_success "Nginx installé"
+# Nginx + certbot
+print_info "Installation Nginx + Certbot..."
+apt-get install -y nginx certbot python3-certbot-nginx
+print_success "Nginx et Certbot installés"
 
 # ============================================================
 # 5. Configuration MariaDB
@@ -187,36 +190,24 @@ git clone https://github.com/Nitrohebergeur/hostclient.git
 cd hostclient
 
 # Vérifier que c'est un projet Laravel valide
-if [ ! -f "artisan" ]; then
-    print_error "Le dépôt est incomplet : fichier 'artisan' manquant"
-    print_info "Assurez-vous que le repository contient un projet Laravel complet"
+if [ ! -f "artisan" ] || [ ! -f "bootstrap/app.php" ] || [ ! -f ".env.example" ]; then
+    print_error "Le dépôt est incomplet. Vérifiez le repository."
     exit 1
 fi
-
-if [ ! -f "bootstrap/app.php" ]; then
-    print_error "Le dépôt est incomplet : bootstrap/app.php manquant"
-    exit 1
-fi
-
-if [ ! -f ".env.example" ]; then
-    print_error ".env.example manquant"
-    exit 1
-fi
-
 print_success "Projet Laravel valide"
 
 # Créer les dossiers requis
 mkdir -p bootstrap/cache
 mkdir -p storage/framework/{sessions,views,cache}
 mkdir -p storage/logs
+touch storage/logs/laravel.log
 chmod -R 775 storage bootstrap/cache
 
-# Copier .env AVANT composer install
+# Copier .env
 print_info "Création du fichier .env..."
 cp .env.example .env
 
 # Configurer .env
-DOMAIN=$(echo "$APP_URL" | sed 's|https\?://||')
 sed -i "s|APP_NAME=.*|APP_NAME=\"${COMPANY_NAME}\"|"   .env
 sed -i "s|APP_ENV=.*|APP_ENV=production|"               .env
 sed -i "s|APP_DEBUG=.*|APP_DEBUG=false|"                .env
@@ -228,43 +219,6 @@ sed -i "s|DB_DATABASE=.*|DB_DATABASE=${DB_NAME}|"       .env
 sed -i "s|DB_USERNAME=.*|DB_USERNAME=${DB_USER}|"       .env
 sed -i "s|DB_PASSWORD=.*|DB_PASSWORD=${DB_PASSWORD}|"   .env
 
-# Configuration HostClient
-echo "" >> .env
-echo "# HostClient" >> .env
-echo "HOSTCLIENT_COMPANY_NAME=\"${COMPANY_NAME}\"" >> .env
-echo "HOSTCLIENT_CURRENCY=EUR" >> .env
-echo "HOSTCLIENT_LOCALE=fr" >> .env
-echo "HOSTCLIENT_TIMEZONE=Europe/Paris" >> .env
-echo "HOSTCLIENT_TAX_RATE=20.00" >> .env
-echo "HOSTCLIENT_INVOICE_PREFIX=INV-" >> .env
-echo "HOSTCLIENT_ORDER_PREFIX=ORD-" >> .env
-echo "HOSTCLIENT_TICKET_PREFIX=TKT-" >> .env
-echo "HOSTCLIENT_AUTO_SUSPEND_DAYS=7" >> .env
-echo "HOSTCLIENT_AUTO_TERMINATE_DAYS=14" >> .env
-echo "" >> .env
-echo "# Mail (à configurer)" >> .env
-echo "MAIL_MAILER=log" >> .env
-echo "MAIL_HOST=127.0.0.1" >> .env
-echo "MAIL_PORT=2525" >> .env
-echo "MAIL_USERNAME=" >> .env
-echo "MAIL_PASSWORD=" >> .env
-echo "MAIL_ENCRYPTION=" >> .env
-echo "MAIL_FROM_ADDRESS=\"noreply@${DOMAIN}\"" >> .env
-echo "MAIL_FROM_NAME=\"${COMPANY_NAME}\"" >> .env
-echo "" >> .env
-echo "# Stripe (à configurer)" >> .env
-echo "STRIPE_KEY=" >> .env
-echo "STRIPE_SECRET=" >> .env
-echo "STRIPE_WEBHOOK_SECRET=" >> .env
-echo "" >> .env
-echo "# PayPal (à configurer)" >> .env
-echo "PAYPAL_CLIENT_ID=" >> .env
-echo "PAYPAL_SECRET=" >> .env
-echo "PAYPAL_MODE=sandbox" >> .env
-echo "" >> .env
-echo "# Mollie (à configurer)" >> .env
-echo "MOLLIE_KEY=" >> .env
-
 print_success ".env configuré"
 
 # Composer install
@@ -273,7 +227,6 @@ COMPOSER_ALLOW_SUPERUSER=1 composer install \
     --no-dev \
     --optimize-autoloader \
     --no-interaction
-
 print_success "Composer terminé"
 
 # Générer la clé app
@@ -286,37 +239,39 @@ print_info "Exécution des migrations..."
 php artisan migrate --force
 print_success "Migrations terminées"
 
-# Seeders (rôles, permissions, paramètres, catégories, gateways, tickets)
-print_info "Exécution des seeders..."
+# Seeders
+print_info "Exécution des seeders (rôles, permissions, paramètres)..."
 php artisan db:seed --force
 print_success "Seeders terminés"
 
-# Créer l'admin
+# Créer le compte admin et assigner le rôle via SQL direct (pas de tinker en prod)
 print_info "Création du compte administrateur..."
 ADMIN_FIRST=$(echo "$ADMIN_NAME" | awk '{print $1}')
 ADMIN_LAST=$(echo "$ADMIN_NAME" | awk '{print $2}')
 ADMIN_LAST=${ADMIN_LAST:-$ADMIN_FIRST}
 ADMIN_HASH=$(php -r "echo password_hash('${ADMIN_PASSWORD}', PASSWORD_BCRYPT);")
-mysql -u root "$DB_NAME" <<EOSQL 2>/dev/null
--- Créer / mettre à jour le compte admin
+
+mysql -u root "$DB_NAME" <<EOSQL
+-- Créer ou mettre à jour le compte admin
 INSERT INTO users (first_name, last_name, email, password, email_verified_at, email_verified, is_active, created_at, updated_at)
 VALUES ('${ADMIN_FIRST}', '${ADMIN_LAST}', '${ADMIN_EMAIL}', '${ADMIN_HASH}', NOW(), 1, 1, NOW(), NOW())
-ON DUPLICATE KEY UPDATE password='${ADMIN_HASH}', is_active=1, email_verified=1;
+ON DUPLICATE KEY UPDATE password='${ADMIN_HASH}', is_active=1, email_verified=1, updated_at=NOW();
 
--- Créer le rôle 'admin' s'il n'existe pas (Spatie)
+-- S'assurer que le rôle admin existe (Spatie)
 INSERT IGNORE INTO roles (name, guard_name, created_at, updated_at)
 VALUES ('admin', 'web', NOW(), NOW());
 
--- Assigner le rôle 'admin' à l'utilisateur (Spatie: model_has_roles)
+-- Assigner le rôle admin à l'utilisateur (Spatie: model_has_roles)
 INSERT IGNORE INTO model_has_roles (role_id, model_type, model_id)
-SELECT id, 'App\\Models\\User', u.id
-FROM roles r, users u
-WHERE r.name = 'admin' AND r.guard_name = 'web' AND u.email = '${ADMIN_EMAIL}';
+SELECT r.id, 'App\\\\Models\\\\User', u.id
+FROM roles r
+JOIN users u ON u.email = '${ADMIN_EMAIL}'
+WHERE r.name = 'admin' AND r.guard_name = 'web';
 EOSQL
 print_success "Admin créé et rôle 'admin' assigné : ${ADMIN_EMAIL}"
 
 # Storage link
-php artisan storage:link
+php artisan storage:link 2>/dev/null || true
 print_success "Lien de stockage créé"
 
 # Permissions finales
@@ -326,67 +281,40 @@ chmod -R 755 public
 
 # NPM + build
 print_info "Installation des dépendances JavaScript..."
-npm install
-npm install @tailwindcss/vite --save-dev
+npm install --silent
+npm install @tailwindcss/vite --save-dev --silent
 print_info "Compilation des assets..."
 npm run build
 print_success "Assets compilés"
-
-# Optimisation
-print_info "Optimisation des caches..."
-php artisan optimize:clear 2>/dev/null || true
-php artisan config:cache
-php artisan route:cache
-php artisan view:cache
-print_success "Caches optimisés"
 
 # ============================================================
 # 7. Configuration Nginx
 # ============================================================
 print_step "Configuration de Nginx"
 
-# Vérifier si un certificat SSL existe
+APP_DIR=$(pwd)
+
+# Vérifier si un certificat SSL existe déjà
 SSL_EXISTS=false
 if [ -f "/etc/letsencrypt/live/${DOMAIN}/fullchain.pem" ]; then
     SSL_EXISTS=true
-    print_info "Certificat SSL détecté pour ${DOMAIN}"
+    print_info "Certificat SSL existant détecté pour ${DOMAIN}"
 fi
 
-# Configuration avec SSL si disponible
-if [ "$SSL_EXISTS" = true ]; then
-    cat > /etc/nginx/sites-available/hostclient <<EOFNGINX
+# Créer la configuration HTTP de base d'abord (nécessaire pour certbot)
+cat > /etc/nginx/sites-available/hostclient <<EOFNGINX
 server {
     listen 80;
     listen [::]:80;
     server_name ${DOMAIN};
-    return 301 https://\$server_name\$request_uri;
-}
 
-server {
-    listen 443 ssl http2;
-    listen [::]:443 ssl http2;
-    server_name ${DOMAIN};
-
-    root $(pwd)/public;
+    root ${APP_DIR}/public;
     index index.php index.html;
     charset utf-8;
 
-    # SSL Configuration
-    ssl_certificate /etc/letsencrypt/live/${DOMAIN}/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/${DOMAIN}/privkey.pem;
-    ssl_protocols TLSv1.2 TLSv1.3;
-    ssl_ciphers HIGH:!aNULL:!MD5;
-    ssl_prefer_server_ciphers on;
-    ssl_session_cache shared:SSL:10m;
-    ssl_session_timeout 10m;
-
-    # Security Headers
     add_header X-Frame-Options "SAMEORIGIN" always;
     add_header X-Content-Type-Options "nosniff" always;
-    add_header X-XSS-Protection "1; mode=block" always;
-    add_header Referrer-Policy "no-referrer-when-downgrade" always;
 
-    # Logs
     access_log /var/log/nginx/${DOMAIN}-access.log;
     error_log /var/log/nginx/${DOMAIN}-error.log;
 
@@ -410,65 +338,52 @@ server {
     }
 }
 EOFNGINX
-    print_success "Configuration Nginx avec SSL créée"
-else
-    # Configuration HTTP seulement
-    cat > /etc/nginx/sites-available/hostclient <<EOFNGINX
-server {
-    listen 80;
-    listen [::]:80;
-    server_name ${DOMAIN};
-
-    root $(pwd)/public;
-    index index.php index.html;
-    charset utf-8;
-
-    # Security Headers
-    add_header X-Frame-Options "SAMEORIGIN" always;
-    add_header X-Content-Type-Options "nosniff" always;
-
-    # Logs
-    access_log /var/log/nginx/${DOMAIN}-access.log;
-    error_log /var/log/nginx/${DOMAIN}-error.log;
-
-    location / {
-        try_files \$uri \$uri/ /index.php?\$query_string;
-    }
-
-    location = /favicon.ico { access_log off; log_not_found off; }
-    location = /robots.txt  { access_log off; log_not_found off; }
-    error_page 404 /index.php;
-
-    location ~ \.php$ {
-        fastcgi_pass unix:/var/run/php/php8.2-fpm.sock;
-        fastcgi_param SCRIPT_FILENAME \$realpath_root\$fastcgi_script_name;
-        include fastcgi_params;
-    }
-
-    location ~ /\.(?!well-known).* {
-        deny all;
-    }
-}
-EOFNGINX
-    print_success "Configuration Nginx (HTTP) créée"
-fi
 
 ln -sf /etc/nginx/sites-available/hostclient /etc/nginx/sites-enabled/hostclient
 rm -f /etc/nginx/sites-enabled/default
 
-# Test et redémarrage
+# Vérifier et démarrer Nginx
 if nginx -t 2>&1; then
     systemctl restart nginx
-    systemctl restart php8.2-fpm
     systemctl enable nginx php8.2-fpm
-    print_success "Nginx configuré pour ${DOMAIN}"
+    print_success "Nginx démarré sur le port 80 pour ${DOMAIN}"
 else
-    print_error "Erreur dans la configuration Nginx"
+    print_error "Erreur de configuration Nginx"
+    nginx -t
     exit 1
 fi
 
+# Obtenir le certificat SSL automatiquement si le domaine est accessible
+if [ "$SSL_EXISTS" = false ] && [ "$DOMAIN" != "localhost" ]; then
+    print_info "Tentative d'obtention du certificat SSL..."
+    if certbot --nginx -d "${DOMAIN}" --non-interactive --agree-tos -m "admin@${DOMAIN}" 2>/dev/null; then
+        print_success "Certificat SSL obtenu et configuré automatiquement"
+        SSL_EXISTS=true
+    else
+        print_warning "Impossible d'obtenir le SSL automatiquement."
+        print_warning "Le site fonctionne en HTTP. Pour activer HTTPS manuellement :"
+        print_warning "  certbot --nginx -d ${DOMAIN}"
+    fi
+fi
+
+systemctl restart php8.2-fpm
+print_success "Nginx et PHP-FPM configurés pour ${DOMAIN}"
+
 # ============================================================
-# 8. Cron
+# 8. Optimisation finale Laravel
+# ============================================================
+print_step "Optimisation finale"
+
+php artisan optimize:clear 2>/dev/null || true
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
+php artisan permission:cache-reset 2>/dev/null || true
+
+print_success "Caches Laravel optimisés"
+
+# ============================================================
+# 9. Cron
 # ============================================================
 print_step "Configuration des tâches planifiées"
 ARTISAN_PATH="$(pwd)/artisan"
@@ -476,12 +391,12 @@ ARTISAN_PATH="$(pwd)/artisan"
 print_success "Cron configuré"
 
 # ============================================================
-# 9. Sauvegarde des identifiants
+# 10. Sauvegarde des identifiants
 # ============================================================
 CREDS_FILE="$(pwd)/CREDENTIALS.txt"
 cat > "${CREDS_FILE}" <<EOFCREDS
 ╔════════════════════════════════════════════════════════╗
-║        INFORMATIONS D'INSTALLATION - HostClient         ║
+║        INFORMATIONS D'INSTALLATION - HostClient        ║
 ╚════════════════════════════════════════════════════════╝
 
 Date          : $(date)
@@ -504,89 +419,48 @@ Utilisateur   : ${DB_USER}
 Mot de passe  : ${DB_PASSWORD}
 
 ──────────────────────────────────────────────────────────
-CONFIGURATION À COMPLÉTER DANS .env
-──────────────────────────────────────────────────────────
-# Mail (obligatoire pour les notifications)
-MAIL_MAILER=smtp
-MAIL_HOST=smtp.example.com
-MAIL_PORT=587
-MAIL_USERNAME=
-MAIL_PASSWORD=
-MAIL_ENCRYPTION=tls
-MAIL_FROM_ADDRESS="noreply@${DOMAIN}"
-MAIL_FROM_NAME="${COMPANY_NAME}"
-
-# Stripe (optionnel)
-STRIPE_KEY=
-STRIPE_SECRET=
-STRIPE_WEBHOOK_SECRET=
-
-# PayPal (optionnel)
-PAYPAL_CLIENT_ID=
-PAYPAL_SECRET=
-PAYPAL_MODE=sandbox
-
-# Mollie (optionnel)
-MOLLIE_KEY=
-
-──────────────────────────────────────────────────────────
 PROCHAINES ÉTAPES
 ──────────────────────────────────────────────────────────
-1. Connectez-vous : ${APP_URL}/admin/login
+1. Connectez-vous : ${APP_URL}/login
 2. Configurez Mail dans Paramètres > Email
-3. Activez les passerelles de paiement (Paramètres > Paiement)
+3. Activez les passerelles de paiement dans Paramètres
 4. Créez vos catégories et produits
-5. Configurez SSL : certbot --nginx -d ${DOMAIN}
 
 ⚠️  Supprimez ce fichier après avoir noté les infos :
    rm ${CREDS_FILE}
 EOFCREDS
 chmod 600 "${CREDS_FILE}"
 
-# Sauvegarde .env
-cp .env ".env.backup.$(date +%Y%m%d_%H%M%S)"
-chmod 600 .env
-
-# ============================================================
-# 10. Optimisation finale
-# ============================================================
-print_step "Optimisation finale"
-php artisan optimize:clear 2>/dev/null || true
-php artisan config:cache
-php artisan route:cache
-php artisan view:cache
-print_success "Optimisations appliquées"
-
 # ============================================================
 # 11. Résumé final
 # ============================================================
+FINAL_URL="${APP_URL}"
+if [ "$SSL_EXISTS" = true ] && [[ "$APP_URL" != https* ]]; then
+    FINAL_URL="https://${DOMAIN}"
+fi
+
 echo ""
 echo -e "${GREEN}╔════════════════════════════════════════════════════════╗${NC}"
 echo -e "${GREEN}║       Installation terminée avec succès ! 🎉           ║${NC}"
 echo -e "${GREEN}╚════════════════════════════════════════════════════════╝${NC}"
 echo ""
-echo -e " ${CYAN}URL admin :${NC} ${YELLOW}${APP_URL}/admin/login${NC}"
+echo -e " ${CYAN}URL       :${NC} ${YELLOW}${FINAL_URL}/login${NC}"
 echo -e " ${CYAN}Email     :${NC} ${YELLOW}${ADMIN_EMAIL}${NC}"
 echo -e " ${CYAN}Password  :${NC} ${YELLOW}${ADMIN_PASSWORD}${NC}"
 echo -e " ${CYAN}Dossier   :${NC} $(pwd)"
 echo ""
 echo -e " ${MAGENTA}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-echo -e " ${MAGENTA}  CONFIGURATION RECOMMANDÉE${NC}"
-echo -e " ${MAGENTA}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-echo ""
 echo -e " ${YELLOW}📧 Configurer les emails${NC}"
-echo -e "   Connectez-vous puis allez dans :  ${CYAN}Paramètres > Email${NC}"
-echo -e "   Sans cela, les notifications et factures ne partiront pas."
+echo -e "   Connexion > ${CYAN}Paramètres > Email${NC}"
 echo ""
 echo -e " ${YELLOW}💳 Activer les passerelles de paiement${NC}"
-echo -e "   ${CYAN}Paramètres > Passerelles de paiement${NC}"
-echo -e "   Stripe, PayPal et Mollie sont pré-installés (désactivés)."
-echo -e "   Renseignez vos clés API dans .env ou via l'interface admin."
+echo -e "   Connexion > ${CYAN}Paramètres > Passerelles de paiement${NC}"
 echo ""
+if [ "$SSL_EXISTS" = false ]; then
 echo -e " ${YELLOW}🔒 Activer SSL (HTTPS)${NC}"
-echo -e "   apt-get install certbot python3-certbot-nginx"
-echo -e "   certbot --nginx -d ${DOMAIN}"
+echo -e "   ${CYAN}certbot --nginx -d ${DOMAIN}${NC}"
 echo ""
+fi
 echo -e " ${YELLOW}📁 Identifiants sauvegardés :${NC} ${CREDS_FILE}"
-echo ""
 echo -e " ${MAGENTA}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+echo ""
