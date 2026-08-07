@@ -408,7 +408,7 @@ install_php_deps() {
 install_node_deps() {
     log_step "Installation des dependances Node.js et compilation des assets"
     cd "$INSTALL_DIR"
-    npm install --silent
+    npm install
     npm run build
     log_ok "Assets compiles avec succes"
 }
