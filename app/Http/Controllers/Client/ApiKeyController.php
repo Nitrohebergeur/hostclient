@@ -37,7 +37,8 @@ class ApiKeyController extends Controller
         ]);
 
         return redirect()->route('client.api-keys.index')
-            ->with('success', "Clé API créée. Copiez-la maintenant : {$key}");
+            ->with('success', 'Clé API créée.')
+            ->with('new_key', $key);
     }
 
     public function show(ApiKey $apiKey)
