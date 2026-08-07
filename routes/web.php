@@ -66,8 +66,14 @@ Route::prefix('client')->name('client.')->middleware(['auth', 'role:client'])->g
 Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/dashboard', [AdminDashboard::class, 'index'])->name('dashboard');
     
-    // Clients
-    Route::resource('clients', \App\Http\Controllers\Admin\ClientController::class);
+    // Clients (redirigé vers Users)
+    Route::get('clients', fn() => redirect()->route('admin.users.index'))->name('clients.index');
+    Route::get('clients/{client}', fn($client) => redirect()->route('admin.users.show', $client))->name('clients.show');
+    Route::get('clients/{client}/edit', fn($client) => redirect()->route('admin.users.edit', $client))->name('clients.edit');
+    Route::get('clients/create', fn() => redirect()->route('admin.users.create'))->name('clients.create');
+    
+    // Users (gestion unifiée clients + admins + support)
+    Route::resource('users', \App\Http\Controllers\Admin\UserController::class);
     
     // Products
     Route::resource('products', \App\Http\Controllers\Admin\ProductController::class);
@@ -113,8 +119,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
     Route::post('modules/{module}/uninstall', [\App\Http\Controllers\Admin\ModuleController::class, 'uninstall'])->name('modules.uninstall');
     Route::post('modules/{module}/toggle', [\App\Http\Controllers\Admin\ModuleController::class, 'toggle'])->name('modules.toggle');
     
-    // Users & Permissions
-    Route::resource('users', \App\Http\Controllers\Admin\UserController::class);
+    // Users & Permissions (déjà déclaré plus haut avec clients)
     Route::resource('roles', \App\Http\Controllers\Admin\RoleController::class);
     
     // Activity Log
