@@ -283,6 +283,22 @@ clone_repository() {
 
     log_info "Clonage depuis $REPO (branche: $BRANCH)..."
     git clone --branch "$BRANCH" --depth 1 "$REPO" "$INSTALL_DIR"
+
+    # S'assurer que Controller.php de base existe
+    if [ ! -f "$INSTALL_DIR/app/Http/Controllers/Controller.php" ]; then
+        cat > "$INSTALL_DIR/app/Http/Controllers/Controller.php" <<'CONTROLLER'
+<?php
+
+namespace App\Http\Controllers;
+
+abstract class Controller
+{
+    //
+}
+CONTROLLER
+        log_info "Controller.php de base cree"
+    fi
+
     log_ok "Code source telecharge dans $INSTALL_DIR"
 }
 

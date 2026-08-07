@@ -32,8 +32,10 @@ php artisan down --render="errors.503" --retry=60
 log_ok "Mode maintenance activé"
 
 # Pull
-log_step "Téléchargement de la dernière version"
+log_step "Telechargement de la derniere version"
+git config --global --add safe.directory "$INSTALL_DIR" 2>/dev/null || true
 git fetch origin
+git reset --hard origin/main
 git pull origin main
 log_ok "Code source mis à jour"
 
