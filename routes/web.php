@@ -10,8 +10,13 @@ use App\Http\Controllers\Client\SecurityController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 
+use App\Http\Controllers\HomeController;
+
 // ─── Page d'accueil ─────────────────────────────────────────────────────────
-Route::get('/', fn() => view('welcome'))->name('home');
+Route::get('/', [HomeController::class, 'index'])->name('home');
+Route::get('/products', [HomeController::class, 'products'])->name('products');
+Route::get('/products/{categorySlug}', [HomeController::class, 'products'])->name('products.category');
+Route::get('/order/{slug}', [HomeController::class, 'productDetail'])->name('product.detail');
 
 // ─── Authentification ────────────────────────────────────────────────────────
 Route::middleware('guest')->group(function () {

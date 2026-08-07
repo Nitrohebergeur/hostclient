@@ -54,56 +54,52 @@ Support des principales plateformes :
 
 ## 🚀 Installation
 
-### Avec Docker (Recommandé)
+### ⚡ Installation en une seule commande (Recommandé)
 
 ```bash
-# Cloner le dépôt
-git clone https://github.com/votre-username/hostclient.git
-cd hostclient
-
-# Copier le fichier d'environnement
-cp .env.example .env
-
-# Démarrer les conteneurs
-docker-compose up -d
-
-# Installer les dépendances
-docker-compose exec app composer install
-docker-compose exec app npm install
-
-# Générer la clé d'application
-docker-compose exec app php artisan key:generate
-
-# Lancer les migrations
-docker-compose exec app php artisan migrate --seed
-
-# Compiler les assets
-docker-compose exec app npm run build
+bash <(curl -fsSL https://raw.githubusercontent.com/hostclient/hostclient/main/install.sh)
 ```
 
-### Installation manuelle
+Le script détecte automatiquement votre système, installe les dépendances manquantes et configure tout.
+
+**Systèmes supportés :** Ubuntu 22.04/24.04, Debian 11/12, CentOS/Rocky/AlmaLinux 8/9
+
+---
+
+### 🔄 Mise à jour
 
 ```bash
-# Cloner le dépôt
-git clone https://github.com/votre-username/hostclient.git
+bash <(curl -fsSL https://raw.githubusercontent.com/hostclient/hostclient/main/update.sh)
+```
+
+---
+
+### 🐳 Avec Docker (Développement)
+
+```bash
+git clone https://github.com/hostclient/hostclient.git
 cd hostclient
-
-# Installer les dépendances
-composer install
-npm install
-
-# Configuration
 cp .env.example .env
-php artisan key:generate
+docker-compose up -d
+docker-compose exec app composer install
+docker-compose exec app php artisan key:generate
+docker-compose exec app php artisan migrate --seed
+docker-compose exec app npm install && npm run build
+```
 
-# Base de données
+---
+
+### 🛠️ Installation manuelle
+
+```bash
+git clone https://github.com/hostclient/hostclient.git
+cd hostclient
+composer install --no-dev --optimize-autoloader
+npm install && npm run build
+cp .env.example .env && php artisan key:generate
 php artisan migrate --seed
-
-# Assets
-npm run build
-
-# Démarrer le serveur
-php artisan serve
+php artisan storage:link
+php artisan optimize
 ```
 
 ### Installation Web

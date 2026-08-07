@@ -76,6 +76,14 @@ class DatabaseSeeder extends Seeder
         );
         $demoClient->assignRole('client');
 
+        // ── Produits, Serveurs, Passerelles de paiement ─────────────
+        $this->call([
+            ProductSeeder::class,
+            ServerSeeder::class,
+            PaymentGatewaySeeder::class,
+            SystemSettingSeeder::class,
+        ]);
+
         $this->command->info('✅ Seeder terminé !');
         $this->command->table(
             ['Rôle', 'Email', 'Mot de passe'],
