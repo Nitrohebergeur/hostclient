@@ -267,7 +267,7 @@ VALUES ('admin', 'web', NOW(), NOW());
 
 -- Assigner le rôle 'admin' à l'utilisateur (Spatie: model_has_roles)
 INSERT IGNORE INTO model_has_roles (role_id, model_type, model_id)
-SELECT id, 'App\\\\Models\\\\User', u.id
+SELECT id, 'App\\Models\\User', u.id
 FROM roles r, users u
 WHERE r.name = 'admin' AND r.guard_name = 'web' AND u.email = '${ADMIN_EMAIL}';
 EOSQL
