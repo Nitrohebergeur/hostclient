@@ -274,10 +274,19 @@ print_success "Admin créé et rôle 'admin' assigné : ${ADMIN_EMAIL}"
 php artisan storage:link 2>/dev/null || true
 print_success "Lien de stockage créé"
 
-# Permissions finales
-chown -R www-data:www-data storage bootstrap/cache 2>/dev/null || true
-chmod -R 775 storage bootstrap/cache
+# Permissions finales (CRITIQUE : www-data doit pouvoir écrire dans storage)
+print_info "Correction des permissions..."
+chown -R www-data:www-data storage bootstrap/cache
+chmod -R 775 storage
+chmod -R 775 bootstrap/cache
 chmod -R 755 public
+# S'assurer que les sous-dossiers existent avec les bonnes permissions
+mkdir -p storage/framework/{sessions,views,cache}
+mkdir -p storage/logs
+touch storage/logs/laravel.log
+chown -R www-data:www-data storage
+chmod -R 775 storage
+print_success "Permissions corrigées"
 
 # NPM + build
 print_info "Installation des dépendances JavaScript..."
@@ -339,31 +348,22 @@ server {
 }
 EOFNGINX
 
-ln -sf /etc/nginx/sites-available/hostclient /etc/nginx/sites-enabled/hostclient
-rm -f /etc/nginx/sites-enabled/default
-
-# Vérifier et démarrer Nginx
-if nginx -t 2>&1; then
-    systemctl restart nginx
-    systemctl enable nginx php8.2-fpm
-    print_success "Nginx démarré sur le port 80 pour ${DOMAIN}"
-else
-    print_error "Erreur de configuration Nginx"
-    nginx -t
-    exit 1
-fi
-
 # Obtenir le certificat SSL automatiquement si le domaine est accessible
 if [ "$SSL_EXISTS" = false ] && [ "$DOMAIN" != "localhost" ]; then
-    print_info "Tentative d'obtention du certificat SSL..."
+    print_info "Tentative d'obtention du certificat SSL pour ${DOMAIN}..."
+    # S'assurer que le plugin nginx certbot est bien installé
+    apt-get install -y python3-certbot-nginx -qq
     if certbot --nginx -d "${DOMAIN}" --non-interactive --agree-tos -m "admin@${DOMAIN}" 2>/dev/null; then
-        print_success "Certificat SSL obtenu et configuré automatiquement"
+        print_success "Certificat SSL obtenu et configuré automatiquement ✓"
         SSL_EXISTS=true
     else
-        print_warning "Impossible d'obtenir le SSL automatiquement."
-        print_warning "Le site fonctionne en HTTP. Pour activer HTTPS manuellement :"
-        print_warning "  certbot --nginx -d ${DOMAIN}"
+        print_warning "Impossible d'obtenir le SSL automatiquement (DNS pas encore propagé ?)."
+        print_warning "Le site fonctionne en HTTP. Pour activer HTTPS plus tard :"
+        echo -e "   ${CYAN}apt-get install -y python3-certbot-nginx${NC}"
+        echo -e "   ${CYAN}certbot --nginx -d ${DOMAIN}${NC}"
     fi
+else
+    print_success "Certificat SSL déjà configuré ✓"
 fi
 
 systemctl restart php8.2-fpm
