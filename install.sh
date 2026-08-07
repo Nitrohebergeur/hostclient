@@ -480,20 +480,63 @@ print_success "Cron configuré"
 # ============================================================
 CREDS_FILE="$(pwd)/CREDENTIALS.txt"
 cat > "${CREDS_FILE}" <<EOFCREDS
-╔════════════════════════════════════════╗
-║     INFORMATIONS D'INSTALLATION        ║
-╚════════════════════════════════════════╝
+╔════════════════════════════════════════════════════════╗
+║        INFORMATIONS D'INSTALLATION - HostClient         ║
+╚════════════════════════════════════════════════════════╝
 
-Date       : $(date)
-URL        : ${APP_URL}
-Email      : ${ADMIN_EMAIL}
-Mot passe  : ${ADMIN_PASSWORD}
+Date          : $(date)
+URL           : ${APP_URL}
+Dossier       : $(pwd)
 
-DB name    : ${DB_NAME}
-DB user    : ${DB_USER}
-DB password: ${DB_PASSWORD}
+──────────────────────────────────────────────────────────
+COMPTE ADMINISTRATEUR
+──────────────────────────────────────────────────────────
+Email         : ${ADMIN_EMAIL}
+Mot de passe  : ${ADMIN_PASSWORD}
 
-Dossier    : $(pwd)
+──────────────────────────────────────────────────────────
+BASE DE DONNÉES
+──────────────────────────────────────────────────────────
+Host          : 127.0.0.1
+Port          : 3306
+Database      : ${DB_NAME}
+Utilisateur   : ${DB_USER}
+Mot de passe  : ${DB_PASSWORD}
+
+──────────────────────────────────────────────────────────
+CONFIGURATION À COMPLÉTER DANS .env
+──────────────────────────────────────────────────────────
+# Mail (obligatoire pour les notifications)
+MAIL_MAILER=smtp
+MAIL_HOST=smtp.example.com
+MAIL_PORT=587
+MAIL_USERNAME=
+MAIL_PASSWORD=
+MAIL_ENCRYPTION=tls
+MAIL_FROM_ADDRESS="noreply@${DOMAIN}"
+MAIL_FROM_NAME="${COMPANY_NAME}"
+
+# Stripe (optionnel)
+STRIPE_KEY=
+STRIPE_SECRET=
+STRIPE_WEBHOOK_SECRET=
+
+# PayPal (optionnel)
+PAYPAL_CLIENT_ID=
+PAYPAL_SECRET=
+PAYPAL_MODE=sandbox
+
+# Mollie (optionnel)
+MOLLIE_KEY=
+
+──────────────────────────────────────────────────────────
+PROCHAINES ÉTAPES
+──────────────────────────────────────────────────────────
+1. Connectez-vous : ${APP_URL}/admin/login
+2. Configurez Mail dans Paramètres > Email
+3. Activez les passerelles de paiement (Paramètres > Paiement)
+4. Créez vos catégories et produits
+5. Configurez SSL : certbot --nginx -d ${DOMAIN}
 
 ⚠️  Supprimez ce fichier après avoir noté les infos :
    rm ${CREDS_FILE}
