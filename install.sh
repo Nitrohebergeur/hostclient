@@ -330,6 +330,7 @@ with open('.env', 'w') as f:
     set_env "REDIS_HOST"       "$REDIS_HOST"
     set_env "REDIS_PORT"       "$REDIS_PORT"
     set_env "REDIS_PASSWORD"   "${REDIS_PASS:-null}"
+    set_env "CACHE_STORE"      "redis"
     set_env "CACHE_DRIVER"     "redis"
     set_env "SESSION_DRIVER"   "redis"
     set_env "QUEUE_CONNECTION" "redis"
@@ -410,11 +411,14 @@ run_migrations() {
     php "$INSTALL_DIR/artisan" key:generate --no-interaction --force
     log_ok "Cle d'application generee"
 
-    # Publier les migrations Spatie Permission (table permissions/roles)
+    # Publier les configs Spatie Permission
     php "$INSTALL_DIR/artisan" vendor:publish \
         --provider="Spatie\Permission\PermissionServiceProvider" \
         --force --no-interaction 2>/dev/null || true
     log_ok "Migrations Spatie publiees"
+
+    # Forcer Spatie a utiliser le cache redis et non database
+    php "$INSTALL_DIR/artisan" config:clear --no-interaction 2>/dev/null || true
 
     php "$INSTALL_DIR/artisan" migrate --force --no-interaction
     log_ok "Migrations executees"
