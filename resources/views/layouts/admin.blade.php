@@ -1,176 +1,336 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<html lang="fr">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ config('hostclient.company_name', 'HostClient') }} Admin — @yield('title', 'Dashboard')</title>
-
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <script src="https://unpkg.com/lucide@latest"></script>
     @livewireStyles
     @stack('styles')
 </head>
-<body>
+<body style="background: #f4f5f7; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; min-height: 100vh; margin: 0;">
 
-<div style="display: flex; min-height: 100vh; background: var(--hc-bg);">
+{{-- ═══════════════════ TOP HEADER ═══════════════════ --}}
+<header style="background: #fff; border-bottom: 1px solid #e2e6ea; position: sticky; top: 0; z-index: 100; box-shadow: 0 1px 3px rgba(0,0,0,0.06);">
+    <div style="display: flex; align-items: center; justify-content: space-between; height: 56px; padding: 0 24px; max-width: 100%;">
 
-    {{-- Sidebar --}}
-    <aside style="width: 260px; background: var(--hc-gray-900); color: var(--hc-gray-300); display: flex; flex-direction: column; position: sticky; top: 0; height: 100vh; flex-shrink: 0;" class="hc-sidebar">
+        {{-- Logo + Brand --}}
+        <a href="{{ route('admin.dashboard') }}" style="display: flex; align-items: center; gap: 10px; text-decoration: none; color: #1a1f36; font-weight: 700; font-size: 15px; white-space: nowrap;">
+            <div style="width: 32px; height: 32px; background: linear-gradient(135deg, #0066ff, #6366f1); border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" style="width: 18px; height: 18px;">
+                    <path d="M3 12L12 3L21 12M5 10V21H19V10"/>
+                </svg>
+            </div>
+            {{ config('hostclient.company_name', 'HostClient') }}
+        </a>
 
-        {{-- Logo --}}
-        <div style="padding: var(--hc-space-5) var(--hc-space-6); border-bottom: 1px solid var(--hc-gray-800);">
-            <a href="{{ route('admin.dashboard') }}" style="display: flex; align-items: center; gap: var(--hc-space-3); text-decoration: none; color: var(--hc-text-inverse); font-weight: 700; font-size: var(--hc-text-base);">
-                <div style="width: 36px; height: 36px; background: var(--hc-primary); border-radius: var(--hc-radius); display: flex; align-items: center; justify-content: center;">
-                    <i data-lucide="shield" style="width: 20px; height: 20px; color: white;"></i>
-                </div>
-                <span>{{ config('hostclient.company_name', 'HostClient') }}<br><span style="font-size: var(--hc-text-xs); font-weight: 500; color: var(--hc-gray-400);">Console admin</span></span>
-            </a>
+        {{-- Search bar --}}
+        <div style="flex: 1; max-width: 340px; margin: 0 32px; position: relative;">
+            <i data-lucide="search" style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); width: 15px; height: 15px; color: #8898aa; pointer-events: none;"></i>
+            <input type="text" placeholder="Rechercher..." style="width: 100%; padding: 7px 12px 7px 34px; border: 1px solid #e2e6ea; border-radius: 8px; font-size: 13px; background: #f8f9fa; color: #1a1f36; outline: none; box-sizing: border-box;" onfocus="this.style.borderColor='#0066ff'; this.style.background='#fff'" onblur="this.style.borderColor='#e2e6ea'; this.style.background='#f8f9fa'">
+            <span style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); font-size: 11px; color: #adb5bd; background: #e9ecef; padding: 2px 6px; border-radius: 4px;">Ctrl /</span>
         </div>
 
-        {{-- Nav --}}
-        <nav style="flex: 1; padding: var(--hc-space-4); overflow-y: auto;">
-            @php
-                $navGroups = [
-                    ['label' => null, 'items' => [
-                        ['route' => 'admin.dashboard', 'icon' => 'layout-dashboard', 'label' => 'Tableau de bord'],
-                    ]],
-                    ['label' => 'Clients & Ventes', 'items' => [
-                        ['route' => 'admin.users.index', 'icon' => 'users', 'label' => 'Utilisateurs'],
-                        ['route' => 'admin.orders.index', 'icon' => 'shopping-bag', 'label' => 'Commandes'],
-                        ['route' => 'admin.invoices.index', 'icon' => 'file-text', 'label' => 'Factures'],
-                        ['route' => 'admin.transactions.index', 'icon' => 'credit-card', 'label' => 'Transactions'],
-                    ]],
-                    ['label' => 'Catalogue', 'items' => [
-                        ['route' => 'admin.products.index', 'icon' => 'package', 'label' => 'Produits'],
-                        ['route' => 'admin.categories.index', 'icon' => 'folder', 'label' => 'Catégories'],
-                        ['route' => 'admin.services.index', 'icon' => 'server', 'label' => 'Services'],
-                        ['route' => 'admin.coupons.index', 'icon' => 'ticket', 'label' => 'Coupons'],
-                    ]],
-                    ['label' => 'Support', 'items' => [
-                        ['route' => 'admin.tickets.index', 'icon' => 'message-circle', 'label' => 'Tickets'],
-                    ]],
-                    ['label' => 'Configuration', 'items' => [
-                        ['route' => 'admin.payment-gateways.index', 'icon' => 'wallet', 'label' => 'Paiement'],
-                        ['route' => 'admin.modules.index', 'icon' => 'puzzle', 'label' => 'Modules'],
-                        ['route' => 'admin.settings.index', 'icon' => 'settings', 'label' => 'Paramètres'],
-                        ['route' => 'admin.roles.index', 'icon' => 'key', 'label' => 'Rôles & permissions'],
-                        ['route' => 'admin.activity.index', 'icon' => 'activity', 'label' => 'Journal d\'activité'],
-                        ['route' => 'admin.homepage.edit', 'icon' => 'layout', 'label' => 'Page d\'accueil'],
-                    ]],
-                ];
-            @endphp
+        {{-- Right actions --}}
+        <div style="display: flex; align-items: center; gap: 6px; flex-shrink: 0;">
+            {{-- Dark mode placeholder --}}
+            <button style="width: 34px; height: 34px; border: none; background: transparent; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #6b7280;" title="Mode sombre">
+                <i data-lucide="moon" style="width: 17px; height: 17px;"></i>
+            </button>
 
-            @foreach($navGroups as $group)
-                @if($group['label'])
-                    <div style="padding: var(--hc-space-3) var(--hc-space-3) var(--hc-space-2); font-size: var(--hc-text-xs); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--hc-gray-500);">
-                        {{ $group['label'] }}
+            {{-- Flag --}}
+            <div style="font-size: 18px; line-height: 1; cursor: pointer; padding: 4px;" title="Langue">🇫🇷</div>
+
+            {{-- User avatar + dropdown --}}
+            <div x-data="{ open: false }" style="position: relative;">
+                <button @click="open = !open"
+                    style="width: 36px; height: 36px; background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none; border-radius: 50%; cursor: pointer; font-weight: 700; font-size: 13px; display: flex; align-items: center; justify-content: center; letter-spacing: 0.5px;">
+                    {{ strtoupper(substr(auth()->user()->first_name ?? 'A', 0, 1)) }}{{ strtoupper(substr(auth()->user()->last_name ?? 'A', 0, 1)) }}
+                </button>
+
+                <div x-show="open" @click.away="open = false" x-transition
+                    style="position: absolute; right: 0; top: calc(100% + 8px); background: #fff; border: 1px solid #e2e6ea; border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.12); min-width: 240px; overflow: hidden; z-index: 200;">
+
+                    {{-- User info header --}}
+                    <div style="padding: 14px 16px 10px; background: #f8f9fa; border-bottom: 1px solid #e2e6ea;">
+                        <div style="font-size: 12px; color: #6b7280; margin-bottom: 2px;">Connecté en tant que</div>
+                        <div style="font-weight: 700; font-size: 14px; color: #1a1f36;">{{ auth()->user()->email }}</div>
                     </div>
-                @endif
-                @foreach($group['items'] as $item)
-                    @php
-                        $isActive = request()->routeIs(
-                            $item['route'],
-                            str_replace('.index', '.*', $item['route'])
-                        );
-                    @endphp
-                    <a href="{{ route($item['route']) }}" class="hc-nav-link-admin {{ $isActive ? 'hc-nav-link-admin-active' : '' }}">
-                        <i data-lucide="{{ $item['icon'] }}" style="width: 18px; height: 18px;"></i>
-                        <span>{{ $item['label'] }}</span>
+
+                    <div style="padding: 6px;">
+                        <a href="{{ route('client.dashboard') }}"
+                            style="display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 8px; background: #f1f3f5; color: #1a1f36; text-decoration: none; font-size: 13px; font-weight: 500; margin-bottom: 2px;">
+                            <i data-lucide="log-in" style="width: 15px; height: 15px; color: #6b7280;"></i>
+                            Espace client
+                        </a>
+                        <a href="{{ route('client.profile.edit') }}"
+                            style="display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 8px; color: #374151; text-decoration: none; font-size: 13px; font-weight: 500; margin-bottom: 2px;"
+                            onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">
+                            <i data-lucide="user" style="width: 15px; height: 15px; color: #6b7280;"></i>
+                            Mon profil
+                        </a>
+                        <a href="{{ route('store.index') }}"
+                            style="display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 8px; color: #374151; text-decoration: none; font-size: 13px; font-weight: 500; margin-bottom: 2px;"
+                            onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">
+                            <i data-lucide="store" style="width: 15px; height: 15px; color: #6b7280;"></i>
+                            Retour à la boutique
+                        </a>
+                        <div style="height: 1px; background: #e2e6ea; margin: 4px 0;"></div>
+                        <form method="POST" action="{{ route('logout') }}" style="margin: 0;">
+                            @csrf
+                            <button type="submit"
+                                style="display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 8px; color: #ef4444; background: transparent; border: none; width: 100%; text-align: left; cursor: pointer; font-size: 13px; font-weight: 500;"
+                                onmouseover="this.style.background='#fef2f2'" onmouseout="this.style.background='transparent'">
+                                <i data-lucide="log-out" style="width: 15px; height: 15px;"></i>
+                                Déconnexion
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- ═══ NAV TABS ═══ --}}
+    <nav style="display: flex; align-items: center; gap: 2px; padding: 0 24px; height: 44px; overflow-x: auto; border-top: 1px solid #f0f0f0;">
+        @php
+            $navItems = [
+                ['route' => 'admin.dashboard',       'icon' => 'layout-dashboard', 'label' => 'Tableau de bord', 'match' => 'admin.dashboard'],
+                ['route' => 'admin.users.index',     'icon' => 'users',            'label' => 'Clients',         'match' => 'admin.users.*'],
+                ['route' => 'admin.services.index',  'icon' => 'server',           'label' => 'Services',        'match' => 'admin.services.*'],
+                ['route' => 'admin.invoices.index',  'icon' => 'file-text',        'label' => 'Factures',        'match' => 'admin.invoices.*'],
+                ['route' => 'admin.orders.index',    'icon' => 'shopping-bag',     'label' => 'Commandes',       'match' => 'admin.orders.*'],
+                ['route' => 'admin.tickets.index',   'icon' => 'message-circle',   'label' => 'Support',         'match' => 'admin.tickets.*'],
+                ['route' => 'admin.settings.index',  'icon' => 'settings',         'label' => 'Paramètres',      'match' => 'admin.settings.*'],
+            ];
+        @endphp
+
+        @foreach($navItems as $item)
+            @php $active = request()->routeIs($item['match']); @endphp
+            <a href="{{ route($item['route']) }}"
+                style="display: inline-flex; align-items: center; gap: 6px; padding: 0 12px; height: 44px; font-size: 13px; font-weight: {{ $active ? '600' : '500' }}; color: {{ $active ? '#0066ff' : '#5a6475' }}; text-decoration: none; border-bottom: 2px solid {{ $active ? '#0066ff' : 'transparent' }}; white-space: nowrap; transition: color 0.15s, border-color 0.15s;"
+                onmouseover="if (!{{ $active ? 'true' : 'false' }}) { this.style.color='#1a1f36'; this.style.borderBottomColor='#d1d5db'; }"
+                onmouseout="if (!{{ $active ? 'true' : 'false' }}) { this.style.color='#5a6475'; this.style.borderBottomColor='transparent'; }">
+                <i data-lucide="{{ $item['icon'] }}" style="width: 14px; height: 14px;"></i>
+                {{ $item['label'] }}
+            </a>
+        @endforeach
+
+        {{-- More dropdown --}}
+        <div x-data="{ open: false }" style="position: relative; margin-left: auto;">
+            <button @click="open = !open"
+                style="display: inline-flex; align-items: center; gap: 6px; padding: 0 12px; height: 44px; font-size: 13px; font-weight: 500; color: #5a6475; background: transparent; border: none; border-bottom: 2px solid transparent; cursor: pointer; white-space: nowrap;">
+                <i data-lucide="more-horizontal" style="width: 14px; height: 14px;"></i>
+                Plus
+            </button>
+            <div x-show="open" @click.away="open = false" x-transition
+                style="position: absolute; right: 0; top: 100%; background: #fff; border: 1px solid #e2e6ea; border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,0.1); min-width: 200px; padding: 6px; z-index: 200;">
+                @php
+                    $moreItems = [
+                        ['route' => 'admin.products.index',         'icon' => 'package',      'label' => 'Produits'],
+                        ['route' => 'admin.categories.index',       'icon' => 'folder',       'label' => 'Catégories'],
+                        ['route' => 'admin.transactions.index',     'icon' => 'credit-card',  'label' => 'Transactions'],
+                        ['route' => 'admin.coupons.index',          'icon' => 'ticket',       'label' => 'Coupons'],
+                        ['route' => 'admin.payment-gateways.index', 'icon' => 'wallet',       'label' => 'Paiements'],
+                        ['route' => 'admin.modules.index',          'icon' => 'puzzle',       'label' => 'Modules'],
+                        ['route' => 'admin.roles.index',            'icon' => 'key',          'label' => 'Rôles'],
+                        ['route' => 'admin.activity.index',         'icon' => 'activity',     'label' => 'Activité'],
+                        ['route' => 'admin.homepage.edit',          'icon' => 'layout',       'label' => 'Page d\'accueil'],
+                    ];
+                @endphp
+                @foreach($moreItems as $item)
+                    <a href="{{ route($item['route']) }}"
+                        style="display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 6px; font-size: 13px; color: #374151; text-decoration: none;"
+                        onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">
+                        <i data-lucide="{{ $item['icon'] }}" style="width: 14px; height: 14px; color: #6b7280;"></i>
+                        {{ $item['label'] }}
                     </a>
                 @endforeach
-            @endforeach
-        </nav>
-
-        {{-- User --}}
-        <div style="padding: var(--hc-space-4); border-top: 1px solid var(--hc-gray-800);">
-            <div style="display: flex; align-items: center; gap: var(--hc-space-3); padding: var(--hc-space-3); background: var(--hc-gray-800); border-radius: var(--hc-radius);">
-                <div style="width: 36px; height: 36px; background: var(--hc-primary); color: var(--hc-text-inverse); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600;">
-                    {{ strtoupper(substr(auth()->user()->first_name ?? 'A', 0, 1)) }}
-                </div>
-                <div style="flex: 1; min-width: 0;">
-                    <div style="font-size: var(--hc-text-sm); font-weight: 600; color: var(--hc-text-inverse); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                        {{ auth()->user()->first_name }} {{ auth()->user()->last_name }}
-                    </div>
-                    <div style="font-size: var(--hc-text-xs); color: var(--hc-gray-400); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                        {{ auth()->user()->email }}
-                    </div>
-                </div>
             </div>
         </div>
-    </aside>
+    </nav>
+</header>
 
-    {{-- Main --}}
-    <div style="flex: 1; display: flex; flex-direction: column; min-width: 0;">
+{{-- ═══════════════════ PAGE CONTENT ═══════════════════ --}}
+<div style="max-width: 1400px; margin: 0 auto; padding: 28px 24px;">
 
-        {{-- Topbar --}}
-        <header style="background: var(--hc-bg-elevated); border-bottom: 1px solid var(--hc-border); padding: var(--hc-space-4) var(--hc-space-8); display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 30;">
-            <h1 style="font-size: var(--hc-text-xl); font-weight: 600; margin: 0;">@yield('title', 'Tableau de bord')</h1>
-
-            <div style="display: flex; align-items: center; gap: var(--hc-space-2);">
-                @if(Route::has('client.dashboard'))
-                    <a href="{{ route('client.dashboard') }}" class="hc-btn hc-btn-ghost hc-btn-sm" title="Voir en tant que client">
-                        <i data-lucide="eye" style="width: 16px; height: 16px;"></i>
-                        Vue client
-                    </a>
-                @endif
-                <form method="POST" action="{{ route('logout') }}" style="margin: 0;">
-                    @csrf
-                    <button type="submit" class="hc-btn hc-btn-ghost hc-btn-sm">
-                        <i data-lucide="log-out" style="width: 16px; height: 16px;"></i>
-                        Déconnexion
-                    </button>
-                </form>
-            </div>
-        </header>
-
-        {{-- Flash --}}
-        @if(session('success') || session('error') || session('warning'))
-            <div style="padding: var(--hc-space-4) var(--hc-space-8);">
-                @if(session('success')) <x-alert type="success">{{ session('success') }}</x-alert> @endif
-                @if(session('error')) <x-alert type="danger">{{ session('error') }}</x-alert> @endif
-                @if(session('warning')) <x-alert type="warning">{{ session('warning') }}</x-alert> @endif
+    {{-- Greeting + title bar --}}
+    <div style="margin-bottom: 20px;">
+        @hasSection('greeting')
+            @yield('greeting')
+        @else
+            <div style="background: #fff; border: 1px solid #e2e6ea; border-radius: 10px; padding: 18px 24px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between;">
+                <div>
+                    <div style="font-weight: 600; font-size: 18px; color: #1a1f36;">Bonsoir, {{ auth()->user()->first_name }} 👋</div>
+                    <div style="font-size: 13px; color: #6b7280; margin-top: 2px;">
+                        Bienvenue sur le tableau de bord d'administration. Il est actuellement {{ now()->format('H:i') }}. Voici un aperçu de votre système.
+                    </div>
+                </div>
+                <div style="font-size: 12px; color: #9ca3af;">{{ now()->format('d/m/Y') }}</div>
             </div>
         @endif
-
-        {{-- Content --}}
-        <main style="padding: var(--hc-space-8); flex: 1;">
-            @yield('content')
-        </main>
     </div>
+
+    {{-- Flash messages --}}
+    @if(session('success') || session('error') || session('warning'))
+        <div style="margin-bottom: 16px;">
+            @if(session('success'))
+                <div style="display: flex; align-items: center; gap: 10px; padding: 12px 16px; background: #ecfdf5; border: 1px solid #6ee7b7; border-radius: 8px; color: #065f46; font-size: 13px; margin-bottom: 8px;">
+                    <i data-lucide="check-circle" style="width: 16px; height: 16px; flex-shrink: 0;"></i>
+                    {{ session('success') }}
+                </div>
+            @endif
+            @if(session('error'))
+                <div style="display: flex; align-items: center; gap: 10px; padding: 12px 16px; background: #fef2f2; border: 1px solid #fca5a5; border-radius: 8px; color: #991b1b; font-size: 13px; margin-bottom: 8px;">
+                    <i data-lucide="alert-circle" style="width: 16px; height: 16px; flex-shrink: 0;"></i>
+                    {{ session('error') }}
+                </div>
+            @endif
+            @if(session('warning'))
+                <div style="display: flex; align-items: center; gap: 10px; padding: 12px 16px; background: #fffbeb; border: 1px solid #fcd34d; border-radius: 8px; color: #92400e; font-size: 13px; margin-bottom: 8px;">
+                    <i data-lucide="alert-triangle" style="width: 16px; height: 16px; flex-shrink: 0;"></i>
+                    {{ session('warning') }}
+                </div>
+            @endif
+        </div>
+    @endif
+
+    {{-- Main content --}}
+    @yield('content')
 </div>
 
 @livewireScripts
 <script>lucide.createIcons();</script>
+
 <style>
-.hc-nav-link-admin {
+/* Stat cards ClientXMS style */
+.ctx-stat {
+    background: #fff;
+    border: 1px solid #e2e6ea;
+    border-radius: 10px;
+    padding: 16px 20px;
     display: flex;
     align-items: center;
-    gap: var(--hc-space-3);
-    padding: var(--hc-space-3);
-    color: var(--hc-gray-300);
-    text-decoration: none;
-    border-radius: var(--hc-radius);
-    font-size: var(--hc-text-sm);
-    font-weight: 500;
-    margin-bottom: 2px;
-    transition: background var(--hc-transition), color var(--hc-transition);
+    justify-content: space-between;
+    transition: box-shadow 0.2s;
 }
-.hc-nav-link-admin:hover {
-    background: var(--hc-gray-800);
-    color: var(--hc-text-inverse);
+.ctx-stat:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+.ctx-stat-label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #6b7280;
+    margin-bottom: 6px;
 }
-.hc-nav-link-admin-active {
-    background: var(--hc-primary);
-    color: var(--hc-text-inverse);
+.ctx-stat-value {
+    font-size: 28px;
+    font-weight: 700;
+    color: #1a1f36;
+    line-height: 1;
 }
-.hc-nav-link-admin-active:hover {
-    background: var(--hc-primary-dark);
+.ctx-stat-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
 }
-@media (max-width: 1024px) {
-    .hc-sidebar { display: none !important; }
+
+/* Cards */
+.ctx-card {
+    background: #fff;
+    border: 1px solid #e2e6ea;
+    border-radius: 10px;
+    overflow: hidden;
 }
+.ctx-card-header {
+    padding: 14px 20px;
+    border-bottom: 1px solid #f0f0f0;
+    font-size: 14px;
+    font-weight: 600;
+    color: #1a1f36;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.ctx-card-body { padding: 20px; }
+
+/* Tables */
+.ctx-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.ctx-table thead { background: #f8f9fa; }
+.ctx-table th { padding: 10px 16px; text-align: left; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: #6b7280; border-bottom: 1px solid #e2e6ea; white-space: nowrap; }
+.ctx-table td { padding: 12px 16px; border-bottom: 1px solid #f0f0f0; color: #374151; vertical-align: middle; }
+.ctx-table tbody tr:last-child td { border-bottom: none; }
+.ctx-table tbody tr:hover { background: #f8f9fa; }
+
+/* Badges */
+.ctx-badge { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; white-space: nowrap; }
+.ctx-badge-success { background: #d1fae5; color: #065f46; }
+.ctx-badge-danger  { background: #fee2e2; color: #991b1b; }
+.ctx-badge-warning { background: #fef3c7; color: #92400e; }
+.ctx-badge-info    { background: #dbeafe; color: #1e40af; }
+.ctx-badge-neutral { background: #f3f4f6; color: #6b7280; }
+
+/* Buttons */
+.ctx-btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 8px; font-size: 13px; font-weight: 500; cursor: pointer; text-decoration: none; border: 1px solid transparent; transition: all 0.15s; white-space: nowrap; }
+.ctx-btn-primary { background: #0066ff; color: #fff; border-color: #0066ff; }
+.ctx-btn-primary:hover { background: #0052cc; border-color: #0052cc; }
+.ctx-btn-secondary { background: #fff; color: #374151; border-color: #d1d5db; }
+.ctx-btn-secondary:hover { background: #f9fafb; }
+.ctx-btn-danger { background: #ef4444; color: #fff; border-color: #ef4444; }
+.ctx-btn-danger:hover { background: #dc2626; }
+.ctx-btn-ghost { background: transparent; color: #6b7280; border-color: transparent; }
+.ctx-btn-ghost:hover { background: #f3f4f6; color: #374151; }
+.ctx-btn-sm { padding: 5px 10px; font-size: 12px; }
+.ctx-btn-lg { padding: 10px 20px; font-size: 14px; }
+
+/* Inputs */
+.ctx-input, .ctx-select, .ctx-textarea {
+    width: 100%; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 13px; background: #fff; color: #1a1f36; outline: none; box-sizing: border-box; transition: border-color 0.15s, box-shadow 0.15s;
+}
+.ctx-input:focus, .ctx-select:focus, .ctx-textarea:focus { border-color: #0066ff; box-shadow: 0 0 0 3px rgba(0,102,255,0.1); }
+.ctx-label { display: block; font-size: 12px; font-weight: 600; color: #374151; margin-bottom: 5px; }
+
+/* Page header */
+.ctx-page-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 20px; flex-wrap: wrap; }
+.ctx-page-title { font-size: 20px; font-weight: 700; color: #1a1f36; margin: 0 0 2px 0; }
+.ctx-page-subtitle { font-size: 13px; color: #6b7280; margin: 0; }
+.ctx-page-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* Filters */
+.ctx-filters { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; padding: 16px 20px; }
+.ctx-filter-field { min-width: 180px; }
+.ctx-filter-actions { display: flex; gap: 8px; align-items: flex-end; }
+
+/* Divider */
+.ctx-divider { height: 1px; background: #e2e6ea; margin: 0; }
+
+/* Avatar */
+.ctx-avatar { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 12px; flex-shrink: 0; }
+.ctx-avatar-blue { background: #dbeafe; color: #1e40af; }
+.ctx-avatar-green { background: #d1fae5; color: #065f46; }
+.ctx-avatar-purple { background: #ede9fe; color: #5b21b6; }
+
+/* Empty state */
+.ctx-empty { padding: 48px 24px; text-align: center; }
+.ctx-empty-icon { font-size: 40px; margin-bottom: 12px; opacity: 0.6; }
+.ctx-empty h3 { font-size: 16px; font-weight: 600; color: #1a1f36; margin: 0 0 6px; }
+.ctx-empty p { font-size: 13px; color: #6b7280; margin: 0 0 16px; }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: #f1f5f9; }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+
+/* Pagination override */
+nav[role="navigation"] { margin-top: 16px; }
 </style>
+
 @stack('scripts')
 </body>
 </html>
